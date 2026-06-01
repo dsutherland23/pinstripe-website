@@ -1,0 +1,15 @@
+# Render Blueprint Specification for Pinstripes Party & Event Rentals
+# Docs: https://render.com/docs/blueprints
+
+services:
+  - type: web
+    name: pinstripe-website
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.x
