@@ -1,65 +1,152 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState } from "react";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import SearchBar from "@/components/SearchBar";
+import Categories from "@/components/Categories";
+import FeaturedRentals, { type RentalItem } from "@/components/FeaturedRentals";
+import TentLayoutSimulator from "@/components/TentLayoutSimulator";
+import Packages from "@/components/Packages";
+import Testimonials from "@/components/Testimonials";
+import StatsBar from "@/components/StatsBar";
+import Footer from "@/components/Footer";
+import QuoteBuilder from "@/components/QuoteBuilder";
+import ProductDetail from "@/components/ProductDetail";
+import AboutContactModal from "@/components/AboutContactModal";
+import Reveal from "@/components/Reveal";
+import MobileBottomNav from "@/components/MobileBottomNav";
+
+
+// ---- Category data ----
+const categories = [
+  { name: "Bounce Houses",         icon: "castle",  featured: true },
+  { name: "Water Slides",          icon: "water",   featured: true },
+  { name: "Tents",                 icon: "tent",    featured: true },
+  { name: "Tables",                icon: "table",   featured: false },
+  { name: "Chairs",                icon: "chair",   featured: false },
+  { name: "Cotton Candy Machines", icon: "candy",   featured: false },
+  { name: "Popcorn Machines",      icon: "popcorn", featured: false },
+  { name: "Photo Booths",          icon: "camera",  featured: false },
+];
 
 export default function Home() {
+  const [quoteOpen, setQuoteOpen]             = useState(false);
+  const [selectedItem, setSelectedItem]       = useState<RentalItem | null>(null);
+  const [activeCategory, setActiveCategory]   = useState("All");
+  const [searchQuery, setSearchQuery]         = useState("");
+  const [searchDate, setSearchDate]           = useState("2026-06-20");
+  const [quotePreItem, setQuotePreItem]       = useState<RentalItem | null>(null);
+  const [aboutContactOpen, setAboutContactOpen] = useState(false);
+  const [aboutContactTab, setAboutContactTab]   = useState<"about" | "contact">("about");
+
+  const handleOpenAbout = () => {
+    setAboutContactTab("about");
+    setAboutContactOpen(true);
+  };
+
+  const handleOpenContact = () => {
+    setAboutContactTab("contact");
+    setAboutContactOpen(true);
+  };
+
+  const handleOpenQuote = () => {
+    setQuotePreItem(null);
+    setQuoteOpen(true);
+  };
+
+  const handleOpenQuoteWithItem = (item: RentalItem) => {
+    setQuotePreItem(item);
+    setQuoteOpen(true);
+  };
+
+  const handleSearch = (q: string, cat: string, d: string) => {
+    setSearchQuery(q);
+    setActiveCategory(cat === "All Categories" ? "All" : cat);
+    setSearchDate(d);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="pb-18 lg:pb-0" style={{ fontFamily: "var(--font-body)", transition: "padding 0.3s ease" }}>
+      <Navbar
+        onOpenQuote={handleOpenQuote}
+        onOpenAbout={handleOpenAbout}
+        onOpenContact={handleOpenContact}
+      />
+
+      <Hero onOpenQuote={handleOpenQuote} />
+
+      <Reveal delay={100}>
+        <StatsBar />
+      </Reveal>
+
+      <SearchBar
+        onSearch={handleSearch}
+        categories={categories.map((c) => c.name)}
+      />
+
+      <Categories
+        categories={categories}
+        activeCategory={activeCategory}
+        onSelectCategory={setActiveCategory}
+      />
+
+      <Reveal>
+        <FeaturedRentals
+          activeCategory={activeCategory}
+          searchQuery={searchQuery}
+          searchDate={searchDate}
+          onSelectItem={setSelectedItem}
+          onOpenQuote={(item) => item ? handleOpenQuoteWithItem(item) : handleOpenQuote()}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </Reveal>
+
+      <Reveal>
+        <TentLayoutSimulator onOpenQuoteWithItem={handleOpenQuoteWithItem} />
+      </Reveal>
+
+      <Reveal>
+        <Packages onOpenQuote={handleOpenQuote} />
+      </Reveal>
+
+      <Reveal>
+        <Testimonials />
+      </Reveal>
+
+      {/* ---- Footer needs top spacing for CTA overlap ---- */}
+      <div style={{ paddingTop: "4rem", background: "#ffffff" }}>
+        <Footer
+          onOpenQuote={handleOpenQuote}
+          onOpenAbout={handleOpenAbout}
+          onOpenContact={handleOpenContact}
+        />
+      </div>
+
+      {/* ---- Modals ---- */}
+      <ProductDetail
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onOpenQuoteWithItem={handleOpenQuoteWithItem}
+      />
+
+      <QuoteBuilder
+        isOpen={quoteOpen}
+        onClose={() => setQuoteOpen(false)}
+        selectedItemFromInventory={quotePreItem}
+        defaultDate={searchDate}
+      />
+
+      <AboutContactModal
+        isOpen={aboutContactOpen}
+        onClose={() => setAboutContactOpen(false)}
+        defaultTab={aboutContactTab}
+      />
+
+      <MobileBottomNav
+        onOpenQuote={handleOpenQuote}
+        onOpenAbout={handleOpenAbout}
+        onOpenContact={handleOpenContact}
+      />
+    </main>
   );
 }
