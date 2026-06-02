@@ -6,7 +6,7 @@ import { RadialGlowCard } from "./CursorReactive";
 
 
 interface PackagesProps {
-  onOpenQuote: () => void;
+  onOpenQuote: (pkgName?: string) => void;
 }
 
 const pkgs = [
@@ -289,7 +289,7 @@ export default function Packages({ onOpenQuote }: PackagesProps) {
 
               {/* CTA */}
               <button
-                onClick={onOpenQuote}
+                onClick={() => onOpenQuote(pkg.name)}
                 style={{
                   width: "100%",
                   padding: "1rem",

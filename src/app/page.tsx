@@ -37,6 +37,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery]         = useState("");
   const [searchDate, setSearchDate]           = useState("2026-06-20");
   const [quotePreItem, setQuotePreItem]       = useState<RentalItem | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [aboutContactOpen, setAboutContactOpen] = useState(false);
   const [aboutContactTab, setAboutContactTab]   = useState<"about" | "contact">("about");
   const [plannerEnabled, setPlannerEnabled]     = useState(true);
@@ -62,13 +63,15 @@ export default function Home() {
     setAboutContactOpen(true);
   };
 
-  const handleOpenQuote = () => {
+  const handleOpenQuote = (pkgName?: string) => {
     setQuotePreItem(null);
+    setSelectedPackage(pkgName || null);
     setQuoteOpen(true);
   };
 
   const handleOpenQuoteWithItem = (item: RentalItem) => {
     setQuotePreItem(item);
+    setSelectedPackage(null);
     setQuoteOpen(true);
   };
 
@@ -147,6 +150,7 @@ export default function Home() {
         isOpen={quoteOpen}
         onClose={() => setQuoteOpen(false)}
         selectedItemFromInventory={quotePreItem}
+        selectedPackageFromUI={selectedPackage}
         defaultDate={searchDate}
       />
 

@@ -1,19 +1,62 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { X, ArrowLeft, ArrowRight, Send, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, ArrowLeft, ArrowRight, Send, CheckCircle2, AlertCircle, Plus } from "lucide-react";
 import { mockInventory } from "@/data/mockInventory";
 import { useFormValidation, formatPhone } from "@/hooks/useFormValidation";
+
+interface PackageAddon {
+  id: string;
+  label: string;
+  price: number;
+}
+
+interface PhotoBoothPackage {
+  name: string;
+  price: number;
+  description: string;
+  addons: PackageAddon[];
+}
+
+const PHOTO_BOOTH_PACKAGES: PhotoBoothPackage[] = [
+  {
+    name: "Snap It",
+    price: 250,
+    description: "Perfect for DIY hosts who want great digital photos without the full-service price. A backdrop can be added as an optional add-on.",
+    addons: [
+      { id: "backdrop", label: "Backdrop", price: 100 }
+    ]
+  },
+  {
+    name: "Party",
+    price: 500,
+    description: "Full-service, staffed booth. We handle everything before, during, and after — you just enjoy.",
+    addons: [
+      { id: "prints", label: "Unlimited Prints (2×6 or 4×6)", price: 250 },
+      { id: "glam", label: "Glam Filter", price: 100 },
+      { id: "guestbook", label: "Photo Guest Book", price: 100 }
+    ]
+  },
+  {
+    name: "VVIP",
+    price: 750,
+    description: "Guests look like they're on a red carpet. Glam filter, unlimited prints, and video messaging included.",
+    addons: [
+      { id: "guestbook", label: "Photo Guest Book", price: 100 }
+    ]
+  }
+];
 
 interface QuoteBuilderProps {
   isOpen: boolean;
   onClose: () => void;
   selectedItemFromInventory?: { id: string; title: string; price: number } | null;
+  selectedPackageFromUI?: string | null;
   defaultDate?: string;
   defaultCity?: string;
 }
 
-export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventory, defaultDate, defaultCity }: QuoteBuilderProps) {
+export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventory, selectedPackageFromUI, defaultDate, defaultCity }: QuoteBuilderProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [step, setStep] = useState(1);
   const [done, setDone] = useState(false);
@@ -57,6 +100,10 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
 
   // Step 2
   const [selected, setSelected] = useState<Record<string, number>>({});
+  const [bookingMode, setBookingMode] = useState<"package" | "items">("package");
+  const [selectedPackageName, setSelectedPackageName] = useState<string>("Party");
+  const [packageHours, setPackageHours] = useState<number>(4);
+  const [selectedPackageAddons, setSelectedPackageAddons] = useState<Record<string, boolean>>({});
 
   // Step 3
   const [firstName, setFirstName] = useState("");
@@ -71,10 +118,25 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   const [paymentMethod, setPaymentMethod] = useState("Pay in Person");
 
   useEffect(() => {
-    if (selectedItemFromInventory) {
+    if (selectedPackageFromUI) {
+      setBookingMode("package");
+      setSelectedPackageName(selectedPackageFromUI);
+      setPackageHours(4);
+      setSelectedPackageAddons({});
+      setSelected({});
+      setStep(1);
+    } else if (selectedItemFromInventory) {
+      setBookingMode("items");
       setSelected({ [selectedItemFromInventory.id]: 1 });
+      setSelectedPackageName("Party");
+      setPackageHours(4);
+      setSelectedPackageAddons({});
       setStep(1);
     } else {
+      setBookingMode("package");
+      setSelectedPackageName("Party");
+      setPackageHours(4);
+      setSelectedPackageAddons({});
       setSelected({});
       setStep(1);
     }
@@ -88,7 +150,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     setSubmitError(null);
     setQuoteRef(null);
     clearAllErrors();
-  }, [selectedItemFromInventory, isOpen, defaultDate, defaultCity, clearAllErrors]);
+  }, [selectedItemFromInventory, selectedPackageFromUI, isOpen, defaultDate, defaultCity, clearAllErrors]);
 
   useEffect(() => {
     const d = dialogRef.current;
@@ -136,10 +198,23 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
       return { ...prev, [id]: Math.max(1, nextVal) };
     });
 
-  const total = Object.entries(selected).reduce((sum, [id, qty]) => {
-    const item = mockInventory.find((i) => i.id === id);
-    return sum + (item ? item.price * qty : 0);
-  }, 0);
+  const selectedPkg = PHOTO_BOOTH_PACKAGES.find((p) => p.name === selectedPackageName);
+  const packageBaseTotal = selectedPkg ? selectedPkg.price : 0;
+  const extraHoursPrice = Math.max(0, packageHours - 4) * 65;
+  const addonsTotal = selectedPkg
+    ? selectedPkg.addons
+        .filter((addon) => selectedPackageAddons[addon.id])
+        .reduce((sum, addon) => sum + addon.price, 0)
+    : 0;
+
+  const packageTotal = packageBaseTotal + extraHoursPrice + addonsTotal;
+
+  const total = bookingMode === "package"
+    ? packageTotal
+    : Object.entries(selected).reduce((sum, [id, qty]) => {
+        const item = mockInventory.find((i) => i.id === id);
+        return sum + (item ? item.price * qty : 0);
+      }, 0);
 
   const steps = ["Event Info", "Select Rentals", "Your Details"];
 
@@ -353,11 +428,35 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                 e.preventDefault();
                 // Final step validation
                 const vals = { firstName, lastName, email, phone, address, zipCode, city, customCity };
-                const isValid = validateStepFields(3, vals, Object.keys(selected).length);
+                const itemsCount = bookingMode === "package" ? 1 : Object.keys(selected).length;
+                const isValid = validateStepFields(3, vals, itemsCount);
                 if (!isValid) return;
 
                 setIsSubmitting(true);
                 setSubmitError(null);
+
+                const finalSelectedItems = bookingMode === "package"
+                  ? {
+                      [`pkg_${selectedPackageName.toLowerCase().replace(/\s+/g, "_")}`]: 1,
+                      ...(packageHours > 4 ? { ["extra_hours"]: packageHours - 4 } : {}),
+                      ...Object.keys(selectedPackageAddons).reduce((acc, addonId) => {
+                        if (selectedPackageAddons[addonId]) {
+                          acc[`addon_${addonId}`] = 1;
+                        }
+                        return acc;
+                      }, {} as Record<string, number>)
+                    }
+                  : selected;
+
+                const finalNotes = bookingMode === "package" && selectedPkg
+                  ? `[Selected Package]: ${selectedPackageName} (${packageHours} hours)\n[Selected Add-ons]: ${
+                      selectedPkg.addons
+                        .filter((a) => selectedPackageAddons[a.id])
+                        .map((a) => a.label)
+                        .join(", ") || "None"
+                    }${notes ? `\n\n[User Notes]: ${notes}` : ""}`
+                  : notes;
+
                 try {
                   const res = await fetch("/api/quote", {
                     method: "POST",
@@ -367,7 +466,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       eventDate,
                       eventLocation: eventLoc,
                       guestCount,
-                      selectedItems: selected,
+                      selectedItems: finalSelectedItems,
                       firstName,
                       lastName,
                       email,
@@ -376,7 +475,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       city,
                       customCity,
                       zipCode,
-                      notes,
+                      notes: finalNotes,
                       paymentMethod,
                       estimatedTotal: total,
                     }),
@@ -459,117 +558,349 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
               {/* STEP 2 */}
               {step === 2 && (
                 <>
-                  <label style={labelStyle}>Select Rental Equipment Items</label>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem", maxHeight: "320px", overflowY: "auto" }}>
-                    {mockInventory.map((item) => {
-                      const qty = selected[item.id] || 0;
-                      const avail = availability[item.id];
-                      const isSoldOut = avail !== undefined && avail.available <= 0;
-                      
-                      return (
-                        <div
-                          key={item.id}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: "1rem",
-                            padding: "0.625rem 0.875rem",
-                            background: isSoldOut
-                              ? "rgba(239,68,68,0.02)"
-                              : qty
-                              ? "rgba(212,175,55,0.04)"
-                              : "var(--bg-secondary)",
-                            border: `1.5px solid ${
-                              isSoldOut
-                                ? "rgba(239,68,68,0.2)"
-                                : qty
-                                ? "#D4AF37"
-                                : "var(--border-primary)"
-                            }`,
-                            borderRadius: "0.75rem",
-                            transition: "all 0.2s ease",
-                            opacity: isSoldOut ? 0.65 : 1,
-                          }}
-                        >
-                          <div
-                            onClick={() => !isSoldOut && toggle(item.id)}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.75rem",
-                              cursor: isSoldOut ? "not-allowed" : "pointer",
-                              flex: 1,
-                              minWidth: 0,
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={qty > 0}
-                              disabled={isSoldOut}
-                              onChange={() => {}}
-                              style={{ accentColor: "#D4AF37", width: "16px", height: "16px", pointerEvents: "none" }}
-                            />
-                            <div style={{ minWidth: 0 }}>
-                              <h4
+                  {/* Segmented Mode Selector */}
+                  <div style={{ display: "flex", gap: "0.5rem", padding: "0.25rem", background: "var(--bg-secondary)", borderRadius: "0.75rem", border: "1px solid var(--border-primary)", marginBottom: "1.25rem" }}>
+                    <button
+                      type="button"
+                      onClick={() => setBookingMode("package")}
+                      style={{
+                        flex: 1,
+                        padding: "0.5rem 1rem",
+                        borderRadius: "0.5rem",
+                        border: "none",
+                        background: bookingMode === "package" ? "var(--card-bg)" : "transparent",
+                        color: bookingMode === "package" ? "var(--text-primary)" : "var(--text-secondary)",
+                        fontFamily: "var(--font-heading)",
+                        fontWeight: 700,
+                        fontSize: "0.72rem",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        cursor: "pointer",
+                        boxShadow: bookingMode === "package" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      Curated Packages
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBookingMode("items")}
+                      style={{
+                        flex: 1,
+                        padding: "0.5rem 1rem",
+                        borderRadius: "0.5rem",
+                        border: "none",
+                        background: bookingMode === "items" ? "var(--card-bg)" : "transparent",
+                        color: bookingMode === "items" ? "var(--text-primary)" : "var(--text-secondary)",
+                        fontFamily: "var(--font-heading)",
+                        fontWeight: 700,
+                        fontSize: "0.72rem",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        cursor: "pointer",
+                        boxShadow: bookingMode === "items" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      Individual Rentals
+                    </button>
+                  </div>
+
+                  {bookingMode === "package" ? (
+                    /* PACKAGES MODE */
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      <div>
+                        <label style={labelStyle}>Select Curated Package</label>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                          {PHOTO_BOOTH_PACKAGES.map((pkg) => {
+                            const isSelected = selectedPackageName === pkg.name;
+                            return (
+                              <div
+                                key={pkg.name}
+                                onClick={() => {
+                                  setSelectedPackageName(pkg.name);
+                                  setSelectedPackageAddons({});
+                                }}
                                 style={{
-                                  fontFamily: "var(--font-heading)",
-                                  fontWeight: 800,
-                                  fontSize: "0.78rem",
-                                  color: isSoldOut ? "var(--text-secondary)" : "var(--text-primary)",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
+                                  padding: "0.875rem 1.1rem",
+                                  borderRadius: "1rem",
+                                  border: isSelected ? "2.5px solid #D4AF37" : "1.5px solid var(--border-primary)",
+                                  background: isSelected ? "rgba(212,175,55,0.04)" : "var(--card-bg)",
+                                  cursor: "pointer",
+                                  transition: "all 0.2s ease",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "0.875rem"
                                 }}
                               >
-                                {item.title}
-                              </h4>
-                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.15rem" }}>
-                                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--text-secondary)", opacity: 0.8 }}>
-                                  ${item.price} / day
-                                </span>
-                                
-                                {loadingAvailability ? (
-                                  <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)" }}>checking stock...</span>
-                                ) : avail !== undefined ? (
-                                  isSoldOut ? (
-                                    <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", fontWeight: 700 }}>Sold Out</span>
-                                  ) : avail.available <= 3 ? (
-                                    <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b", fontWeight: 700 }}>Low Stock: {avail.available} Left</span>
-                                  ) : (
-                                    <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", color: "#10b981", fontWeight: 500 }}>{avail.available} Available</span>
-                                  )
-                                ) : null}
+                                <input
+                                  type="radio"
+                                  checked={isSelected}
+                                  onChange={() => {}}
+                                  style={{ accentColor: "#D4AF37", width: "16px", height: "16px", pointerEvents: "none", flexShrink: 0 }}
+                                />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.5rem" }}>
+                                    <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.8rem", color: "var(--text-primary)" }}>
+                                      {pkg.name} Package
+                                    </h4>
+                                    <span style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "0.85rem", color: isSelected ? "#D4AF37" : "var(--text-primary)" }}>
+                                      ${pkg.price}
+                                    </span>
+                                  </div>
+                                  <p style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", color: "var(--text-secondary)", marginTop: "0.15rem", lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    {pkg.description}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          </div>
+                            );
+                          })}
+                        </div>
+                      </div>
 
-                          {qty > 0 && !isSoldOut && (
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--card-bg)", border: "1px solid var(--border-primary)", borderRadius: "0.5rem", padding: "0.15rem 0.4rem" }}>
+                      {/* Package Customize Section */}
+                      {selectedPkg && (
+                        <div
+                          style={{
+                            background: "var(--bg-secondary)",
+                            border: "1.5px solid var(--border-primary)",
+                            borderRadius: "1rem",
+                            padding: "1.25rem",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "1.25rem",
+                            animation: "fadeIn 0.3s ease"
+                          }}
+                        >
+                          {/* Duration Selector */}
+                          <div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
+                              <label style={{ ...labelStyle, marginBottom: 0 }}>Rental Duration</label>
+                              <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.78rem", color: "#D4AF37" }}>
+                                {packageHours} Hours {packageHours > 4 && `(+$${(packageHours - 4) * 65})`}
+                              </span>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                               <button
                                 type="button"
-                                onClick={() => updateQty(item.id, -1)}
-                                style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 800, fontSize: "1rem", color: "var(--text-primary)", padding: "0 0.15rem" }}
+                                disabled={packageHours <= 4}
+                                onClick={() => setPackageHours((h) => Math.max(4, h - 1))}
+                                style={{
+                                  width: "32px",
+                                  height: "32px",
+                                  borderRadius: "50%",
+                                  border: "1px solid var(--border-primary)",
+                                  background: "var(--card-bg)",
+                                  color: "var(--text-primary)",
+                                  fontWeight: 800,
+                                  cursor: packageHours <= 4 ? "not-allowed" : "pointer",
+                                  opacity: packageHours <= 4 ? 0.4 : 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontFamily: "monospace"
+                                }}
                               >
                                 -
                               </button>
-                              <span style={{ fontFamily: "var(--font-heading)", fontSize: "0.75rem", fontWeight: 700, minWidth: "12px", textAlign: "center", color: "var(--text-primary)" }}>
-                                {qty}
-                              </span>
+                              <input
+                                type="range"
+                                min="4"
+                                max="12"
+                                value={packageHours}
+                                onChange={(e) => setPackageHours(parseInt(e.target.value, 10))}
+                                style={{ flex: 1, accentColor: "#D4AF37" }}
+                              />
                               <button
                                 type="button"
-                                onClick={() => updateQty(item.id, 1)}
-                                disabled={avail !== undefined && qty >= avail.available}
-                                style={{ background: "none", border: "none", cursor: isAvailLimited(item.id, qty) ? "not-allowed" : "pointer", fontWeight: 800, fontSize: "1rem", color: isAvailLimited(item.id, qty) ? "rgba(255,255,255,0.2)" : "var(--text-primary)", padding: "0 0.15rem" }}
+                                disabled={packageHours >= 12}
+                                onClick={() => setPackageHours((h) => Math.min(12, h + 1))}
+                                style={{
+                                  width: "32px",
+                                  height: "32px",
+                                  borderRadius: "50%",
+                                  border: "1px solid var(--border-primary)",
+                                  background: "var(--card-bg)",
+                                  color: "var(--text-primary)",
+                                  fontWeight: 800,
+                                  cursor: packageHours >= 12 ? "not-allowed" : "pointer",
+                                  opacity: packageHours >= 12 ? 0.4 : 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontFamily: "monospace"
+                                }}
                               >
                                 +
                               </button>
                             </div>
+                          </div>
+
+                          {/* Add-ons Checklist */}
+                          {selectedPkg.addons.length > 0 && (
+                            <div>
+                              <label style={labelStyle}>Customize Package Add-Ons</label>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                                {selectedPkg.addons.map((addon) => {
+                                  const isChecked = !!selectedPackageAddons[addon.id];
+                                  return (
+                                    <div
+                                      key={addon.id}
+                                      onClick={() => setSelectedPackageAddons((prev) => ({ ...prev, [addon.id]: !prev[addon.id] }))}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        padding: "0.6rem 0.875rem",
+                                        background: isChecked ? "rgba(212,175,55,0.04)" : "var(--card-bg)",
+                                        border: `1.5px solid ${isChecked ? "#D4AF37" : "var(--border-primary)"}`,
+                                        borderRadius: "0.75rem",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease"
+                                      }}
+                                    >
+                                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={() => {}}
+                                          style={{ accentColor: "#D4AF37", width: "16px", height: "16px", pointerEvents: "none" }}
+                                        />
+                                        <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.75rem", color: "var(--text-primary)" }}>
+                                          {addon.label}
+                                        </span>
+                                      </div>
+                                      <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.75rem", color: isChecked ? "#D4AF37" : "var(--text-secondary)" }}>
+                                        +${addon.price}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* INDIVIDUAL ITEMS RENTAL MODE */
+                    <>
+                      <label style={labelStyle}>Select Rental Equipment Items</label>
+                      {errors.selectedItems && (
+                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "-0.25rem", marginBottom: "0.5rem", fontFamily: "var(--font-body)" }}>{errors.selectedItems}</p>
+                      )}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem", maxHeight: "320px", overflowY: "auto" }}>
+                        {mockInventory.map((item) => {
+                          const qty = selected[item.id] || 0;
+                          const avail = availability[item.id];
+                          const isSoldOut = avail !== undefined && avail.available <= 0;
+                          
+                          return (
+                            <div
+                              key={item.id}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: "1rem",
+                                padding: "0.625rem 0.875rem",
+                                background: isSoldOut
+                                  ? "rgba(239,68,68,0.02)"
+                                  : qty
+                                  ? "rgba(212,175,55,0.04)"
+                                  : "var(--bg-secondary)",
+                                border: `1.5px solid ${
+                                  isSoldOut
+                                    ? "rgba(239,68,68,0.2)"
+                                    : qty
+                                    ? "#D4AF37"
+                                    : "var(--border-primary)"
+                                }`,
+                                borderRadius: "0.75rem",
+                                transition: "all 0.2s ease",
+                                opacity: isSoldOut ? 0.65 : 1,
+                              }}
+                            >
+                              <div
+                                onClick={() => !isSoldOut && toggle(item.id)}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "0.75rem",
+                                  cursor: isSoldOut ? "not-allowed" : "pointer",
+                                  flex: 1,
+                                  minWidth: 0,
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={qty > 0}
+                                  disabled={isSoldOut}
+                                  onChange={() => {}}
+                                  style={{ accentColor: "#D4AF37", width: "16px", height: "16px", pointerEvents: "none" }}
+                                />
+                                <div style={{ minWidth: 0 }}>
+                                  <h4
+                                    style={{
+                                      fontFamily: "var(--font-heading)",
+                                      fontWeight: 800,
+                                      fontSize: "0.78rem",
+                                      color: isSoldOut ? "var(--text-secondary)" : "var(--text-primary)",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {item.title}
+                                  </h4>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.15rem" }}>
+                                    <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--text-secondary)", opacity: 0.8 }}>
+                                      ${item.price} / day
+                                    </span>
+                                    
+                                    {loadingAvailability ? (
+                                      <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)" }}>checking stock...</span>
+                                    ) : avail !== undefined ? (
+                                      isSoldOut ? (
+                                        <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", fontWeight: 700 }}>Sold Out</span>
+                                      ) : avail.available <= 3 ? (
+                                        <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b", fontWeight: 700 }}>Low Stock: {avail.available} Left</span>
+                                      ) : (
+                                        <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", color: "#10b981", fontWeight: 500 }}>{avail.available} Available</span>
+                                      )
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {qty > 0 && !isSoldOut && (
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--card-bg)", border: "1px solid var(--border-primary)", borderRadius: "0.5rem", padding: "0.15rem 0.4rem" }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQty(item.id, -1)}
+                                    style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 800, fontSize: "1rem", color: "var(--text-primary)", padding: "0 0.15rem" }}
+                                  >
+                                    -
+                                  </button>
+                                  <span style={{ fontFamily: "var(--font-heading)", fontSize: "0.75rem", fontWeight: 700, minWidth: "12px", textAlign: "center", color: "var(--text-primary)" }}>
+                                    {qty}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateQty(item.id, 1)}
+                                    disabled={avail !== undefined && qty >= avail.available}
+                                    style={{ background: "none", border: "none", cursor: isAvailLimited(item.id, qty) ? "not-allowed" : "pointer", fontWeight: 800, fontSize: "1rem", color: isAvailLimited(item.id, qty) ? "rgba(255,255,255,0.2)" : "var(--text-primary)", padding: "0 0.15rem" }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </>
               )}
 
@@ -890,7 +1221,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       type="button"
                       onClick={() => {
                         const vals = { eventDate, guestCount, city, customCity, firstName, lastName, email, phone, address, zipCode };
-                        const isValid = validateStepFields(step, vals, Object.keys(selected).length);
+                        const itemsCount = bookingMode === "package" ? 1 : Object.keys(selected).length;
+                        const isValid = validateStepFields(step, vals, itemsCount);
                         if (isValid) setStep((s) => s + 1);
                       }}
                       style={{
