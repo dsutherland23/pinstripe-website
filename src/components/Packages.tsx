@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, Gift, Heart, Briefcase, Calendar, Sparkles } from "lucide-react";
+import { Check, Camera, Star, Crown, Calendar, Sparkles, Plus } from "lucide-react";
 import { RadialGlowCard } from "./CursorReactive";
 
 
@@ -11,53 +11,71 @@ interface PackagesProps {
 
 const pkgs = [
   {
-    name: "Birthday Bash",
-    icon: <Gift size={24} />,
-    tagline: "Kids' birthdays & backyard parties",
-    price: 495,
-    savings: "Save $90",
+    name: "Snap It",
+    icon: <Camera size={24} />,
+    tagline: "DIY hosts who want great digital photos",
+    description: "Perfect for DIY hosts who want great digital photos without the full-service price. A backdrop can be added as an optional add-on.",
+    price: 250,
+    duration: "4 hrs",
+    extraHour: 65,
     color: "#f59e0b",
     popular: false,
     items: [
-      "Summer Waves Inflatable Kingdom",
-      "3 Premium Banquet Tables",
-      "24 Fan-Back Folding Chairs",
-      "Popcorn Machine w/ starter ingredients",
-      "Free sanitisation & professional setup",
+      "Open-air booth (drop-off)",
+      "Studio lighting for high-quality photos",
+      "Theme-matched photo template",
+      "Instant text sharing + live gallery",
+      "GIFs, Boomerangs & Slow Motion",
+    ],
+    addons: [
+      { label: "Backdrop", price: "+$100" },
     ],
   },
   {
-    name: "Grand Wedding",
-    icon: <Heart size={24} />,
-    tagline: "Everything for a stunning reception",
-    price: 1295,
-    savings: "Save $250",
+    name: "Party",
+    icon: <Star size={24} />,
+    tagline: "Full-service, staffed booth experience",
+    description: "Full-service, staffed booth. We handle everything before, during, and after — you just enjoy.",
+    price: 500,
+    duration: "4 hrs",
+    extraHour: 65,
     color: "#D4AF37",
     popular: true,
     items: [
-      "High-Peak Elegance Canopy Tent (20×30ft)",
-      "8 Solid Round Banqueting Tables",
-      "64 Premium White Folding Chairs",
-      "Custom Backdrop & Decor Elements",
-      "Chandelier & String Lighting",
-      "White Satin Table Linens",
+      "Everything in Snap It, plus:",
+      "On-site professional attendant",
+      "Props included",
+      "Choice of backdrop",
+      "Custom photo overlay",
+      "Custom tap-to-start screen",
+      "GIFs, Boomerangs & Slow Motion",
+    ],
+    addons: [
+      { label: "Unlimited Prints (2×6 or 4×6)", price: "+$250" },
+      { label: "Glam Filter", price: "+$100" },
+      { label: "Photo Guest Book", price: "+$100" },
     ],
   },
   {
-    name: "Corporate Elite",
-    icon: <Briefcase size={24} />,
-    tagline: "Impress clients, staff & partners",
-    price: 1850,
-    savings: "Save $380",
-    color: "#6366f1",
+    name: "VVIP",
+    icon: <Crown size={24} />,
+    tagline: "Guests look like they're on a red carpet",
+    description: "Guests look like they're on a red carpet. Glam filter, unlimited prints, and video messaging included.",
+    price: 750,
+    duration: "4 hrs",
+    extraHour: 65,
+    color: "#a855f7",
     popular: false,
     items: [
-      "2× High-Peak Canopy Tents w/ sidewalls",
-      "12 Banquet & Dining Tables",
-      "100 Premium Folding Chairs",
-      "Professional Sound System (+ Mic)",
-      "Warm String & Stage Spotlights",
-      "Heavy-Duty Generator Setup",
+      "Everything in Party, plus:",
+      "Unlimited prints (2×6 or 4×6)",
+      "Glam filter (magazine-style finish)",
+      "Black & White Filter",
+      "Video messages",
+      "GIFs, Boomerangs & Slow Motion",
+    ],
+    addons: [
+      { label: "Photo Guest Book", price: "+$100" },
     ],
   },
 ];
@@ -68,10 +86,10 @@ export default function Packages({ onOpenQuote }: PackagesProps) {
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.25rem" }}>
         {/* Header */}
         <div style={{ textAlign: "center", maxWidth: "560px", margin: "0 auto 3.5rem" }}>
-          <span className="section-label">All-In-One Bundles</span>
-          <h2 className="section-title text-gradient">Curated Event Packages</h2>
+          <span className="section-label">Photo Booth</span>
+          <h2 className="section-title text-gradient">Photo Booth Packages</h2>
           <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.7, marginTop: "0.875rem" }}>
-            Simplify your planning with cost-effective equipment bundles. Includes delivery, professional setup, and post-event teardown.
+            Choose the perfect booth experience for your event. All packages include GIFs, Boomerangs & Slow Motion. Additional hours available at $65/hr.
           </p>
         </div>
 
@@ -141,7 +159,7 @@ export default function Packages({ onOpenQuote }: PackagesProps) {
                 </div>
               )}
 
-              {/* Icon + savings */}
+              {/* Icon + duration pill */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
                 <div
                   style={{
@@ -160,9 +178,9 @@ export default function Packages({ onOpenQuote }: PackagesProps) {
                 </div>
                 <div
                   style={{
-                    background: "#f0fdf4",
-                    border: "1px solid #bbf7d0",
-                    color: "#16a34a",
+                    background: `${pkg.color}15`,
+                    border: `1px solid ${pkg.color}40`,
+                    color: pkg.color,
                     padding: "0.3rem 0.75rem",
                     borderRadius: "9999px",
                     fontFamily: "var(--font-heading)",
@@ -172,7 +190,7 @@ export default function Packages({ onOpenQuote }: PackagesProps) {
                     textTransform: "uppercase",
                   }}
                 >
-                  {pkg.savings}
+                  {pkg.duration}
                 </div>
               </div>
 
@@ -180,22 +198,28 @@ export default function Packages({ onOpenQuote }: PackagesProps) {
               <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", marginBottom: "0.25rem" }}>
                 {pkg.name} Package
               </h3>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8rem", color: "#888", marginBottom: "1.5rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8rem", color: "#888", marginBottom: "0.875rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
                 {pkg.tagline}
+              </p>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "1.25rem" }}>
+                {pkg.description}
               </p>
 
               {/* Price */}
-              <div style={{ display: "flex", alignItems: "baseline", gap: "0.2rem", marginBottom: "1.5rem" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "0.2rem", marginBottom: "0.375rem" }}>
                 <span style={{ fontFamily: "var(--font-heading)", fontWeight: 400, fontSize: "1.2rem", color: "var(--text-secondary)" }}>$</span>
                 <span style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "2.5rem", color: "var(--text-primary)", lineHeight: 1 }}>{pkg.price}</span>
-                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", color: "var(--text-secondary)", opacity: 0.7, marginLeft: "0.25rem" }}>/ package</span>
+                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", color: "var(--text-secondary)", opacity: 0.7, marginLeft: "0.25rem" }}>/ {pkg.duration}</span>
               </div>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-secondary)", opacity: 0.6, marginBottom: "1.5rem" }}>
+                Additional hours: +${pkg.extraHour}/hr
+              </p>
 
               {/* Divider */}
-              <div style={{ height: "1px", background: "#f0f0f0", marginBottom: "1.5rem" }} />
+              <div style={{ height: "1px", background: "var(--border-primary)", marginBottom: "1.25rem" }} />
 
               {/* Item list */}
-              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "2rem" }}>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.625rem", marginBottom: "1.25rem" }}>
                 {pkg.items.map((item, i) => (
                   <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: "0.625rem" }}>
                     <div
@@ -214,12 +238,54 @@ export default function Packages({ onOpenQuote }: PackagesProps) {
                     >
                       <Check size={10} color={pkg.color} strokeWidth={3} />
                     </div>
-                    <span style={{ fontFamily: "var(--font-body)", fontSize: "0.83rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                    <span style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "0.83rem",
+                      color: "var(--text-secondary)",
+                      lineHeight: 1.5,
+                      fontWeight: item.endsWith(":") || item.startsWith("Everything") ? 700 : 400,
+                    }}>
                       {item}
                     </span>
                   </li>
                 ))}
               </ul>
+
+              {/* Add-ons */}
+              {pkg.addons.length > 0 && (
+                <div style={{ marginBottom: "1.75rem" }}>
+                  <p style={{
+                    fontFamily: "var(--font-heading)",
+                    fontWeight: 700,
+                    fontSize: "0.6rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "var(--text-secondary)",
+                    opacity: 0.6,
+                    marginBottom: "0.5rem",
+                  }}>
+                    Available Add-Ons
+                  </p>
+                  <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                    {pkg.addons.map((addon, i) => (
+                      <li key={i} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <Plus size={11} color={pkg.color} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "0.78rem", color: "var(--text-secondary)", flex: 1 }}>
+                          {addon.label}
+                        </span>
+                        <span style={{
+                          fontFamily: "var(--font-heading)",
+                          fontWeight: 700,
+                          fontSize: "0.72rem",
+                          color: pkg.color,
+                        }}>
+                          {addon.price}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* CTA */}
               <button
@@ -229,8 +295,8 @@ export default function Packages({ onOpenQuote }: PackagesProps) {
                   padding: "1rem",
                   borderRadius: "0.875rem",
                   border: "none",
-                  background: pkg.popular ? pkg.color : "#0f0f0f",
-                  color: pkg.popular ? "#0f0f0f" : "#ffffff",
+                  background: pkg.popular ? pkg.color : "var(--text-primary)",
+                  color: pkg.popular ? "#0f0f0f" : "var(--bg-primary)",
                   fontFamily: "var(--font-heading)",
                   fontWeight: 800,
                   fontSize: "0.7rem",
@@ -242,13 +308,13 @@ export default function Packages({ onOpenQuote }: PackagesProps) {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "0.5rem",
-                  boxShadow: pkg.popular ? `0 8px 24px rgba(212,175,55,0.3)` : "0 4px 12px rgba(0,0,0,0.15)",
+                  boxShadow: pkg.popular ? `0 8px 24px ${pkg.color}40` : "0 4px 12px rgba(0,0,0,0.15)",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
               >
                 <Calendar size={15} />
-                Book This Bundle
+                Book This Package
               </button>
             </RadialGlowCard>
           ))}
