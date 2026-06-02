@@ -1,147 +1,12 @@
 "use client";
 
-import React from "react";
-import { Star, Maximize2, Users, ShoppingCart, Calendar, CheckCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Star, Maximize2, Users, ShoppingCart, Calendar } from "lucide-react";
 import { RadialGlowCard } from "./CursorReactive";
 
-
-export interface RentalItem {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  price: number;
-  depositAmount: number;
-  availability: boolean;
-  dimensions: string;
-  capacity: string;
-  image: string;
-  rating: number;
-  reviews: number;
-}
-
-export const mockInventory: RentalItem[] = [
-  {
-    id: "1",
-    title: "Adventure 5-in-1 Inflatable Water Park",
-    category: "Water Slides",
-    description:
-      "The ultimate water play adventure! Features dual racing slides, climbing wall, water cannons, sprinkler arch, splash pool, and integrated sports play zone.",
-    price: 350,
-    depositAmount: 100,
-    availability: true,
-    dimensions: "18ft L × 16ft W × 10ft H",
-    capacity: "Up to 8 Kids",
-    image: "/images/water-slide-1.png",
-    rating: 4.9,
-    reviews: 42,
-  },
-  {
-    id: "2",
-    title: "Premium White Fan-Back Folding Chair",
-    category: "Chairs",
-    description:
-      "Heavy-duty commercial folding chairs in a sleek fan-back style — perfect for weddings, birthdays, banquets and outdoor corporate gatherings.",
-    price: 2.5,
-    depositAmount: 0.5,
-    availability: true,
-    dimensions: "Standard fold",
-    capacity: "Up to 300 lbs",
-    image: "/images/folding-chair.png",
-    rating: 4.8,
-    reviews: 120,
-  },
-  {
-    id: "3",
-    title: "Vintage Red Cotton Candy Cart",
-    category: "Cotton Candy Machines",
-    description:
-      "Professional high-yield cotton candy maker on a vintage mobile trolley. Adds nostalgic joy and sweet treats to any event.",
-    price: 85,
-    depositAmount: 25,
-    availability: true,
-    dimensions: "36″ × 24″ × 42″",
-    capacity: "120 Cones / hr",
-    image: "/images/logo.jpg",
-    rating: 4.9,
-    reviews: 28,
-  },
-  {
-    id: "4",
-    title: "Summer Waves Double-Slide Splash Kingdom",
-    category: "Bounce Houses",
-    description:
-      "Multi-activity inflatable bounce kingdom with safety netting, basketball hoop, giant splash pool and automatic water bucket drop.",
-    price: 295,
-    depositAmount: 80,
-    availability: true,
-    dimensions: "16ft L × 14ft W × 9ft H",
-    capacity: "Up to 6 Kids",
-    image: "/images/water-slide-2.png",
-    rating: 4.7,
-    reviews: 19,
-  },
-  {
-    id: "5",
-    title: "High-Peak Elegance Canopy Tent",
-    category: "Tents",
-    description:
-      "Stunning professional high-peak tent — perfect for outdoor wedding receptions, corporate dinners, or milestone celebrations.",
-    price: 450,
-    depositAmount: 150,
-    availability: true,
-    dimensions: "20ft × 30ft",
-    capacity: "Up to 80 seated",
-    image: "/images/canopy-tent.png",
-    rating: 4.9,
-    reviews: 31,
-  },
-  {
-    id: "6",
-    title: "Round Banqueting Table (60-inch)",
-    category: "Tables",
-    description:
-      "Premium heavy-duty round tables built for high-end dining setups. Seats 8–10 guests comfortably under our event tents.",
-    price: 18,
-    depositAmount: 5,
-    availability: true,
-    dimensions: "60-inch diameter",
-    capacity: "8–10 Guests",
-    image: "/images/banquet-table.png",
-    rating: 4.8,
-    reviews: 75,
-  },
-  {
-    id: "7",
-    title: "Theatre-Style Popcorn Maker",
-    category: "Popcorn Machines",
-    description:
-      "Fresh, hot popcorn in minutes! Comes with a vintage stand and all starter ingredients (corn, oil, butter salt).",
-    price: 75,
-    depositAmount: 20,
-    availability: true,
-    dimensions: "18″ × 18″ × 30″",
-    capacity: "8 oz Kettle",
-    image: "/images/popcorn-machine.png",
-    rating: 4.8,
-    reviews: 34,
-  },
-  {
-    id: "8",
-    title: "Interactive Open-Air Photo Booth",
-    category: "Photo Booths",
-    description:
-      "Fully digital touchscreen booth with instant SMS / email delivery, custom frames, props, and green screen backdrop.",
-    price: 350,
-    depositAmount: 100,
-    availability: true,
-    dimensions: "Needs 6 × 6 ft area",
-    capacity: "Unlimited sharing",
-    image: "/images/photo-booth.png",
-    rating: 5.0,
-    reviews: 53,
-  },
-];
+// Re-export RentalItem type so other files can still import it from here
+export type { RentalItem } from "@/data/mockInventory";
+import type { RentalItem } from "@/data/mockInventory";
 
 /* ---- Fallback image ---- */
 const FALLBACK =
@@ -169,7 +34,20 @@ export default function FeaturedRentals({
   onSelectItem,
   onOpenQuote,
 }: FeaturedRentalsProps) {
-  const filtered = mockInventory.filter((item) => {
+  const [inventory, setInventory] = useState<RentalItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/inventory?t=${Date.now()}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setInventory(data.items);
+      })
+      .catch(() => {/* silently fail, show empty state */})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = inventory.filter((item) => {
     const matchCat =
       activeCategory === "All" || item.category === activeCategory;
     const q = searchQuery.toLowerCase();
@@ -212,8 +90,42 @@ export default function FeaturedRentals({
           </p>
         </div>
 
+        {/* Loading skeleton */}
+        {loading && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
+              gap: "1.5rem",
+            }}
+          >
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <div
+                key={n}
+                style={{
+                  borderRadius: "1.25rem",
+                  overflow: "hidden",
+                  background: "#f5f5f5",
+                  animation: "pulse 1.5s ease-in-out infinite",
+                }}
+              >
+                <div style={{ aspectRatio: "4/3", background: "#e8e8e8" }} />
+                <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div style={{ height: "12px", background: "#e0e0e0", borderRadius: "6px", width: "40%" }} />
+                  <div style={{ height: "16px", background: "#e0e0e0", borderRadius: "6px", width: "80%" }} />
+                  <div style={{ height: "12px", background: "#e0e0e0", borderRadius: "6px", width: "60%" }} />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem", marginTop: "0.5rem" }}>
+                    <div style={{ height: "38px", background: "#e0e0e0", borderRadius: "0.75rem" }} />
+                    <div style={{ height: "38px", background: "#e0e0e0", borderRadius: "0.75rem" }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Grid */}
-        {filtered.length > 0 ? (
+        {!loading && filtered.length > 0 ? (
           <div
             style={{
               display: "grid",
@@ -454,7 +366,7 @@ export default function FeaturedRentals({
               );
             })}
           </div>
-        ) : (
+        ) : !loading && (
           <div
             style={{
               padding: "5rem 2rem",

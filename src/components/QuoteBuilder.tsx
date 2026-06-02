@@ -1,26 +1,59 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { X, ArrowLeft, ArrowRight, Send, Users, Calendar, MapPin, CheckCircle2, ShoppingBag } from "lucide-react";
-import { mockInventory } from "./FeaturedRentals";
+import { X, ArrowLeft, ArrowRight, Send, CheckCircle2, AlertCircle } from "lucide-react";
+import { mockInventory } from "@/data/mockInventory";
+import { useFormValidation, formatPhone } from "@/hooks/useFormValidation";
 
 interface QuoteBuilderProps {
   isOpen: boolean;
   onClose: () => void;
   selectedItemFromInventory?: { id: string; title: string; price: number } | null;
   defaultDate?: string;
+  defaultCity?: string;
 }
 
-export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventory, defaultDate }: QuoteBuilderProps) {
+export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventory, defaultDate, defaultCity }: QuoteBuilderProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [step, setStep] = useState(1);
   const [done, setDone] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [quoteRef, setQuoteRef] = useState<string | null>(null);
+  const { errors, validateOnBlur, validateStepFields, clearAllErrors } = useFormValidation();
 
-  // Step 1
+  // Availability state
+  const [availability, setAvailability] = useState<Record<string, { totalStock: number; rented: number; available: number }>>({});
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+
+  // Step 1 — must be declared before the availability useEffect that depends on eventDate
   const [eventType, setEventType] = useState("Birthday Party");
   const [eventDate, setEventDate] = useState("");
   const [eventLoc, setEventLoc] = useState("");
   const [guestCount, setGuestCount] = useState("50");
+
+  // Fetch availability when date is changed
+  useEffect(() => {
+    if (!eventDate || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) return;
+
+    const fetchAvailability = async () => {
+      setLoadingAvailability(true);
+      try {
+        const res = await fetch(`/api/availability?date=${eventDate}`);
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setAvailability(data.availability);
+        }
+      } catch (err) {
+        console.error("Failed to load availability:", err);
+      } finally {
+        setLoadingAvailability(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [eventDate]);
+
 
   // Step 2
   const [selected, setSelected] = useState<Record<string, number>>({});
@@ -48,8 +81,14 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     if (isOpen && defaultDate) {
       setEventDate(defaultDate);
     }
+    if (isOpen && defaultCity) {
+      setCity(defaultCity);
+    }
     setDone(false);
-  }, [selectedItemFromInventory, isOpen, defaultDate]);
+    setSubmitError(null);
+    setQuoteRef(null);
+    clearAllErrors();
+  }, [selectedItemFromInventory, isOpen, defaultDate, defaultCity, clearAllErrors]);
 
   useEffect(() => {
     const d = dialogRef.current;
@@ -65,16 +104,37 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     }
   }, [isOpen]);
 
+  const isAvailLimited = (id: string, qty: number) => {
+    const limit = availability[id]?.available;
+    return limit !== undefined && qty >= limit;
+  };
+
   const toggle = (id: string) =>
     setSelected((prev) => {
       const c = { ...prev };
       if (c[id]) delete c[id];
-      else c[id] = 1;
+      else {
+        const limit = availability[id]?.available;
+        if (limit !== undefined && limit <= 0) {
+          return prev; // Block selecting sold-out items
+        }
+        c[id] = 1;
+      }
       return c;
     });
 
   const updateQty = (id: string, delta: number) =>
-    setSelected((prev) => ({ ...prev, [id]: Math.max(1, (prev[id] || 1) + delta) }));
+    setSelected((prev) => {
+      const current = prev[id] || 1;
+      const nextVal = current + delta;
+      
+      const limit = availability[id]?.available;
+      if (delta > 0 && limit !== undefined && nextVal > limit) {
+        return prev; // Block increment beyond stock level
+      }
+      
+      return { ...prev, [id]: Math.max(1, nextVal) };
+    });
 
   const total = Object.entries(selected).reduce((sum, [id, qty]) => {
     const item = mockInventory.find((i) => i.id === id);
@@ -197,6 +257,26 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                   </>
                 )}
               </p>
+              {quoteRef && (
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    background: "rgba(212,175,55,0.08)",
+                    border: "1px solid rgba(212,175,55,0.25)",
+                    borderRadius: "0.5rem",
+                    padding: "0.5rem 1rem",
+                    fontSize: "0.78rem",
+                    color: "#D4AF37",
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 600,
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  Reference #: {quoteRef}
+                </div>
+              )}
 
               {/* Summary */}
               <div
@@ -247,11 +327,72 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
               </button>
             </div>
           ) : (
-            /* STEPS FORM */
+            <>
+            {submitError && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  background: "rgba(239,68,68,0.08)",
+                  border: "1px solid rgba(239,68,68,0.25)",
+                  borderRadius: "0.75rem",
+                  padding: "0.75rem 1rem",
+                  fontSize: "0.82rem",
+                  color: "#ef4444",
+                  fontFamily: "var(--font-body)",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                {submitError}
+              </div>
+            )}
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                setDone(true);
+                // Final step validation
+                const vals = { firstName, lastName, email, phone, address, zipCode, city, customCity };
+                const isValid = validateStepFields(3, vals, Object.keys(selected).length);
+                if (!isValid) return;
+
+                setIsSubmitting(true);
+                setSubmitError(null);
+                try {
+                  const res = await fetch("/api/quote", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      eventType,
+                      eventDate,
+                      eventLocation: eventLoc,
+                      guestCount,
+                      selectedItems: selected,
+                      firstName,
+                      lastName,
+                      email,
+                      phone,
+                      address,
+                      city,
+                      customCity,
+                      zipCode,
+                      notes,
+                      paymentMethod,
+                      estimatedTotal: total,
+                    }),
+                  });
+                  const json = await res.json();
+                  if (res.ok && json.success) {
+                    setQuoteRef(json.quoteRef ?? null);
+                    setDone(true);
+                  } else {
+                    setSubmitError(json.error || "Something went wrong. Please try again.");
+                  }
+                } catch {
+                  setSubmitError("Network error. Please check your connection and try again.");
+                } finally {
+                  setIsSubmitting(false);
+                }
               }}
               style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}
             >
@@ -322,6 +463,9 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem", maxHeight: "320px", overflowY: "auto" }}>
                     {mockInventory.map((item) => {
                       const qty = selected[item.id] || 0;
+                      const avail = availability[item.id];
+                      const isSoldOut = avail !== undefined && avail.available <= 0;
+                      
                       return (
                         <div
                           key={item.id}
@@ -331,19 +475,30 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                             justifyContent: "space-between",
                             gap: "1rem",
                             padding: "0.625rem 0.875rem",
-                            background: qty ? "rgba(212,175,55,0.04)" : "var(--bg-secondary)",
-                            border: `1.5px solid ${qty ? "#D4AF37" : "var(--border-primary)"}`,
+                            background: isSoldOut
+                              ? "rgba(239,68,68,0.02)"
+                              : qty
+                              ? "rgba(212,175,55,0.04)"
+                              : "var(--bg-secondary)",
+                            border: `1.5px solid ${
+                              isSoldOut
+                                ? "rgba(239,68,68,0.2)"
+                                : qty
+                                ? "#D4AF37"
+                                : "var(--border-primary)"
+                            }`,
                             borderRadius: "0.75rem",
                             transition: "all 0.2s ease",
+                            opacity: isSoldOut ? 0.65 : 1,
                           }}
                         >
                           <div
-                            onClick={() => toggle(item.id)}
+                            onClick={() => !isSoldOut && toggle(item.id)}
                             style={{
                               display: "flex",
                               alignItems: "center",
                               gap: "0.75rem",
-                              cursor: "pointer",
+                              cursor: isSoldOut ? "not-allowed" : "pointer",
                               flex: 1,
                               minWidth: 0,
                             }}
@@ -351,6 +506,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                             <input
                               type="checkbox"
                               checked={qty > 0}
+                              disabled={isSoldOut}
                               onChange={() => {}}
                               style={{ accentColor: "#D4AF37", width: "16px", height: "16px", pointerEvents: "none" }}
                             />
@@ -360,7 +516,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                   fontFamily: "var(--font-heading)",
                                   fontWeight: 800,
                                   fontSize: "0.78rem",
-                                  color: "var(--text-primary)",
+                                  color: isSoldOut ? "var(--text-secondary)" : "var(--text-primary)",
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",
                                   whiteSpace: "nowrap",
@@ -368,13 +524,27 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                               >
                                 {item.title}
                               </h4>
-                              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--text-secondary)", opacity: 0.8 }}>
-                                ${item.price} / day
-                              </p>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.15rem" }}>
+                                <span style={{ fontFamily: "var(--font-body)", fontSize: "0.68rem", color: "var(--text-secondary)", opacity: 0.8 }}>
+                                  ${item.price} / day
+                                </span>
+                                
+                                {loadingAvailability ? (
+                                  <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)" }}>checking stock...</span>
+                                ) : avail !== undefined ? (
+                                  isSoldOut ? (
+                                    <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", fontWeight: 700 }}>Sold Out</span>
+                                  ) : avail.available <= 3 ? (
+                                    <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b", fontWeight: 700 }}>Low Stock: {avail.available} Left</span>
+                                  ) : (
+                                    <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", color: "#10b981", fontWeight: 500 }}>{avail.available} Available</span>
+                                  )
+                                ) : null}
+                              </div>
                             </div>
                           </div>
 
-                          {qty > 0 && (
+                          {qty > 0 && !isSoldOut && (
                             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--card-bg)", border: "1px solid var(--border-primary)", borderRadius: "0.5rem", padding: "0.15rem 0.4rem" }}>
                               <button
                                 type="button"
@@ -389,7 +559,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                               <button
                                 type="button"
                                 onClick={() => updateQty(item.id, 1)}
-                                style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 800, fontSize: "1rem", color: "var(--text-primary)", padding: "0 0.15rem" }}
+                                disabled={avail !== undefined && qty >= avail.available}
+                                style={{ background: "none", border: "none", cursor: isAvailLimited(item.id, qty) ? "not-allowed" : "pointer", fontWeight: 800, fontSize: "1rem", color: isAvailLimited(item.id, qty) ? "rgba(255,255,255,0.2)" : "var(--text-primary)", padding: "0 0.15rem" }}
                               >
                                 +
                               </button>
@@ -415,7 +586,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         placeholder="Jane"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
+                        onBlur={(e) => validateOnBlur("firstName", e.target.value)}
+                        style={errors.firstName ? { borderColor: "#ef4444" } : {}}
                       />
+                      {errors.firstName && (
+                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.firstName}</p>
+                      )}
                     </div>
                     <div>
                       <label style={labelStyle}>Last Name *</label>
@@ -426,7 +602,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         placeholder="Doe"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
+                        onBlur={(e) => validateOnBlur("lastName", e.target.value)}
+                        style={errors.lastName ? { borderColor: "#ef4444" } : {}}
                       />
+                      {errors.lastName && (
+                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.lastName}</p>
+                      )}
                     </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
@@ -442,10 +623,14 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                           className="field"
                           placeholder="(757) 749-3407"
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          style={{ paddingLeft: "2.5rem" }}
+                          onChange={(e) => setPhone(formatPhone(e.target.value))}
+                          onBlur={(e) => validateOnBlur("phone", e.target.value)}
+                          style={{ paddingLeft: "2.5rem", ...(errors.phone ? { borderColor: "#ef4444" } : {}) }}
                         />
                       </div>
+                      {errors.phone && (
+                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.phone}</p>
+                      )}
                     </div>
                     <div>
                       <label style={labelStyle}>Email Address *</label>
@@ -456,7 +641,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         placeholder="jane@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        onBlur={(e) => validateOnBlur("email", e.target.value)}
+                        style={errors.email ? { borderColor: "#ef4444" } : {}}
                       />
+                      {errors.email && (
+                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.email}</p>
+                      )}
                     </div>
                   </div>
                   <div>
@@ -468,7 +658,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       placeholder="e.g. 123 Atlantic Ave"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
+                      onBlur={(e) => validateOnBlur("address", e.target.value)}
+                      style={errors.address ? { borderColor: "#ef4444" } : {}}
                     />
+                    {errors.address && (
+                      <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.address}</p>
+                    )}
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
                     <div>
@@ -490,7 +685,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         placeholder="e.g. 23451"
                         value={zipCode}
                         onChange={(e) => setZipCode(e.target.value)}
+                        onBlur={(e) => validateOnBlur("zipCode", e.target.value)}
+                        style={errors.zipCode ? { borderColor: "#ef4444" } : {}}
                       />
+                      {errors.zipCode && (
+                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.zipCode}</p>
+                      )}
                     </div>
                   </div>
                   {city === "Other" && (
@@ -688,7 +888,11 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                   {step < 3 ? (
                     <button
                       type="button"
-                      onClick={() => setStep((s) => s + 1)}
+                      onClick={() => {
+                        const vals = { eventDate, guestCount, city, customCity, firstName, lastName, email, phone, address, zipCode };
+                        const isValid = validateStepFields(step, vals, Object.keys(selected).length);
+                        if (isValid) setStep((s) => s + 1);
+                      }}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -713,12 +917,13 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                   ) : (
                     <button
                       type="submit"
+                      disabled={isSubmitting}
                       style={{
                         display: "flex",
                         alignItems: "center",
                         gap: "0.4rem",
                         padding: "0.875rem 1.5rem",
-                        background: "#D4AF37",
+                        background: isSubmitting ? "#b8962e" : "#D4AF37",
                         border: "none",
                         borderRadius: "0.875rem",
                         fontFamily: "var(--font-heading)",
@@ -726,19 +931,21 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         fontSize: "0.7rem",
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
-                        cursor: "pointer",
+                        cursor: isSubmitting ? "not-allowed" : "pointer",
                         color: "#0f0f0f",
                         boxShadow: "0 6px 20px rgba(212,175,55,0.3)",
                         transition: "all 0.2s ease",
+                        opacity: isSubmitting ? 0.8 : 1,
                       }}
                       className="btn-press"
                     >
-                      Submit Quote <Send size={14} />
+                      {isSubmitting ? "Submitting…" : <>Submit Quote <Send size={14} /></>}
                     </button>
                   )}
                 </div>
               </div>
             </form>
+            </>
           )}
         </div>
       </div>

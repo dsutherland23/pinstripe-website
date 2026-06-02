@@ -17,8 +17,11 @@ import AboutContactModal from "@/components/AboutContactModal";
 import Reveal from "@/components/Reveal";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
+interface LocationClientPageProps {
+  cityKey: string;
+  cityName: string;
+}
 
-// ---- Category data ----
 const categories = [
   { name: "Bounce Houses",         icon: "castle",  featured: true },
   { name: "Water Slides",          icon: "water",   featured: true },
@@ -30,7 +33,7 @@ const categories = [
   { name: "Photo Booths",          icon: "camera",  featured: false },
 ];
 
-export default function Home() {
+export default function LocationClientPage({ cityKey, cityName }: LocationClientPageProps) {
   const [quoteOpen, setQuoteOpen]             = useState(false);
   const [selectedItem, setSelectedItem]       = useState<RentalItem | null>(null);
   const [activeCategory, setActiveCategory]   = useState("All");
@@ -86,10 +89,31 @@ export default function Home() {
         onOpenContact={handleOpenContact}
       />
 
-      <Hero onOpenQuote={handleOpenQuote} />
+      {/* Localized Hero */}
+      <Hero 
+        onOpenQuote={handleOpenQuote} 
+        customTitle={`Premium Party & Event Rentals in ${cityName}, VA`}
+        customSubtitle={`The ultimate collection of high-peak tents, commercial inflatables, and sweet treats delivered right to your location in ${cityName}.`}
+      />
 
       <Reveal delay={100}>
         <StatsBar />
+      </Reveal>
+
+      {/* Local Intro Text Block */}
+      <Reveal>
+        <div style={{ maxWidth: "1200px", margin: "2rem auto 0", padding: "0 1.5rem" }}>
+          <div style={{ background: "rgba(212,175,55,0.03)", border: "1px solid rgba(212,175,55,0.12)", borderRadius: "1rem", padding: "2rem", textAlign: "center" }}>
+            <h2 style={{ fontFamily: "var(--font-heading)", color: "#ffffff", fontSize: "1.5rem", marginBottom: "0.75rem", fontWeight: 800 }}>
+              Serving Your Special Events in {cityName}, Virginia
+            </h2>
+            <p style={{ color: "rgba(255,255,255,0.7)", maxWidth: "800px", margin: "0 auto", fontSize: "0.95rem", lineHeight: 1.6 }}>
+              Planning a party, backyard birthday, graduation celebration, or outdoor wedding reception in {cityName}? 
+              Pinstripes Rentals offers premium delivery, setup, and teardown services across the entire city. 
+              We ensure all units are clean, fully sanitized, and securely anchored for your event's absolute safety and success.
+            </p>
+          </div>
+        </div>
       </Reveal>
 
       <SearchBar
@@ -127,7 +151,6 @@ export default function Home() {
         <Testimonials />
       </Reveal>
 
-      {/* ---- Footer needs top spacing for CTA overlap ---- */}
       <div style={{ paddingTop: "4rem", background: "#ffffff" }}>
         <Footer
           onOpenQuote={handleOpenQuote}
@@ -136,7 +159,6 @@ export default function Home() {
         />
       </div>
 
-      {/* ---- Modals ---- */}
       <ProductDetail
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
@@ -148,6 +170,7 @@ export default function Home() {
         onClose={() => setQuoteOpen(false)}
         selectedItemFromInventory={quotePreItem}
         defaultDate={searchDate}
+        defaultCity={cityName}
       />
 
       <AboutContactModal

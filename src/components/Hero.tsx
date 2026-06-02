@@ -5,6 +5,8 @@ import { Calendar, ArrowRight, Star, ShieldCheck, Truck } from "lucide-react";
 
 interface HeroProps {
   onOpenQuote: () => void;
+  customTitle?: string;
+  customSubtitle?: string;
 }
 
 const slides = [
@@ -30,7 +32,7 @@ const slides = [
   },
 ];
 
-export default function Hero({ onOpenQuote }: HeroProps) {
+export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
@@ -156,14 +158,20 @@ export default function Hero({ onOpenQuote }: HeroProps) {
               marginBottom: "1.25rem",
             }}
           >
-            Creating{" "}
-            <span className="text-gradient" style={{ display: "inline-block" }}>
-              Unforgettable
-            </span>
-            <br />
-            Events, One Rental
-            <br />
-            At A Time
+            {customTitle ? (
+              customTitle
+            ) : (
+              <>
+                Creating{" "}
+                <span className="text-gradient" style={{ display: "inline-block" }}>
+                  Unforgettable
+                </span>
+                <br />
+                Events, One Rental
+                <br />
+                At A Time
+              </>
+            )}
           </h1>
 
           {/* Subheadline */}
@@ -178,7 +186,7 @@ export default function Hero({ onOpenQuote }: HeroProps) {
               fontFamily: "var(--font-body)",
             }}
           >
-            From premium bounce houses &amp; massive water slides to elegant wedding tents, tables, chairs, and concession machines — Pinstripes delivers everything your event needs.
+            {customSubtitle || "From premium bounce houses & massive water slides to elegant wedding tents, tables, chairs, and concession machines — Pinstripes delivers everything your event needs."}
           </p>
 
           {/* CTAs */}

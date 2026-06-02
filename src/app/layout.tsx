@@ -32,12 +32,34 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Pinstripes Party & Event Rentals",
+    "alternateName": "Pinstripes Rentals",
+    "url": "https://pinstripesrentals.com",
+    "logo": "https://pinstripesrentals.com/images/logo.jpg",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "(757) 200-2600",
+      "contactType": "customer service",
+      "areaServed": "US",
+      "availableLanguage": "en"
+    }
+  };
+
   return (
     <html
       lang="en"
       className={`${montserrat.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
+      </head>
       <body suppressHydrationWarning>
         {children}
       </body>

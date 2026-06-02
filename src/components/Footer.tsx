@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Mail, Phone, MapPin, ShieldCheck } from "lucide-react";
 
 interface FooterProps {
@@ -293,6 +294,31 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                 Socialkon10
               </a>
             </p>
+            {/* Legal links */}
+            <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem", flexWrap: "wrap" }}>
+              {[
+                { label: "Privacy Policy", href: "/privacy-policy" },
+                { label: "Terms & Conditions", href: "/terms-and-conditions" },
+                { label: "Rental Agreement", href: "/rental-agreement" },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "0.72rem",
+                    color: "rgba(255,255,255,0.3)",
+                    textDecoration: "none",
+                    fontWeight: 500,
+                    transition: "color 0.2s",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#D4AF37"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: "9999px", padding: "0.35rem 0.875rem" }}>
             <ShieldCheck size={14} color="#22c55e" />

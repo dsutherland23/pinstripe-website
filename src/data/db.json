@@ -1,0 +1,206 @@
+{
+  "bookings": [
+    {
+      "id": "PSR-SEEDBOOK1",
+      "customer": {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "phone": "(757) 555-0199"
+      },
+      "event": {
+        "type": "Wedding reception",
+        "date": "2026-06-07",
+        "location": "Backyard",
+        "guestCount": 80
+      },
+      "delivery": {
+        "address": "123 Ocean Front",
+        "city": "Virginia Beach",
+        "zipCode": "23451"
+      },
+      "items": {
+        "2": 50,
+        "5": 1
+      },
+      "itemCount": 51,
+      "estimatedTotal": 575,
+      "paymentMethod": "Pay in Person",
+      "notes": "Wedding reception booking.",
+      "submittedAt": "2026-06-02T02:04:17.974Z"
+    },
+    {
+      "id": "PSR-MPW12KLX",
+      "customer": {
+        "name": "John Doe",
+        "email": "johndoe@example.com",
+        "phone": "7575551234"
+      },
+      "event": {
+        "type": "Birthday Party",
+        "date": "2026-07-20",
+        "location": "Backyard",
+        "guestCount": 50
+      },
+      "delivery": {
+        "address": "123 Main St",
+        "city": "Norfolk",
+        "zipCode": "23502"
+      },
+      "items": {
+        "1": 1
+      },
+      "itemCount": 1,
+      "estimatedTotal": 350,
+      "paymentMethod": "Credit Card",
+      "notes": "Test quote request",
+      "submittedAt": "2026-06-02T02:38:05.781Z"
+    },
+    {
+      "id": "PSR-MPW14OVU",
+      "customer": {
+        "name": "Kadine Wright",
+        "email": "kwright@gmail.com",
+        "phone": "(757) 443-3233"
+      },
+      "event": {
+        "type": "Birthday Party",
+        "date": "2026-06-20",
+        "location": "Town Point Park",
+        "guestCount": 50
+      },
+      "delivery": {
+        "address": "200 Perry LN",
+        "city": "Norfolk",
+        "zipCode": "30291-3412"
+      },
+      "items": {
+        "1": 1,
+        "5": 1
+      },
+      "itemCount": 2,
+      "estimatedTotal": 800,
+      "paymentMethod": "Pay in Person",
+      "notes": "Need a clown",
+      "submittedAt": "2026-06-02T02:39:44.634Z"
+    }
+  ],
+  "inventory": [
+    {
+      "id": "1",
+      "title": "Adventure 5-in-1 Inflatable Water Park",
+      "category": "Water Slides",
+      "description": "The ultimate water play adventure! Features dual racing slides, climbing wall, water cannons, sprinkler arch, splash pool, and integrated sports play zone.",
+      "price": 350,
+      "depositAmount": 105,
+      "availability": true,
+      "dimensions": "18ft L × 16ft W × 10ft H",
+      "capacity": "Up to 8 Kids",
+      "image": "/images/water-slide-1.png",
+      "rating": 4.9,
+      "reviews": 42,
+      "stock": 5
+    },
+    {
+      "id": "2",
+      "title": "Premium White Fan-Back Folding Chair",
+      "category": "Chairs",
+      "description": "Heavy-duty commercial folding chairs in a sleek fan-back style — perfect for weddings, birthdays, banquets and outdoor corporate gatherings.",
+      "price": 2.5,
+      "depositAmount": 0.75,
+      "availability": true,
+      "dimensions": "Standard fold",
+      "capacity": "Up to 300 lbs",
+      "image": "/images/folding-chair.png",
+      "rating": 4.8,
+      "reviews": 120,
+      "stock": 500
+    },
+    {
+      "id": "3",
+      "title": "Vintage Red Cotton Candy Cart",
+      "category": "Cotton Candy Machines",
+      "description": "Professional high-yield cotton candy maker on a vintage mobile trolley. Adds nostalgic joy and sweet treats to any event.",
+      "price": 85,
+      "depositAmount": 25,
+      "availability": true,
+      "dimensions": "36″ × 24″ × 42″",
+      "capacity": "120 Cones / hr",
+      "image": "/images/logo.jpg",
+      "rating": 4.9,
+      "reviews": 28
+    },
+    {
+      "id": "4",
+      "title": "Summer Waves Double-Slide Splash Kingdom",
+      "category": "Bounce Houses",
+      "description": "Multi-activity inflatable bounce kingdom with safety netting, basketball hoop, giant splash pool and automatic water bucket drop.",
+      "price": 295,
+      "depositAmount": 80,
+      "availability": true,
+      "dimensions": "16ft L × 14ft W × 9ft H",
+      "capacity": "Up to 6 Kids",
+      "image": "/images/water-slide-2.png",
+      "rating": 4.7,
+      "reviews": 19
+    },
+    {
+      "id": "5",
+      "title": "High-Peak Elegance Canopy Tent",
+      "category": "Tents",
+      "description": "Stunning professional high-peak tent — perfect for outdoor wedding receptions, corporate dinners, or milestone celebrations.",
+      "price": 450,
+      "depositAmount": 150,
+      "availability": true,
+      "dimensions": "20ft × 30ft",
+      "capacity": "Up to 80 seated",
+      "image": "/images/canopy-tent.png",
+      "rating": 4.9,
+      "reviews": 31
+    },
+    {
+      "id": "6",
+      "title": "Round Banqueting Table (60-inch)",
+      "category": "Tables",
+      "description": "Premium heavy-duty round tables built for high-end dining setups. Seats 8–10 guests comfortably under our event tents.",
+      "price": 18,
+      "depositAmount": 5,
+      "availability": true,
+      "dimensions": "60-inch diameter",
+      "capacity": "8–10 Guests",
+      "image": "/images/banquet-table.png",
+      "rating": 4.8,
+      "reviews": 75
+    },
+    {
+      "id": "7",
+      "title": "Theatre-Style Popcorn Maker",
+      "category": "Popcorn Machines",
+      "description": "Fresh, hot popcorn in minutes! Comes with a vintage stand and all starter ingredients (corn, oil, butter salt).",
+      "price": 75,
+      "depositAmount": 20,
+      "availability": true,
+      "dimensions": "18″ × 18″ × 30″",
+      "capacity": "8 oz Kettle",
+      "image": "/images/popcorn-machine.png",
+      "rating": 4.8,
+      "reviews": 34
+    },
+    {
+      "id": "8",
+      "title": "Interactive Open-Air Photo Booth",
+      "category": "Photo Booths",
+      "description": "Fully digital touchscreen booth with instant SMS / email delivery, custom frames, props, and green screen backdrop.",
+      "price": 350,
+      "depositAmount": 100,
+      "availability": true,
+      "dimensions": "Needs 6 × 6 ft area",
+      "capacity": "Unlimited sharing",
+      "image": "/images/photo-booth.png",
+      "rating": 5,
+      "reviews": 53
+    }
+  ],
+  "settings": {
+    "tentPlannerEnabled": true
+  }
+}

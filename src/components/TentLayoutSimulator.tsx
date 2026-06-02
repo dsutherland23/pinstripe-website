@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Users, LayoutGrid, Check, Plus, ShoppingCart, HelpCircle } from "lucide-react";
-import { mockInventory, type RentalItem } from "./FeaturedRentals";
+import { mockInventory, type RentalItem } from "@/data/mockInventory";
 
 interface TentLayoutSimulatorProps {
   onOpenQuoteWithItem: (item: RentalItem) => void;

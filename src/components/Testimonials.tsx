@@ -10,6 +10,8 @@ const galleryItems = [
   { id: 4, title: "Annual High School Carnival",  cat: "Schools",   img: "/images/water-slide-2.png" },
   { id: 5, title: "Sunday Fellowship Harvest",    cat: "Churches",  img: "/images/banquet-table.png" },
   { id: 6, title: "Sunset Garden Ceremony",       cat: "Weddings",  img: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=60" },
+  { id: 7, title: "Snowcone Summer Festival",     cat: "Schools",   img: "/images/kids-snowcones.png" },
+  { id: 8, title: "Sweet 7th Birthday Party",     cat: "Birthdays", img: "/images/kids-cotton-candy.png" },
 ];
 
 const reviews = [
@@ -30,9 +32,15 @@ const FALLBACK = "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w
 
 export default function Testimonials() {
   const [filter, setFilter] = useState("All");
+  const [activeIndex, setActiveIndex] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const filters = ["All", "Weddings", "Birthdays", "Corporate", "Schools", "Churches"];
   const shown = filter === "All" ? galleryItems : galleryItems.filter(g => g.cat === filter);
+
+  const handleFilterChange = (f: string) => {
+    setFilter(f);
+    setActiveIndex(0);
+  };
 
   return (
     <>
@@ -52,7 +60,7 @@ export default function Testimonials() {
             {filters.map(f => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => handleFilterChange(f)}
                 style={{
                   padding: "0.5rem 1.25rem",
                   borderRadius: "9999px",
@@ -74,55 +82,62 @@ export default function Testimonials() {
             ))}
           </div>
 
-          {/* Masonry-style grid */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
-              gap: "1rem",
-            }}
-          >
-            {shown.map((item) => (
-              <div
-                key={item.id}
-                className="img-zoom"
-                style={{
-                  position: "relative",
-                  borderRadius: "1.25rem",
-                  overflow: "hidden",
-                  aspectRatio: "4/3",
-                  background: "#f5f5f5",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                  cursor: "pointer",
-                }}
-              >
-                <img
-                  src={item.img}
-                  alt={item.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK; }}
-                />
+          {/* Interactive Accordion Layout */}
+          <div className="flex flex-row items-center justify-center gap-4 overflow-x-auto p-4 no-scrollbar min-h-[480px]">
+            {shown.map((item, index) => {
+              const isActive = index === activeIndex;
+              return (
                 <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 60%)",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "flex-end",
-                    padding: "1.25rem",
-                    opacity: 0,
-                    transition: "opacity 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0"; }}
+                  key={item.id}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  className={`
+                    relative h-[420px] rounded-2xl overflow-hidden cursor-pointer
+                    transition-all duration-700 ease-in-out shadow-lg shrink-0
+                    ${isActive ? 'w-[320px] md:w-[420px]' : 'w-[70px]'}
+                  `}
                 >
-                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "#D4AF37", marginBottom: "0.25rem" }}>{item.cat}</span>
-                  <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1rem", color: "#fff", lineHeight: 1.3 }}>{item.title}</h4>
+                  {/* Background Image */}
+                  <img
+                    src={item.img}
+                    alt={item.title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK; }}
+                  />
+                  {/* Dark overlay for readability */}
+                  <div className="absolute inset-0 bg-black/40"></div>
+
+                  {/* Caption info for expanded state */}
+                  <div
+                    className={`
+                      absolute inset-x-0 bottom-0 p-6 flex flex-col justify-end
+                      transition-all duration-500 ease-in-out
+                      ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
+                    `}
+                  >
+                    <span className="text-[0.65rem] font-bold tracking-widest uppercase text-[#D4AF37] mb-1">
+                      {item.cat}
+                    </span>
+                    <h4 className="font-heading font-extrabold text-sm md:text-base text-white leading-tight">
+                      {item.title}
+                    </h4>
+                  </div>
+
+                  {/* Vertical title for collapsed state */}
+                  <div
+                    className={`
+                      absolute inset-0 flex items-center justify-center
+                      transition-all duration-500 ease-in-out pointer-events-none
+                      ${!isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}
+                    `}
+                  >
+                    <span className="text-white text-xs font-bold tracking-widest uppercase whitespace-nowrap -rotate-90">
+                      {item.title.length > 22 ? item.title.slice(0, 20) + '...' : item.title}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
