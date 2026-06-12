@@ -18,14 +18,18 @@ jobs:
           # Zip the repository excluding node_modules, git history, and build outputs
           zip -r project.zip . -x "node_modules/*" -x ".git/*" -x ".next/*" -x "out/*" -x "*.zip" -x ".env*"
 
-      - name: Upload Archive via FTP
+      - name: Install Paramiko for SFTP
+        run: |
+          python3 -m pip install paramiko
+
+      - name: Upload Archive via SFTP
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USER }}
           FTP_PASS: ${{ secrets.FTP_PASS }}
         run: |
           python3 -c "
-          import ftplib
+          import paramiko
           import os
           import sys
           import traceback
@@ -34,6 +38,7 @@ jobs:
               host = os.environ.get('FTP_HOST', '')
               user = os.environ.get('FTP_USER', '')
               password = os.environ.get('FTP_PASS', '')
+              port = 65002
               
               print('Debug info:')
               print('  FTP_HOST length:', len(host))
@@ -41,30 +46,26 @@ jobs:
               print('  FTP_PASS length:', len(password))
               
               if not host or not user or not password:
-                  print('Error: One or more FTP credentials are empty in GitHub Secrets. Please add them to your repository Settings > Secrets and variables > Actions.')
+                  print('Error: One or more credentials are empty in GitHub Secrets.')
                   sys.exit(1)
                   
-              print('Connecting to ' + host + '...')
-              ftp = ftplib.FTP()
-              ftp.set_debuglevel(2)
-              ftp.connect(host, 21, timeout=30)
-              
-              print('Logging in as ' + user + '...')
-              ftp.login(user, password)
-              ftp.encoding = 'utf-8'
-              
-              ftp.set_pasv(True)
+              print('Connecting via SFTP to ' + host + ':' + str(port) + '...')
+              transport = paramiko.Transport((host, port))
+              transport.connect(username=user, password=password)
+              sftp = paramiko.SFTPClient.from_transport(transport)
+              print('SFTP connection established successfully!')
               
               local_file = 'project.zip'
               remote_file = 'pinstripe-website-main.zip'
               
               print('Uploading ' + local_file + ' as ' + remote_file + '...')
-              with open(local_file, 'rb') as f:
-                  ftp.storbinary('STOR ' + remote_file, f)
+              sftp.put(local_file, remote_file)
               print('Upload successful!')
-              ftp.quit()
+              
+              sftp.close()
+              transport.close()
           except Exception as e:
-              print('FTP Upload failed with exception:')
+              print('SFTP Upload failed with exception:')
               traceback.print_exc()
               sys.exit(1)
           "
