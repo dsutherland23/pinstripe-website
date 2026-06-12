@@ -53,6 +53,36 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
+  // Listen for category selections from the Navbar rental dropdown
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.category) {
+        setActiveCategory(detail.category === "All" ? "All" : detail.category);
+      }
+    };
+    window.addEventListener("pinstripe:selectCategory", handler);
+    return () => window.removeEventListener("pinstripe:selectCategory", handler);
+  }, []);
+
+  // Check query parameters on mount (for cross-page category routing)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get("category");
+    if (cat) {
+      setActiveCategory(cat === "All" ? "All" : cat);
+      // Small delay to allow DOM/inventory to load before scrolling
+      setTimeout(() => {
+        const rentalsSection = document.getElementById("rentals");
+        if (rentalsSection) {
+          const navbarHeight = 90;
+          const top = rentalsSection.getBoundingClientRect().top + window.scrollY - navbarHeight;
+          window.scrollTo({ top, behavior: "smooth" });
+        }
+      }, 150);
+    }
+  }, []);
+
   const handleOpenAbout = () => {
     setAboutContactTab("about");
     setAboutContactOpen(true);
@@ -114,6 +144,23 @@ export default function Home() {
           onSelectItem={setSelectedItem}
           onOpenQuote={(item) => item ? handleOpenQuoteWithItem(item) : handleOpenQuote()}
         />
+      </Reveal>
+
+      <Reveal>
+        <div style={{ textAlign: "center", margin: "1rem 0 5rem" }}>
+          <a
+            href="/inventory"
+            className="btn-primary"
+            style={{
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem"
+            }}
+          >
+            Browse Full Catalog →
+          </a>
+        </div>
       </Reveal>
 
       {plannerEnabled && (

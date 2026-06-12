@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import { updateInventoryItem } from "@/lib/db";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
 
-const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "pinstripes123";
+const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "pinstripes2024";
 
-function checkAuth(req: NextRequest): boolean {
-  const passcode = req.headers.get("x-admin-passcode");
-  return passcode === ADMIN_PASSCODE;
+function isAuthorized(req: NextRequest): boolean {
+  return req.headers.get("x-admin-passcode") === ADMIN_PASSCODE;
 }
 
 export async function POST(req: NextRequest) {
-  if (!checkAuth(req)) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -21,36 +20,24 @@ export async function POST(req: NextRequest) {
     const itemId = formData.get("itemId") as string | null;
 
     if (!file || !itemId) {
-      return NextResponse.json({ success: false, error: "File and Item ID are required" }, { status: 400 });
+      return NextResponse.json({ error: "file and itemId are required" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const filename = `rental-${itemId}-${Date.now()}.${ext}`;
+    const uploadDir = path.join(process.cwd(), "public", "images", "uploads");
+    await mkdir(uploadDir, { recursive: true });
 
-    // Ensure uploads directory exists
-    const uploadDir = path.join(process.cwd(), "public/images/uploads");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    // Generate safe unique filename
-    const fileExt = path.extname(file.name) || ".png";
-    const baseName = path.basename(file.name, fileExt).replace(/[^a-zA-Z0-9]/g, "_");
-    const filename = `${itemId}_${Date.now()}_${baseName}${fileExt}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
     const filePath = path.join(uploadDir, filename);
+    await writeFile(filePath, buffer);
 
-    // Save file
-    fs.writeFileSync(filePath, new Uint8Array(buffer));
     const imagePath = `/images/uploads/${filename}`;
-
-    // Update in database
-    const updated = updateInventoryItem(itemId, { image: imagePath });
-    if (!updated) {
-      return NextResponse.json({ success: false, error: "Item not found in database" }, { status: 404 });
-    }
+    updateInventoryItem(itemId, { image: imagePath });
 
     return NextResponse.json({ success: true, imagePath });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message || "Failed to upload image" }, { status: 500 });
+  } catch (err) {
+    console.error("Upload API error:", err);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

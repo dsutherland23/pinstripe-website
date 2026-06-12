@@ -53,8 +53,7 @@
       "estimatedTotal": 350,
       "paymentMethod": "Credit Card",
       "notes": "Test quote request",
-      "submittedAt": "2026-06-02T02:38:05.781Z",
-      "status": "confirmed"
+      "submittedAt": "2026-06-02T02:38:05.781Z"
     },
     {
       "id": "PSR-MPW14OVU",
@@ -82,8 +81,7 @@
       "estimatedTotal": 800,
       "paymentMethod": "Pay in Person",
       "notes": "Need a clown",
-      "submittedAt": "2026-06-02T02:39:44.634Z",
-      "status": "confirmed"
+      "submittedAt": "2026-06-02T02:39:44.634Z"
     }
   ],
   "inventory": [
@@ -203,132 +201,6 @@
     }
   ],
   "settings": {
-    "tentPlannerEnabled": false,
-    "maintenanceMode": false,
-    "analyticsId": ""
-  },
-  "categories": [
-    {
-      "id": "cat-1",
-      "name": "Bounce Houses",
-      "icon": "castle",
-      "featured": true,
-      "order": 1
-    },
-    {
-      "id": "cat-2",
-      "name": "Water Slides",
-      "icon": "water",
-      "featured": true,
-      "order": 2
-    },
-    {
-      "id": "cat-3",
-      "name": "Tents",
-      "icon": "tent",
-      "featured": true,
-      "order": 3
-    },
-    {
-      "id": "cat-4",
-      "name": "Tables",
-      "icon": "table",
-      "featured": false,
-      "order": 4
-    },
-    {
-      "id": "cat-5",
-      "name": "Chairs",
-      "icon": "chair",
-      "featured": false,
-      "order": 5
-    },
-    {
-      "id": "cat-6",
-      "name": "Cotton Candy Machines",
-      "icon": "candy",
-      "featured": false,
-      "order": 6
-    },
-    {
-      "id": "cat-7",
-      "name": "Popcorn Machines",
-      "icon": "popcorn",
-      "featured": false,
-      "order": 7
-    },
-    {
-      "id": "cat-8",
-      "name": "Photo Booths",
-      "icon": "camera",
-      "featured": false,
-      "order": 8
-    }
-  ],
-  "siteContent": {
-    "hero": {
-      "badge": "America's #1 Rated Event Rentals",
-      "headline": "Creating Unforgettable Events, One Rental At A Time",
-      "subheadline": "From premium bounce houses & massive water slides to elegant wedding tents, tables, chairs, and concession machines — Pinstripes delivers everything your event needs.",
-      "trustPillars": [
-        {
-          "value": "100%",
-          "label": "Sanitised Equipment"
-        },
-        {
-          "value": "Ontime",
-          "label": "Delivery & Setup"
-        },
-        {
-          "value": "5.0 ★",
-          "label": "Customer Rated"
-        }
-      ]
-    },
-    "stats": [
-      {
-        "value": "500",
-        "label": "Events Served",
-        "suffix": "+"
-      },
-      {
-        "value": "5.0",
-        "label": "Star Rating",
-        "suffix": "★"
-      },
-      {
-        "value": "48",
-        "label": "Hour Booking",
-        "suffix": "hr"
-      },
-      {
-        "value": "100",
-        "label": "Satisfaction",
-        "suffix": "%"
-      }
-    ],
-    "footer": {
-      "phone": "(757) 749-3407",
-      "email": "pinstripes@events.com",
-      "address": "Hampton Roads, Virginia",
-      "instagramUrl": "https://www.instagram.com/socialkon10_cre8tive/",
-      "facebookUrl": "https://facebook.com"
-    },
-    "navbar": {
-      "rainCheckText": "100% Free date shifts & weather protection for all Hampton Roads rentals.",
-      "dispatchHours": "7:00 AM – 7:00 PM",
-      "serviceArea": "Serving Norfolk, VA Beach, Chesapeake, Suffolk & surrounding."
-    }
-  },
-  "users": [
-    {
-      "email": "socialkon10@gmail.com",
-      "passwordHash": "RGFzYW1veTE=",
-      "name": "Daan Sutherland",
-      "phone": "8762554848",
-      "address": "",
-      "city": "Portmore",
-      "zipCode": ""
-    }
-  ]
+    "tentPlannerEnabled": true
+  }
 }

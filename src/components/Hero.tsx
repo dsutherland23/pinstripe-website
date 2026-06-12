@@ -272,7 +272,7 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
           >
             {[
               { icon: <ShieldCheck size={18} color="#D4AF37" />, value: "100%", label: "Sanitised Equipment" },
-              { icon: <Truck size={18} color="#D4AF37" />, value: "Free", label: "Delivery & Setup" },
+              { icon: <Truck size={18} color="#D4AF37" />, value: "Ontime", label: "Delivery & Setup" },
               { icon: <Star size={18} color="#D4AF37" />, value: "5.0 ★", label: "Customer Rated" },
             ].map((p) => (
               <div key={p.label} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>

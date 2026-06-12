@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSettings, updateSettings } from "@/lib/db";
+import { getSiteContent, updateSiteContent } from "@/lib/db";
 
 const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "pinstripes2024";
 
@@ -11,8 +11,8 @@ export async function GET(req: NextRequest) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const settings = getSettings();
-  return NextResponse.json({ success: true, ...settings });
+  const content = getSiteContent();
+  return NextResponse.json({ success: true, content });
 }
 
 export async function POST(req: NextRequest) {
@@ -22,14 +22,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    updateSettings({
-      tentPlannerEnabled: body.tentPlannerEnabled,
-      maintenanceMode: body.maintenanceMode,
-      analyticsId: body.analyticsId,
-    });
+    const { section, data } = body;
+
+    if (!section || !data) {
+      return NextResponse.json({ error: "section and data are required" }, { status: 400 });
+    }
+
+    const current = getSiteContent();
+    const updated = { ...current, [section]: { ...(current as any)[section], ...data } };
+    updateSiteContent(updated);
+
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("Settings API error:", err);
+    console.error("Content API error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

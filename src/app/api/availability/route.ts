@@ -1,35 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getInventory, getItemAvailability } from "@/lib/db";
-
-export const dynamic = "force-dynamic";
+import { getItemAvailability, getInventory } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
+  const itemId = searchParams.get("itemId");
   const date = searchParams.get("date");
 
   if (!date) {
-    return NextResponse.json({ success: false, error: "Date parameter is required (format: YYYY-MM-DD)" }, { status: 400 });
+    return NextResponse.json({ error: "date is required" }, { status: 400 });
   }
 
-  // Basic regex check for YYYY-MM-DD format
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return NextResponse.json({ success: false, error: "Invalid date format. Expected YYYY-MM-DD" }, { status: 400 });
-  }
-
-  try {
+  if (itemId) {
+    const availability = getItemAvailability(itemId, date);
+    return NextResponse.json({ success: true, ...availability });
+  } else {
     const inventory = getInventory();
-    const availability: Record<string, { totalStock: number; rented: number; available: number }> = {};
-
-    inventory.forEach((item) => {
+    const availability: Record<string, any> = {};
+    for (const item of inventory) {
       availability[item.id] = getItemAvailability(item.id, date);
-    });
-
-    return NextResponse.json({
-      success: true,
-      date,
-      availability,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message || "Failed to fetch availability data" }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, date, availability });
   }
 }

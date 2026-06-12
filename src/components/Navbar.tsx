@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Menu,
   X,
@@ -16,7 +16,21 @@ import {
   MessageSquare,
   ShieldCheck,
   MapPin,
+  Table2,
+  Armchair,
+  Wind,
+  Camera,
+  Coffee,
+  User,
 } from "lucide-react";
+
+const rentalSubItems = [
+  { label: "Tables",               href: "/inventory#tables",               categorySlug: "tables",               icon: <Table2 size={15} />,   desc: "Banquet, round & specialty tables" },
+  { label: "Chairs",               href: "/inventory#chairs",               categorySlug: "chairs",               icon: <Armchair size={15} />, desc: "Folding, cross-back & chiavari" },
+  { label: "Inflatables",          href: "/inventory#inflatables",          categorySlug: "inflatables",          icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },
+  { label: "Photo Booth",          href: "/inventory#photobooth",          categorySlug: "photobooth",          icon: <Camera size={15} />,   desc: "360° & open-air photo experiences" },
+  { label: "Concession Equipment", href: "/inventory#concession-equipment", categorySlug: "concession-equipment", icon: <Coffee size={15} />,   desc: "Popcorn, cotton candy & more" },
+];
 
 
 interface NavbarProps {
@@ -29,10 +43,16 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [isEvening, setIsEvening] = useState(false);
+  const [rentalsDropdownOpen, setRentalsDropdownOpen] = useState(false);
+  const [mobileRentalsOpen, setMobileRentalsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const rentalsRef = useRef<HTMLDivElement>(null);
+  const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const hasClass = document.body.classList.contains("evening");
     setIsEvening(hasClass);
+    setMounted(true);
   }, []);
 
   const toggleTheme = () => {
@@ -59,24 +79,87 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (rentalsRef.current && !rentalsRef.current.contains(e.target as Node)) {
+        setRentalsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const getLinkHref = (label: string, defaultHash: string) => {
+    if (!mounted || typeof window === "undefined") return defaultHash;
+    const isHome = window.location.pathname === "/";
+    if (isHome) {
+      if (label === "Rentals") return "/inventory";
+      return defaultHash;
+    }
+    if (label === "Home") return "/";
+    if (label === "Rentals") return "/inventory";
+    
+    const isLocationPage = window.location.pathname.startsWith("/locations/");
+    if (isLocationPage) {
+      return defaultHash;
+    }
+    
+    return `/${defaultHash}`;
+  };
+
+  const handleRentalSubClick = (categorySlug: string) => {
+    // Close menus first
+    setRentalsDropdownOpen(false);
+    setOpen(false);
+    setMobileRentalsOpen(false);
+
+    if (typeof window !== "undefined") {
+      const isInventoryPage = window.location.pathname === "/inventory";
+      
+      if (isInventoryPage) {
+        if (categorySlug === "all") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          // Scroll to the specific section on `/inventory`
+          const targetSection = document.getElementById(categorySlug);
+          if (targetSection) {
+            const navbarHeight = 90;
+            const top = targetSection.getBoundingClientRect().top + window.scrollY - navbarHeight;
+            window.scrollTo({ top, behavior: "smooth" });
+          }
+        }
+      } else {
+        // Redirect to /inventory#categorySlug
+        if (categorySlug === "all") {
+          window.location.href = "/inventory";
+        } else {
+          window.location.href = `/inventory#${categorySlug}`;
+        }
+      }
+    }
+  };
+
   const links = [
-    { label: "Home",      href: "#home",      num: "01", desc: "Return to grand showcase" },
-    { label: "Rentals",   href: "#rentals",   num: "02", desc: "Browse tents, tables & slides" },
-    { label: "Packages",  href: "#packages",  num: "03", desc: "View curated event setups" },
-    { label: "Gallery",   href: "#gallery",   num: "04", desc: "Real celebration inspiration" },
-    { label: "About",     href: "#about",     num: "05", desc: "Our story & premium quality" },
-    { label: "Contact",   href: "#contact",   num: "06", desc: "Get direct quotes & pricing" },
+    { label: "Home",       href: getLinkHref("Home", "#home"),           num: "01", desc: "Return to grand showcase" },
+    { label: "Rentals",    href: getLinkHref("Rentals", "/inventory"),   num: "02", desc: "Browse tents, tables & slides" },
+    { label: "Packages",   href: getLinkHref("Packages", "#packages"),   num: "03", desc: "View curated event setups" },
+    { label: "Gallery",    href: getLinkHref("Gallery", "#gallery"),     num: "04", desc: "Real celebration inspiration" },
+    { label: "My Account", href: "/portal",                              num: "05", desc: "Sign in, register or track orders" },
+    { label: "About",      href: "#about",                               num: "06", desc: "Our story & premium quality" },
+    { label: "Contact",    href: "#contact",                             num: "07", desc: "Get direct quotes & pricing" },
   ];
 
   const renderIcon = (label: string, size = 16) => {
     switch (label) {
-      case "Home":     return <Home size={size} />;
-      case "Rentals":  return <Compass size={size} />;
-      case "Packages": return <Package size={size} />;
-      case "Gallery":  return <ImageIcon size={size} />;
-      case "About":    return <Award size={size} />;
-      case "Contact":  return <MessageSquare size={size} />;
-      default:         return null;
+      case "Home":       return <Home size={size} />;
+      case "Rentals":    return <Compass size={size} />;
+      case "Packages":   return <Package size={size} />;
+      case "Gallery":    return <ImageIcon size={size} />;
+      case "My Account": return <User size={size} />;
+      case "About":      return <Award size={size} />;
+      case "Contact":    return <MessageSquare size={size} />;
+      default:           return null;
     }
   };
 
@@ -117,7 +200,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
           }}
         >
           {/* LOGO */}
-          <a href="#home" style={{ textDecoration: "none", flexShrink: 0 }}>
+          <a href={getLinkHref("Home", "#home")} style={{ textDecoration: "none", flexShrink: 0 }}>
             <div
               style={{
                 display: "flex",
@@ -154,41 +237,234 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
             }}
             className="hidden lg:flex"
           >
-            {links.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                onClick={(e) => {
-                  if (l.label === "About") {
-                    e.preventDefault();
-                    onOpenAbout();
-                  } else if (l.label === "Contact") {
-                    e.preventDefault();
-                    onOpenContact();
+            {links.map((l) => {
+              if (l.label === "Rentals") {
+                return (
+                  <div
+                    key={l.label}
+                    ref={rentalsRef}
+                    style={{ position: "relative" }}
+                    onMouseEnter={() => {
+                      if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
+                      setRentalsDropdownOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      dropdownTimeoutRef.current = setTimeout(() => setRentalsDropdownOpen(false), 150);
+                    }}
+                  >
+                    <button
+                      onClick={() => setRentalsDropdownOpen((v) => !v)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.3rem",
+                        fontFamily: "var(--font-heading)",
+                        fontWeight: 700,
+                        fontSize: "0.72rem",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: rentalsDropdownOpen ? "#D4AF37" : (scrolled ? "#0f0f0f" : "rgba(255,255,255,0.9)"),
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "0.25rem 0",
+                        transition: "color 0.2s",
+                      }}
+                    >
+                      {l.label}
+                      <ChevronDown
+                        size={13}
+                        style={{
+                          transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                          transform: rentalsDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                        }}
+                      />
+                    </button>
+
+                    {/* Dropdown Panel */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "calc(100% + 14px)",
+                        left: "50%",
+                        width: "260px",
+                        background: "rgba(255, 255, 255, 0.97)",
+                        backdropFilter: "blur(24px)",
+                        WebkitBackdropFilter: "blur(24px)",
+                        borderRadius: "1.25rem",
+                        boxShadow: "0 20px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(212,175,55,0.12), 0 0 0 1px rgba(212,175,55,0.15)",
+                        padding: "0.5rem",
+                        opacity: rentalsDropdownOpen ? 1 : 0,
+                        pointerEvents: rentalsDropdownOpen ? "auto" : "none",
+                        transform: rentalsDropdownOpen
+                          ? "translateX(-50%) translateY(0) scale(1)"
+                          : "translateX(-50%) translateY(-8px) scale(0.97)",
+                        transition: "opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)",
+                        zIndex: 200,
+                      }}
+                    >
+                      {/* Arrow pointer */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "-6px",
+                          left: "50%",
+                          transform: "translateX(-50%) rotate(45deg)",
+                          width: "12px",
+                          height: "12px",
+                          background: "rgba(255,255,255,0.97)",
+                          border: "1px solid rgba(212,175,55,0.2)",
+                          borderBottom: "none",
+                          borderRight: "none",
+                        }}
+                      />
+                      <div
+                        style={{
+                          padding: "0.4rem 0.75rem 0.5rem",
+                          borderBottom: "1px solid rgba(212,175,55,0.12)",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
+                        <span style={{
+                          fontFamily: "var(--font-heading)",
+                          fontSize: "0.55rem",
+                          fontWeight: 800,
+                          letterSpacing: "0.14em",
+                          textTransform: "uppercase",
+                          color: "#D4AF37",
+                        }}>Browse by Category</span>
+                      </div>
+                      {rentalSubItems.map((sub, i) => (
+                        <button
+                          key={sub.label}
+                          onClick={() => handleRentalSubClick(sub.categorySlug)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.75rem",
+                            width: "100%",
+                            padding: "0.65rem 0.75rem",
+                            borderRadius: "0.875rem",
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            transition: "all 0.18s ease",
+                            opacity: rentalsDropdownOpen ? 1 : 0,
+                            transform: rentalsDropdownOpen ? "translateX(0)" : "translateX(-6px)",
+                            transitionDelay: rentalsDropdownOpen ? `${i * 35}ms` : "0ms",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "rgba(212,175,55,0.07)";
+                            const icon = e.currentTarget.querySelector(".sub-icon") as HTMLElement;
+                            if (icon) { icon.style.background = "#D4AF37"; icon.style.color = "#0f0f0f"; }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                            const icon = e.currentTarget.querySelector(".sub-icon") as HTMLElement;
+                            if (icon) { icon.style.background = "rgba(212,175,55,0.1)"; icon.style.color = "#D4AF37"; }
+                          }}
+                        >
+                          <div
+                            className="sub-icon"
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "0.625rem",
+                              background: "rgba(212,175,55,0.1)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#D4AF37",
+                              flexShrink: 0,
+                              transition: "all 0.18s ease",
+                            }}
+                          >
+                            {sub.icon}
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
+                            <span style={{
+                              fontFamily: "var(--font-heading)",
+                              fontWeight: 800,
+                              fontSize: "0.72rem",
+                              letterSpacing: "0.05em",
+                              textTransform: "uppercase",
+                              color: "#0f0f0f",
+                            }}>{sub.label}</span>
+                            <span style={{
+                              fontFamily: "var(--font-body)",
+                              fontSize: "0.6rem",
+                              color: "#888",
+                              lineHeight: 1.3,
+                            }}>{sub.desc}</span>
+                          </div>
+                        </button>
+                      ))}
+                      <div style={{ padding: "0.4rem 0.75rem", borderTop: "1px solid rgba(212,175,55,0.12)", marginTop: "0.25rem" }}>
+                        <button
+                          onClick={() => handleRentalSubClick("all")}
+                          style={{
+                            width: "100%",
+                            padding: "0.55rem",
+                            background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.06))",
+                            border: "1px solid rgba(212,175,55,0.25)",
+                            borderRadius: "0.75rem",
+                            fontFamily: "var(--font-heading)",
+                            fontWeight: 800,
+                            fontSize: "0.6rem",
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                            color: "#D4AF37",
+                            cursor: "pointer",
+                            transition: "all 0.18s ease",
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.2)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.06))"; }}
+                        >
+                          View All Rentals →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  onClick={(e) => {
+                    if (l.label === "About") {
+                      e.preventDefault();
+                      onOpenAbout();
+                    } else if (l.label === "Contact") {
+                      e.preventDefault();
+                      onOpenContact();
+                    }
+                  }}
+                  style={{
+                    fontFamily: "var(--font-heading)",
+                    fontWeight: 700,
+                    fontSize: "0.72rem",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: scrolled ? "#0f0f0f" : "rgba(255,255,255,0.9)",
+                    textDecoration: "none",
+                    transition: "color 0.2s",
+                    padding: "0.25rem 0",
+                    position: "relative",
+                  }}
+                  onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#D4AF37")}
+                  onMouseLeave={(e) =>
+                    ((e.target as HTMLElement).style.color = scrolled
+                      ? "#0f0f0f"
+                      : "rgba(255,255,255,0.9)")
                   }
-                }}
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontWeight: 700,
-                  fontSize: "0.72rem",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: scrolled ? "#0f0f0f" : "rgba(255,255,255,0.9)",
-                  textDecoration: "none",
-                  transition: "color 0.2s",
-                  padding: "0.25rem 0",
-                  position: "relative",
-                }}
-                onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#D4AF37")}
-                onMouseLeave={(e) =>
-                  ((e.target as HTMLElement).style.color = scrolled
-                    ? "#0f0f0f"
-                    : "rgba(255,255,255,0.9)")
-                }
-              >
-                {l.label}
-              </a>
-            ))}
+                >
+                  {l.label}
+                </a>
+              );
+            })}
           </nav>
 
           {/* DESKTOP CTAs */}
@@ -408,6 +684,101 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
           {/* Nav Links */}
           <nav style={{ flex: 1, padding: "1.25rem 0", overflowY: "auto" }}>
             {links.map((l, i) => {
+              if (l.label === "Rentals") {
+                return (
+                  <div key={l.label} style={{ margin: "0.35rem 0.85rem" }}>
+                    {/* Rentals toggle row */}
+                    <button
+                      onClick={() => setMobileRentalsOpen((v) => !v)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.85rem",
+                        width: "100%",
+                        padding: "0.85rem 1.25rem",
+                        borderRadius: "1rem",
+                        border: "1px solid transparent",
+                        background: mobileRentalsOpen
+                          ? (isEvening ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.05)")
+                          : "transparent",
+                        transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        transform: open ? "translateX(0) scale(1)" : "translateX(-24px) scale(0.92)",
+                        opacity: open ? 1 : 0,
+                        transitionDelay: open ? `${i * 50}ms` : "0ms",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.65rem", color: "#D4AF37", opacity: 0.8, width: "16px" }}>
+                        {l.num}
+                      </span>
+                      <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: isEvening ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-primary)", flexShrink: 0 }}>
+                        <Compass size={16} />
+                      </div>
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.1rem", textAlign: "left" }}>
+                        <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.75rem", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-primary)" }}>
+                          {l.label}
+                        </span>
+                        <span style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: "0.58rem", color: "var(--text-secondary)" }}>
+                          {l.desc}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        size={14}
+                        color="#D4AF37"
+                        style={{ transition: "transform 0.25s ease", transform: mobileRentalsOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}
+                      />
+                    </button>
+
+                    {/* Mobile Sub-items */}
+                    <div
+                      style={{
+                        overflow: "hidden",
+                        maxHeight: mobileRentalsOpen ? "500px" : "0px",
+                        transition: "max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+                      }}
+                    >
+                      <div style={{ padding: "0.25rem 0 0.5rem 2.5rem", display: "flex", flexDirection: "column", gap: "0.15rem" }}>
+                        {rentalSubItems.map((sub) => (
+                          <button
+                            key={sub.label}
+                            onClick={() => handleRentalSubClick(sub.categorySlug)}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.65rem",
+                              padding: "0.6rem 0.75rem",
+                              borderRadius: "0.75rem",
+                              background: "transparent",
+                              border: "1px solid transparent",
+                              cursor: "pointer",
+                              textAlign: "left",
+                              width: "100%",
+                              transition: "all 0.2s ease",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = isEvening ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.05)"; e.currentTarget.style.borderColor = "rgba(212,175,55,0.2)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; }}
+                          >
+                            <div style={{ width: "28px", height: "28px", borderRadius: "0.5rem", background: "rgba(212,175,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#D4AF37", flexShrink: 0 }}>
+                              {sub.icon}
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.05rem" }}>
+                              <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-primary)" }}>{sub.label}</span>
+                              <span style={{ fontFamily: "var(--font-body)", fontSize: "0.55rem", color: "var(--text-secondary)" }}>{sub.desc}</span>
+                            </div>
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => handleRentalSubClick("all")}
+                          style={{ padding: "0.5rem 0.75rem", marginTop: "0.15rem", borderRadius: "0.625rem", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.58rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#D4AF37", cursor: "pointer", width: "100%", transition: "all 0.2s ease" }}
+                        >
+                          View All Rentals →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <a
                   key={l.label}

@@ -12,12 +12,8 @@ import type { RentalItem } from "@/data/mockInventory";
 const FALLBACK =
   "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=60";
 
-// Booked dates calendar schedule map for popular equipment
-const bookedDatesMap: Record<string, string[]> = {
-  "1": ["2026-06-20", "2026-07-04"],
-  "5": ["2026-06-20", "2026-06-21"],
-  "8": ["2026-06-20", "2026-06-27"],
-};
+// Fallback or empty map
+const bookedDatesMap: Record<string, string[]> = {};
 
 interface FeaturedRentalsProps {
   activeCategory: string;
@@ -36,6 +32,7 @@ export default function FeaturedRentals({
 }: FeaturedRentalsProps) {
   const [inventory, setInventory] = useState<RentalItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [availabilityMap, setAvailabilityMap] = useState<Record<string, { totalStock: number; rented: number; available: number }>>({});
 
   useEffect(() => {
     fetch(`/api/inventory?t=${Date.now()}`)
@@ -46,6 +43,18 @@ export default function FeaturedRentals({
       .catch(() => {/* silently fail, show empty state */})
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!searchDate) return;
+    fetch(`/api/availability?date=${searchDate}&t=${Date.now()}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setAvailabilityMap(data.availability || {});
+        }
+      })
+      .catch(() => {});
+  }, [searchDate]);
 
   const filtered = inventory.filter((item) => {
     const matchCat =
@@ -134,7 +143,7 @@ export default function FeaturedRentals({
             }}
           >
             {filtered.map((item) => {
-              const isBooked = !!(searchDate && bookedDatesMap[item.id]?.includes(searchDate));
+              const isBooked = !!(searchDate && availabilityMap[item.id] && availabilityMap[item.id].available <= 0);
               return (
                 <RadialGlowCard key={item.id} className="product-card" style={isBooked ? { opacity: 0.65 } : {}}>
                   {/* Image */}

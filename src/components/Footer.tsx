@@ -192,10 +192,10 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
               Quick Links
             </h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {["Home", "Rentals", "Packages", "Gallery", "About", "Contact"].map((link) => (
+              {["Home", "Rentals", "Packages", "Gallery", "My Account", "About", "Contact"].map((link) => (
                 <li key={link}>
                   <a
-                    href={`#${link.toLowerCase()}`}
+                    href={link === "My Account" ? "/portal" : `#${link.toLowerCase()}`}
                     onClick={(e) => {
                       if (link === "About") {
                         e.preventDefault();
@@ -209,7 +209,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                     onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "#D4AF37"; }}
                     onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
                   >
-                    {link}
+                    {link === "My Account" ? "My Account / Sign In" : link}
                   </a>
                 </li>
               ))}

@@ -1,31 +1,118 @@
-import { notFound } from "next/navigation";
-import { Metadata } from "next";
-import { getBookingById } from "@/lib/db";
-import { mockInventory } from "@/data/mockInventory";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import InvoiceControls from "@/components/InvoiceControls";
 
-interface InvoicePageProps {
-  params: Promise<{ id: string }>;
+interface Booking {
+  id: string;
+  customer: { name: string; email: string; phone: string };
+  event: { type: string; date: string; location: string; guestCount: number };
+  delivery: { address: string; city: string; zipCode: string };
+  items: Record<string, number>;
+  itemCount: number;
+  estimatedTotal: number;
+  paymentMethod: string;
+  notes?: string;
+  submittedAt: string;
 }
 
-export async function generateMetadata({ params }: InvoicePageProps): Promise<Metadata> {
-  const { id } = await params;
-  return {
-    title: `Invoice ${id} | Pinstripes Party & Event Rentals`,
-    robots: { index: false },
-  };
+interface RentalItem {
+  id: string;
+  title: string;
+  category: string;
+  price: number;
 }
 
-export default async function InvoicePage({ params }: InvoicePageProps) {
-  const { id } = await params;
-  const booking = getBookingById(id.toUpperCase());
+interface InvoicePageClientProps {
+  id: string;
+}
 
-  if (!booking) {
-    notFound();
+export default function InvoicePageClient({ id }: InvoicePageClientProps) {
+  const searchParams = useSearchParams();
+  const email = searchParams?.get("email") || "";
+  const passcode = searchParams?.get("passcode") || "";
+
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [inventory, setInventory] = useState<RentalItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchData = async () => {
+      try {
+        // Fetch inventory to resolve item details
+        const invRes = await fetch(`/api/inventory?t=${Date.now()}`);
+        const invData = await invRes.json();
+        let items: RentalItem[] = [];
+        if (invRes.ok && invData.success) {
+          items = invData.items || [];
+          setInventory(items);
+        }
+
+        // Fetch booking
+        const sessionPasscode = sessionStorage.getItem("admin_passcode") || "";
+        const activePasscode = passcode || sessionPasscode;
+        
+        let url = `/api/portal/lookup?ref=${encodeURIComponent(id)}`;
+        if (email) {
+          url += `&email=${encodeURIComponent(email.toLowerCase())}`;
+        }
+        if (activePasscode) {
+          url += `&passcode=${encodeURIComponent(activePasscode)}`;
+        }
+        url += `&t=${Date.now()}`;
+
+        const headers: Record<string, string> = {};
+        if (activePasscode) {
+          headers["x-admin-passcode"] = activePasscode;
+        }
+
+        const res = await fetch(url, { headers });
+        const data = await res.json();
+
+        if (res.ok && data.success && data.booking) {
+          setBooking(data.booking);
+        } else {
+          setError(data.error || "Invoice not found or unauthorized.");
+        }
+      } catch (err) {
+        setError("Failed to load invoice. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id, email, passcode]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#f4f4f4", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
+        <p style={{ color: "#666", fontSize: "1.1rem" }}>Loading Invoice...</p>
+      </div>
+    );
   }
 
+  if (error || !booking) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#f4f4f4", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif", padding: "2rem" }}>
+        <div style={{ maxWidth: "400px", width: "100%", background: "#ffffff", padding: "2rem", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)", textAlign: "center" }}>
+          <h1 style={{ fontSize: "1.5rem", color: "#ef4444", marginBottom: "1rem" }}>Error</h1>
+          <p style={{ color: "#666", fontSize: "0.95rem", lineHeight: 1.5, marginBottom: "1.5rem" }}>{error || "Invoice not found"}</p>
+          <a href="/portal" style={{ display: "inline-block", padding: "0.6rem 1.25rem", background: "#0f0f0f", color: "#ffffff", borderRadius: "4px", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600 }}>
+            Go to Customer Portal
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate items
   const resolvedItems = Object.entries(booking.items).map(([itemId, qty]) => {
-    const item = mockInventory.find((i) => i.id === itemId);
+    const item = inventory.find((i) => i.id === itemId);
     return {
       title: item ? item.title : `Rental Item #${itemId}`,
       category: item ? item.category : "Rental",
@@ -41,12 +128,11 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
 
   return (
     <>
-      {/* Print-specific styles */}
       <style>{`
         @media print {
           .no-print { display: none !important; }
           body { background: #ffffff !important; color: #000000 !important; }
-          .invoice-page { box-shadow: none !important; max-width: 100% !important; }
+          .invoice-page { box-shadow: none !important; max-width: 100% !important; margin: 0 !important; }
         }
         @media screen {
           body { background: #f4f4f4; }
@@ -55,12 +141,9 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
       `}</style>
 
-      {/* Screen controls */}
       <InvoiceControls />
 
-      {/* Invoice Document */}
       <div className="invoice-page" style={{ maxWidth: "780px", margin: "2rem auto", background: "#ffffff", boxShadow: "0 4px 32px rgba(0,0,0,0.12)", color: "#1a1a1a" }}>
-
         {/* Header */}
         <div style={{ background: "#0f0f0f", padding: "2.5rem 3rem", borderBottom: "4px solid #D4AF37" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1.5rem" }}>
