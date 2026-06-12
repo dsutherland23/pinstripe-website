@@ -19,16 +19,33 @@ jobs:
           zip -r project.zip . -x "node_modules/*" -x ".git/*" -x ".next/*" -x "out/*" -x "*.zip" -x ".env*"
 
       - name: Upload Archive via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: ./
-          server-dir: /
-          exclude: |
-            **
-            !project.zip
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+        run: |
+          python3 -c "
+          import ftplib
+          import os
+          
+          host = os.environ['FTP_HOST']
+          user = os.environ['FTP_USER']
+          password = os.environ['FTP_PASS']
+          
+          print('Connecting to ' + host + '...')
+          ftp = ftplib.FTP(host)
+          ftp.login(user, password)
+          ftp.encoding = 'utf-8'
+          
+          local_file = 'project.zip'
+          remote_file = 'pinstripe-website-main.zip'
+          
+          print('Uploading ' + local_file + ' as ' + remote_file + '...')
+          with open(local_file, 'rb') as f:
+              ftp.storbinary('STOR ' + remote_file, f)
+          print('Upload successful!')
+          ftp.quit()
+          "
 
       - name: Trigger Hostinger NodeJS Build
         run: |
@@ -38,7 +55,7 @@ jobs:
             -H "Accept: application/json" \
             -H "User-Agent: Mozilla/5.0 (GitHubActions; Linux x86_64)" \
             -d '{
-              "archive": "project.zip",
+              "archive": "pinstripe-website-main.zip",
               "node_version": 22,
               "app_type": "next",
               "root_directory": null,
