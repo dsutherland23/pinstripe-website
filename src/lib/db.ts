@@ -1,5 +1,12 @@
 import mysql from "mysql2/promise";
 import { mockInventory, RentalItem } from "@/data/mockInventory";
+import { config } from "dotenv";
+import path from "path";
+
+// Load environment variables in production since standalone Next.js does not load .env files automatically
+config({ path: path.resolve(process.cwd(), ".env.local") });
+config({ path: path.resolve(process.cwd(), ".env") });
+
 
 // ─── Types (unchanged public API) ────────────────────────────────────────────
 
