@@ -88,6 +88,12 @@ def zip_project(zip_path):
         for extra_file in ['package.json', 'package-lock.json', 'tsconfig.json', 'next.config.ts']:
             if os.path.isfile(extra_file):
                 zipf.write(extra_file, extra_file)
+        
+        # 5. Include our server.js wrapper (load credentials from .env.secure)
+        # The standalone build generates its own server.js - we rename it to server_original.js
+        # and replace server.js with our wrapper that loads .env.secure first
+        if os.path.isfile('server.js'):
+            zipf.write('server.js', 'server.js')
 
     print("Zipping complete.")
 
@@ -186,19 +192,9 @@ def main():
         commands = [
             # Extract zip into the nodejs folder (standalone root lands here)
             f"unzip -o project.zip -d {remote_base}/",
-            # Write the .env.local file on the server (injected from local credentials)
-            (
-                f"cat > {remote_base}/.env.local << 'ENVEOF'\n"
-                f"DB_HOST=localhost\n"
-                f"DB_PORT={db_port}\n"
-                f"DB_NAME={db_name}\n"
-                f"DB_USER={db_user}\n"
-                f"DB_PASS={db_pass}\n"
-                f"DB_SOCKET={db_socket}\n"
-                f"ADMIN_PASSCODE={admin_passcode or ''}\n"
-                f"RESEND_API_KEY={resend_api_key or ''}\n"
-                f"ENVEOF"
-            ),
+            # Rename the standalone server.js to server_original.js so our wrapper can require it
+            # (only if server.js exists and server_original.js doesn't already exist)
+            f"[ ! -f {remote_base}/server_original.js ] && cp {remote_base}/server.js {remote_base}/server_original.js || true",
             # Install dependencies on the server (for db-init and any server-side packages)
             f"export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && cd {remote_base} && npm install --omit=dev",
             # Initialise / seed the MySQL database (idempotent — safe to run every deploy)
@@ -213,8 +209,6 @@ def main():
                 f"DB_SOCKET={db_socket} "
                 f"npx tsx src/lib/db-init.ts"
             ),
-            # Touch restart file to trigger Passenger restart
-            f"mkdir -p {remote_base}/tmp && touch {remote_base}/tmp/restart.txt",
             # Remove remote zip
             "rm project.zip"
         ]
@@ -251,6 +245,82 @@ def main():
                 print("Warning: npm install returned non-zero status.")
                 
         ssh.close()
+
+        # 5. Write .htaccess with PassengerEnvVar directives via SFTP
+        # (must use SFTP to avoid shell quoting issues with special chars in passwords)
+        print("\nWriting Passenger configuration (.htaccess) via SFTP...")
+        safe_pass = db_pass.replace('"', '\\"')
+        safe_passcode = (admin_passcode or '').replace('"', '\\"')
+        safe_resend = (resend_api_key or '').replace('"', '\\"')
+        
+        htaccess_content = (
+            'PassengerAppRoot /home/u887289907/domains/pinstripesrentals.com/nodejs\n'
+            'PassengerAppType node\n'
+            'PassengerNodejs /opt/alt/alt-nodejs22/root/bin/node\n'
+            'PassengerStartupFile server.js\n'
+            'PassengerBaseURI /\n'
+            'PassengerRestartDir /home/u887289907/domains/pinstripesrentals.com/nodejs/tmp\n'
+            'SetEnv NODE_OPTIONS "--require /home/u887289907/domains/pinstripesrentals.com/public_html/.builds/config/preload-timestamp.js --max-old-space-size=256"\n'
+            'SetEnv LSNODE_CONSOLE_LOG console.log\n'
+            f'PassengerEnvVar UV_THREADPOOL_SIZE 1\n'
+            f'PassengerEnvVar TOKIO_WORKER_THREADS 1\n'
+            f'PassengerEnvVar DB_HOST localhost\n'
+            f'PassengerEnvVar DB_PORT {db_port}\n'
+            f'PassengerEnvVar DB_NAME {db_name}\n'
+            f'PassengerEnvVar DB_USER {db_user}\n'
+            f'PassengerEnvVar DB_PASS "{safe_pass}"\n'
+            f'PassengerEnvVar DB_SOCKET {db_socket}\n'
+            f'PassengerEnvVar ADMIN_PASSCODE {safe_passcode}\n'
+            f'PassengerEnvVar RESEND_API_KEY {safe_resend}\n'
+            'RewriteRule ^\\.builds - [F,L]\n'
+        )
+        
+        transport2 = paramiko.Transport((host, port))
+        transport2.connect(username=user, password=password)
+        sftp2 = paramiko.SFTPClient.from_transport(transport2)
+        
+        # Write .htaccess
+        htaccess_path = "domains/pinstripesrentals.com/public_html/.htaccess"
+        with sftp2.open(htaccess_path, 'w') as f:
+            f.write(htaccess_content)
+        
+        # Write .env.secure (raw file - no shell interpretation, preserves all special chars)
+        secure_env_content = (
+            f"DB_HOST=localhost\n"
+            f"DB_PORT={db_port}\n"
+            f"DB_NAME={db_name}\n"
+            f"DB_USER={db_user}\n"
+            f"DB_PASS={db_pass}\n"
+            f"DB_SOCKET={db_socket}\n"
+            f"ADMIN_PASSCODE={admin_passcode or ''}\n"
+            f"RESEND_API_KEY={resend_api_key or ''}\n"
+        )
+        with sftp2.open(f"{remote_base}/.env.secure", 'w') as f:
+            f.write(secure_env_content)
+        
+        sftp2.close()
+        transport2.close()
+        
+        # Set restrictive permissions on .env.secure
+        ssh3 = paramiko.SSHClient()
+        ssh3.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh3.connect(host, port, user, password)
+        stdin, stdout, stderr = ssh3.exec_command(f"chmod 600 {remote_base}/.env.secure")
+        stdout.channel.recv_exit_status()
+        ssh3.close()
+        print("Passenger .htaccess and .env.secure written successfully.")
+        
+        # 6. Touch restart file to trigger Passenger restart
+        ssh2 = paramiko.SSHClient()
+        ssh2.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh2.connect(host, port, user, password)
+        stdin, stdout, stderr = ssh2.exec_command(
+            f"mkdir -p {remote_base}/tmp && touch {remote_base}/tmp/restart.txt"
+        )
+        stdout.channel.recv_exit_status()
+        ssh2.close()
+        print("Passenger restart triggered.")
+        
         print("\nDeployment successfully finished!")
     except Exception as e:
         print("SSH build execution failed:", e)
@@ -260,3 +330,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
