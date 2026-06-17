@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const updatedUser = updateUser(email, { name, phone, address, city, zipCode });
+    const updatedUser = await updateUser(email, { name, phone, address, city, zipCode });
     if (!updatedUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

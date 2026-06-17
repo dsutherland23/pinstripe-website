@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getInventory, updateInventoryItem, addInventoryItem, deleteInventoryItem } from "@/lib/db";
 import type { RentalItem } from "@/data/mockInventory";
-
-const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "pinstripes2024";
-
-function isAuthorized(req: NextRequest): boolean {
-  return req.headers.get("x-admin-passcode") === ADMIN_PASSCODE;
-}
+import { isAdminAuthorized } from "@/lib/auth-security";
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const items = getInventory();
+  const items = await getInventory();
   return NextResponse.json({ success: true, items });
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,7 +21,7 @@ export async function POST(req: NextRequest) {
     const { action, item } = body;
 
     if (action === "create" && item) {
-      const inventory = getInventory();
+      const inventory = await getInventory();
       const newId = String(
         inventory.reduce((max, i) => Math.max(max, parseInt(i.id, 10) || 0), 0) + 1
       );
@@ -45,12 +40,12 @@ export async function POST(req: NextRequest) {
         reviews: parseInt(item.reviews, 10) || 0,
         stock: parseInt(item.stock, 10) || 5,
       };
-      addInventoryItem(newItem);
+      await addInventoryItem(newItem);
       return NextResponse.json({ success: true, item: newItem });
     }
 
     if (action === "update" && item?.id) {
-      const updated = updateInventoryItem(item.id, {
+      const updated = await updateInventoryItem(item.id, {
         title: item.title,
         category: item.category,
         description: item.description,
@@ -69,7 +64,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "delete" && item?.id) {
-      const deleted = deleteInventoryItem(item.id);
+      const deleted = await deleteInventoryItem(item.id);
       if (!deleted) return NextResponse.json({ error: "Item not found" }, { status: 404 });
       return NextResponse.json({ success: true });
     }

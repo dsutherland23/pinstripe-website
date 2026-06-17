@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required payment fields" }, { status: 400 });
     }
 
-    const booking = getBookingById(bookingId);
+    const booking = await getBookingById(bookingId);
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
@@ -31,12 +31,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const success = updateBookingPayment(bookingId, Number(amount), paymentMethod);
+    const success = await updateBookingPayment(bookingId, Number(amount), paymentMethod);
     if (!success) {
       return NextResponse.json({ error: "Failed to apply payment to booking" }, { status: 500 });
     }
 
-    const updatedBooking = getBookingById(bookingId);
+    const updatedBooking = await getBookingById(bookingId);
     return NextResponse.json({ success: true, booking: updatedBooking });
   } catch (err) {
     console.error("Payment API error:", err);

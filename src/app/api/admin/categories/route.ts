@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCategories, saveCategories, type Category } from "@/lib/db";
-
-const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "pinstripes2024";
-
-function isAuthorized(req: NextRequest): boolean {
-  return req.headers.get("x-admin-passcode") === ADMIN_PASSCODE;
-}
+import { isAdminAuthorized } from "@/lib/auth-security";
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const categories = getCategories();
+  const categories = await getCategories();
   return NextResponse.json({ success: true, categories });
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,11 +21,11 @@ export async function POST(req: NextRequest) {
 
     if (action === "save-all" && Array.isArray(categories)) {
       // Full replace
-      saveCategories(categories);
+      await saveCategories(categories);
       return NextResponse.json({ success: true, categories });
     }
 
-    const current = getCategories();
+    const current = await getCategories();
 
     if (action === "create" && category) {
       const newCat: Category = {
@@ -40,7 +35,7 @@ export async function POST(req: NextRequest) {
         featured: category.featured ?? false,
         order: current.length + 1,
       };
-      saveCategories([...current, newCat]);
+      await saveCategories([...current, newCat]);
       return NextResponse.json({ success: true, category: newCat });
     }
 
@@ -48,19 +43,19 @@ export async function POST(req: NextRequest) {
       const updated = current.map((c) =>
         c.id === category.id ? { ...c, ...category } : c
       );
-      saveCategories(updated);
+      await saveCategories(updated);
       return NextResponse.json({ success: true });
     }
 
     if (action === "delete" && category?.id) {
       const filtered = current.filter((c) => c.id !== category.id);
-      saveCategories(filtered);
+      await saveCategories(filtered);
       return NextResponse.json({ success: true });
     }
 
     if (action === "reorder" && Array.isArray(categories)) {
       const reordered = categories.map((c: Category, i: number) => ({ ...c, order: i + 1 }));
-      saveCategories(reordered);
+      await saveCategories(reordered);
       return NextResponse.json({ success: true });
     }
 

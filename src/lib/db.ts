@@ -1,9 +1,7 @@
-import fs from "fs";
-import path from "path";
+import mysql from "mysql2/promise";
 import { mockInventory, RentalItem } from "@/data/mockInventory";
 
-const DATA_DIR = path.join(process.cwd(), "src/data");
-const DB_FILE = path.join(DATA_DIR, "db.json");
+// ─── Types (unchanged public API) ────────────────────────────────────────────
 
 export interface Booking {
   id: string;
@@ -37,7 +35,7 @@ export interface Booking {
 
 export interface User {
   email: string;
-  passwordHash: string; // Simple hashed/plain password
+  passwordHash: string;
   name: string;
   phone: string;
   address?: string;
@@ -75,35 +73,242 @@ export interface SiteContent {
   };
 }
 
-interface DatabaseSchema {
-  inventory: RentalItem[];
-  bookings: Booking[];
-  categories?: Category[];
-  siteContent?: SiteContent;
-  users?: User[];
-  settings?: {
-    tentPlannerEnabled: boolean;
-    maintenanceMode?: boolean;
-    analyticsId?: string;
-  };
+// ─── Connection Pool ──────────────────────────────────────────────────────────
+
+let pool: mysql.Pool | null = null;
+
+function getPool(): mysql.Pool {
+  if (!pool) {
+    const dbHost = process.env.DB_HOST;
+    const dbName = process.env.DB_NAME;
+    const dbUser = process.env.DB_USER;
+    const dbPass = process.env.DB_PASS;
+
+    if (!dbHost || !dbName || !dbUser) {
+      const missing = [];
+      if (!dbHost) missing.push("DB_HOST");
+      if (!dbName) missing.push("DB_NAME");
+      if (!dbUser) missing.push("DB_USER");
+      throw new Error(`CRITICAL: Database configuration environment variables are missing: ${missing.join(", ")}`);
+    }
+
+    const socketPath = process.env.DB_SOCKET || "/var/lib/mysql/mysql.sock";
+    // When host is 'localhost', use Unix socket to avoid IPv6 resolution issues.
+    const useSocket = dbHost === "localhost";
+    pool = mysql.createPool({
+      ...(useSocket
+        ? { socketPath }
+        : { host: dbHost, port: parseInt(process.env.DB_PORT || "3306", 10) }),
+      database: dbName,
+      user: dbUser,
+      password: dbPass ?? "",
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+      // Automatically parse JSON columns from MySQL 5.7+
+      typeCast(field, next) {
+        if (field.type === "JSON") {
+          const val = field.string();
+          if (val === null) return null;
+          try { return JSON.parse(val); } catch { return val; }
+        }
+        return next();
+      },
+    });
+  }
+  return pool;
 }
 
-const DEFAULT_CATEGORIES: Category[] = [
-  { id: "cat-1", name: "Bounce Houses",         icon: "castle",  featured: true,  order: 1 },
-  { id: "cat-2", name: "Water Slides",           icon: "water",   featured: true,  order: 2 },
-  { id: "cat-3", name: "Tents",                  icon: "tent",    featured: true,  order: 3 },
-  { id: "cat-4", name: "Tables",                 icon: "table",   featured: false, order: 4 },
-  { id: "cat-5", name: "Chairs",                 icon: "chair",   featured: false, order: 5 },
-  { id: "cat-6", name: "Cotton Candy Machines",  icon: "candy",   featured: false, order: 6 },
-  { id: "cat-7", name: "Popcorn Machines",        icon: "popcorn", featured: false, order: 7 },
-  { id: "cat-8", name: "Photo Booths",            icon: "camera",  featured: false, order: 8 },
-];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function query<T = unknown>(sql: string, values?: any[]): Promise<T[]> {
+  const [rows] = await getPool().execute<mysql.RowDataPacket[]>(sql, values);
+  return rows as unknown as T[];
+}
+
+// ─── Table Initialisation (idempotent) ───────────────────────────────────────
+
+export async function initDb(): Promise<void> {
+  const conn = await getPool().getConnection();
+  try {
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS inventory (
+        id          VARCHAR(64)  NOT NULL PRIMARY KEY,
+        title       VARCHAR(255) NOT NULL,
+        category    VARCHAR(128) NOT NULL,
+        description TEXT         NOT NULL,
+        price       DECIMAL(10,2) NOT NULL,
+        deposit_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+        availability TINYINT(1)  NOT NULL DEFAULT 1,
+        dimensions  VARCHAR(255) NOT NULL DEFAULT '',
+        capacity    VARCHAR(255) NOT NULL DEFAULT '',
+        image       VARCHAR(512) NOT NULL DEFAULT '',
+        rating      DECIMAL(3,1) NOT NULL DEFAULT 5.0,
+        reviews     INT          NOT NULL DEFAULT 0,
+        stock       INT          NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS bookings (
+        id               VARCHAR(64)   NOT NULL PRIMARY KEY,
+        customer         JSON          NOT NULL,
+        event_data       JSON          NOT NULL,
+        delivery         JSON          NOT NULL,
+        items            JSON          NOT NULL,
+        item_count       INT           NOT NULL DEFAULT 0,
+        estimated_total  DECIMAL(10,2) NOT NULL DEFAULT 0,
+        payment_method   VARCHAR(128)  NOT NULL DEFAULT '',
+        status           ENUM('pending','confirmed','cancelled') NOT NULL DEFAULT 'pending',
+        notes            TEXT,
+        submitted_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        amount_paid      DECIMAL(10,2) NOT NULL DEFAULT 0,
+        payment_status   ENUM('unpaid','deposit_paid','fully_paid') NOT NULL DEFAULT 'unpaid',
+        payments         JSON
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id       VARCHAR(64)  NOT NULL PRIMARY KEY,
+        name     VARCHAR(128) NOT NULL,
+        icon     VARCHAR(64)  NOT NULL DEFAULT '',
+        featured TINYINT(1)   NOT NULL DEFAULT 0,
+        \`order\` INT          NOT NULL DEFAULT 0
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS site_content (
+        id      INT         NOT NULL PRIMARY KEY DEFAULT 1,
+        content JSON        NOT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS settings (
+        id                   INT        NOT NULL PRIMARY KEY DEFAULT 1,
+        tent_planner_enabled TINYINT(1) NOT NULL DEFAULT 1,
+        maintenance_mode     TINYINT(1) NOT NULL DEFAULT 0,
+        analytics_id         VARCHAR(128) NOT NULL DEFAULT ''
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        email         VARCHAR(255) NOT NULL PRIMARY KEY,
+        password_hash VARCHAR(512) NOT NULL,
+        name          VARCHAR(255) NOT NULL DEFAULT '',
+        phone         VARCHAR(64)  NOT NULL DEFAULT '',
+        address       VARCHAR(512),
+        city          VARCHAR(128),
+        zip_code      VARCHAR(32)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    // Seed default data if tables are empty
+    const [invCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM inventory");
+    if ((invCount as mysql.RowDataPacket[])[0].c === 0) {
+      for (const item of mockInventory) {
+        await conn.query(
+          `INSERT IGNORE INTO inventory
+            (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [item.id, item.title, item.category, item.description, item.price, item.depositAmount,
+           item.availability ? 1 : 0, item.dimensions, item.capacity, item.image,
+           item.rating, item.reviews, item.stock ?? null]
+        );
+      }
+    }
+
+    const [catCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM categories");
+    if ((catCount as mysql.RowDataPacket[])[0].c === 0) {
+      const DEFAULT_CATEGORIES: Category[] = [
+        { id: "cat-1", name: "Bounce Houses",        icon: "castle",  featured: true,  order: 1 },
+        { id: "cat-2", name: "Water Slides",          icon: "water",   featured: true,  order: 2 },
+        { id: "cat-3", name: "Tents",                 icon: "tent",    featured: true,  order: 3 },
+        { id: "cat-4", name: "Tables",                icon: "table",   featured: false, order: 4 },
+        { id: "cat-5", name: "Chairs",                icon: "chair",   featured: false, order: 5 },
+        { id: "cat-6", name: "Cotton Candy Machines", icon: "candy",   featured: false, order: 6 },
+        { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
+        { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
+      ];
+      for (const cat of DEFAULT_CATEGORIES) {
+        await conn.query(
+          "INSERT IGNORE INTO categories (id, name, icon, featured, `order`) VALUES (?, ?, ?, ?, ?)",
+          [cat.id, cat.name, cat.icon, cat.featured ? 1 : 0, cat.order]
+        );
+      }
+    }
+
+    const [scCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM site_content");
+    if ((scCount as mysql.RowDataPacket[])[0].c === 0) {
+      const DEFAULT_SITE_CONTENT: SiteContent = {
+        hero: {
+          badge: "America's #1 Rated Event Rentals",
+          headline: "Creating Unforgettable Events, One Rental At A Time",
+          subheadline:
+            "From premium bounce houses & massive water slides to elegant wedding tents, tables, chairs, and concession machines — Pinstripes delivers everything your event needs.",
+          trustPillars: [
+            { value: "100%", label: "Sanitised Equipment" },
+            { value: "Ontime", label: "Delivery & Setup" },
+            { value: "5.0 ★", label: "Customer Rated" },
+          ],
+        },
+        stats: [
+          { value: "500", label: "Events Served", suffix: "+" },
+          { value: "5.0", label: "Star Rating", suffix: "★" },
+          { value: "48", label: "Hour Booking", suffix: "hr" },
+          { value: "100", label: "Satisfaction", suffix: "%" },
+        ],
+        footer: {
+          phone: "(757) 749-3407",
+          email: "pinstripes@events.com",
+          address: "Hampton Roads, Virginia",
+          instagramUrl: "https://www.instagram.com/socialkon10_cre8tive/",
+          facebookUrl: "https://facebook.com",
+        },
+        navbar: {
+          rainCheckText: "100% Free date shifts & weather protection for all Hampton Roads rentals.",
+          dispatchHours: "7:00 AM – 7:00 PM",
+          serviceArea: "Serving Norfolk, VA Beach, Chesapeake, Suffolk & surrounding.",
+        },
+      };
+      await conn.query("INSERT IGNORE INTO site_content (id, content) VALUES (1, ?)", [
+        JSON.stringify(DEFAULT_SITE_CONTENT),
+      ]);
+    }
+
+    const [setCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM settings");
+    if ((setCount as mysql.RowDataPacket[])[0].c === 0) {
+      await conn.query(
+        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id) VALUES (1, 1, 0, '')"
+      );
+    }
+  } finally {
+    conn.release();
+  }
+}
+
+// ─── Helper: ensure DB is seeded before every operation ──────────────────────
+
+let _initialized = false;
+async function ensureInit() {
+  if (!_initialized) {
+    await initDb();
+    _initialized = true;
+  }
+}
+
+// ─── Resilient In-Memory Fallback Store ──────────────────────────────────────
+
+let useFallback = false;
 
 const DEFAULT_SITE_CONTENT: SiteContent = {
   hero: {
     badge: "America's #1 Rated Event Rentals",
     headline: "Creating Unforgettable Events, One Rental At A Time",
-    subheadline: "From premium bounce houses & massive water slides to elegant wedding tents, tables, chairs, and concession machines — Pinstripes delivers everything your event needs.",
+    subheadline:
+      "From premium bounce houses & massive water slides to elegant wedding tents, tables, chairs, and concession machines — Pinstripes delivers everything your event needs.",
     trustPillars: [
       { value: "100%", label: "Sanitised Equipment" },
       { value: "Ontime", label: "Delivery & Setup" },
@@ -130,333 +335,645 @@ const DEFAULT_SITE_CONTENT: SiteContent = {
   },
 };
 
-/**
- * Ensures the database directory and db.json exist, initialized with seed data.
- */
-function ensureDb() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
+const fallbackStore = {
+  inventory: [...mockInventory],
+  categories: [
+    { id: "cat-1", name: "Bounce Houses",        icon: "castle",  featured: true,  order: 1 },
+    { id: "cat-2", name: "Water Slides",          icon: "water",   featured: true,  order: 2 },
+    { id: "cat-3", name: "Tents",                 icon: "tent",    featured: true,  order: 3 },
+    { id: "cat-4", name: "Tables",                icon: "table",   featured: false, order: 4 },
+    { id: "cat-5", name: "Chairs",                icon: "chair",   featured: false, order: 5 },
+    { id: "cat-6", name: "Cotton Candy Machines", icon: "candy",   featured: false, order: 6 },
+    { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
+    { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
+  ],
+  siteContent: { ...DEFAULT_SITE_CONTENT },
+  settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "" },
+  bookings: [] as Booking[],
+  users: [] as User[],
+};
 
-  if (!fs.existsSync(DB_FILE)) {
-    const initialData: DatabaseSchema = {
-      inventory: mockInventory,
-      bookings: [
-        // Seed database with a couple of mock bookings to test availability functionality
-        {
-          id: "PSR-SEEDBOOK1",
-          customer: {
-            name: "John Doe",
-            email: "john@example.com",
-            phone: "(757) 555-0199",
-          },
-          event: {
-            type: "Wedding reception",
-            date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 5 days from now
-            location: "Backyard",
-            guestCount: 80,
-          },
-          delivery: {
-            address: "123 Ocean Front",
-            city: "Virginia Beach",
-            zipCode: "23451",
-          },
-          items: {
-            "5": 1, // High-Peak Canopy Tent
-            "2": 50, // folding chairs
-          },
-          itemCount: 51,
-          estimatedTotal: 575.0,
-          paymentMethod: "Pay in Person",
-          notes: "Wedding reception booking.",
-          submittedAt: new Date().toISOString(),
-        },
-      ],
-      categories: DEFAULT_CATEGORIES,
-      siteContent: DEFAULT_SITE_CONTENT,
-      settings: {
-        tentPlannerEnabled: true,
-        maintenanceMode: false,
-        analyticsId: "",
-      },
-    };
-    fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2), "utf-8");
-  }
-}
+// ─── Inventory ────────────────────────────────────────────────────────────────
 
-/** Read database */
-export function readDb(): DatabaseSchema {
-  ensureDb();
-  try {
-    const content = fs.readFileSync(DB_FILE, "utf-8");
-    const data = JSON.parse(content);
-    let modified = false;
-    if (!data.inventory) {
-      data.inventory = mockInventory;
-      modified = true;
-    }
-    if (!data.bookings) {
-      data.bookings = [];
-      modified = true;
-    }
-    if (!data.settings) {
-      data.settings = { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "" };
-      modified = true;
-    }
-    if (!data.categories) {
-      data.categories = DEFAULT_CATEGORIES;
-      modified = true;
-    }
-    if (!data.siteContent) {
-      data.siteContent = DEFAULT_SITE_CONTENT;
-      modified = true;
-    }
-    if (!data.users) {
-      data.users = [];
-      modified = true;
-    }
-    if (modified) {
-      try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
-      } catch (err) {
-        console.error("Error writing healed database schema:", err);
-      }
-    }
-    return data;
-  } catch (err) {
-    console.error("Error reading JSON database:", err);
-    return { inventory: mockInventory, bookings: [], categories: DEFAULT_CATEGORIES, siteContent: DEFAULT_SITE_CONTENT };
-  }
-}
+type InventoryRow = {
+  id: string; title: string; category: string; description: string;
+  price: number; deposit_amount: number; availability: number;
+  dimensions: string; capacity: string; image: string;
+  rating: number; reviews: number; stock: number | null;
+};
 
-/** Write database */
-export function writeDb(data: DatabaseSchema) {
-  ensureDb();
-  try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error writing JSON database:", err);
-  }
-}
-
-/** Get all inventory items */
-export function getInventory(): RentalItem[] {
-  return readDb().inventory;
-}
-
-/** Update an inventory item's details */
-export function updateInventoryItem(id: string, updates: Partial<RentalItem>): RentalItem | null {
-  const db = readDb();
-  const idx = db.inventory.findIndex((item) => item.id === id);
-  if (idx === -1) return null;
-
-  db.inventory[idx] = { ...db.inventory[idx], ...updates };
-  writeDb(db);
-  return db.inventory[idx];
-}
-
-/** Add a new inventory item */
-export function addInventoryItem(item: RentalItem): RentalItem {
-  const db = readDb();
-  db.inventory.push(item);
-  writeDb(db);
-  return item;
-}
-
-/** Delete an inventory item */
-export function deleteInventoryItem(id: string): boolean {
-  const db = readDb();
-  const initialLength = db.inventory.length;
-  db.inventory = db.inventory.filter((item) => item.id !== id);
-  if (db.inventory.length === initialLength) return false;
-  writeDb(db);
-  return true;
-}
-
-/** Get all bookings */
-export function getBookings(): Booking[] {
-  return readDb().bookings;
-}
-
-/** Add a booking */
-export function addBooking(booking: Booking): Booking {
-  const db = readDb();
-  db.bookings.push(booking);
-  writeDb(db);
-  return booking;
-}
-
-/** Get booking by ID */
-export function getBookingById(id: string): Booking | null {
-  return getBookings().find((b) => b.id === id) || null;
-}
-
-/**
- * Calculates dynamic availability for a specific item on a given date.
- * Returns the quantity available to rent (maxStock - currentlyRentedOnDate).
- */
-export function getItemAvailability(itemId: string, date: string): { totalStock: number; rented: number; available: number } {
-  const db = readDb();
-  const item = db.inventory.find((i) => i.id === itemId);
-  if (!item) {
-    return { totalStock: 0, rented: 0, available: 0 };
-  }
-
-  // Max stock in database is represented as quantity limits.
-  // Standard items can be customized by adding a maxStock property or deriving.
-  // Let's support a default capacity limit (e.g. canopy tent has max stock 5, chairs 500, slides 3, etc.)
-  // Let's set standard limits for items based on their category:
-  // Chairs: 500, Tables: 50, Tents: 5, Slides: 3, machines: 5
-  let totalStock = 5;
-  if (item.category === "Chairs") totalStock = 500;
-  else if (item.category === "Tables") totalStock = 50;
-  else if (item.category === "Tents") totalStock = 8;
-  else if (item.category === "Bounce Houses" || item.category === "Water Slides") totalStock = 3;
-
-  // Let's check if the item already has a custom quantity property or override
-  // (We'll support an optional 'stock' property on the RentalItem interface)
-  const itemWithStock = item as any;
-  if (typeof itemWithStock.stock === "number") {
-    totalStock = itemWithStock.stock;
-  }
-
-  // Count quantities already booked for this date
-  let rented = 0;
-  db.bookings.forEach((booking) => {
-    if (booking.event.date === date && booking.items[itemId]) {
-      rented += booking.items[itemId];
-    }
-  });
-
+function rowToItem(r: InventoryRow): RentalItem {
   return {
-    totalStock,
-    rented,
-    available: Math.max(0, totalStock - rented),
+    id: r.id, title: r.title, category: r.category, description: r.description,
+    price: Number(r.price), depositAmount: Number(r.deposit_amount),
+    availability: Boolean(r.availability),
+    dimensions: r.dimensions, capacity: r.capacity, image: r.image,
+    rating: Number(r.rating), reviews: r.reviews,
+    ...(r.stock !== null ? { stock: r.stock } : {}),
   };
 }
 
-/** Get all system settings */
-export function getSettings(): { tentPlannerEnabled: boolean; maintenanceMode?: boolean; analyticsId?: string } {
-  const db = readDb();
-  return db.settings || { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "" };
-}
-
-/** Update system settings */
-export function updateSettings(updates: { tentPlannerEnabled?: boolean; maintenanceMode?: boolean; analyticsId?: string }) {
-  const db = readDb();
-  db.settings = { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", ...db.settings, ...updates };
-  writeDb(db);
-}
-
-/** Get all categories */
-export function getCategories(): Category[] {
-  const db = readDb();
-  return (db.categories || DEFAULT_CATEGORIES).sort((a, b) => a.order - b.order);
-}
-
-/** Save categories (full replace) */
-export function saveCategories(categories: Category[]) {
-  const db = readDb();
-  db.categories = categories;
-  writeDb(db);
-}
-
-/** Get site content */
-export function getSiteContent(): SiteContent {
-  const db = readDb();
-  return db.siteContent || DEFAULT_SITE_CONTENT;
-}
-
-/** Update site content */
-export function updateSiteContent(updates: Partial<SiteContent>) {
-  const db = readDb();
-  db.siteContent = { ...(db.siteContent || DEFAULT_SITE_CONTENT), ...updates };
-  writeDb(db);
-}
-
-/** Delete a booking by ID */
-export function deleteBooking(id: string): boolean {
-  const db = readDb();
-  const before = db.bookings.length;
-  db.bookings = db.bookings.filter((b) => b.id !== id);
-  if (db.bookings.length === before) return false;
-  writeDb(db);
-  return true;
-}
-
-/** Update booking status */
-export function updateBookingStatus(id: string, status: "pending" | "confirmed" | "cancelled"): boolean {
-  const db = readDb();
-  const idx = db.bookings.findIndex((b) => b.id === id);
-  if (idx === -1) return false;
-  (db.bookings[idx] as any).status = status;
-  writeDb(db);
-  return true;
-}
-
-/** Get all users */
-export function getUsers(): User[] {
-  const db = readDb();
-  return db.users || [];
-}
-
-/** Add a new user */
-export function addUser(user: User): User {
-  const db = readDb();
-  if (!db.users) db.users = [];
-  db.users.push(user);
-  writeDb(db);
-  return user;
-}
-
-/** Update an existing user */
-export function updateUser(email: string, updates: Partial<User>): User | null {
-  const db = readDb();
-  if (!db.users) return null;
-  const idx = db.users.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
-  if (idx === -1) return null;
-  db.users[idx] = { ...db.users[idx], ...updates };
-  writeDb(db);
-  return db.users[idx];
-}
-
-/** Get bookings for a user by email */
-export function getUserBookings(email: string): Booking[] {
-  return getBookings().filter((b) => b.customer.email.toLowerCase() === email.toLowerCase());
-}
-
-/** Process a payment for a booking */
-export function updateBookingPayment(id: string, amount: number, method: string): boolean {
-  const db = readDb();
-  const idx = db.bookings.findIndex((b) => b.id === id);
-  if (idx === -1) return false;
-  
-  const booking = db.bookings[idx];
-  const total = booking.estimatedTotal;
-  const currentPaid = booking.amountPaid || 0;
-  const newPaid = currentPaid + amount;
-  
-  booking.amountPaid = newPaid;
-  
-  const payments = booking.payments || [];
-  payments.push({
-    id: "PAY-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
-    amount,
-    method,
-    timestamp: new Date().toISOString()
-  });
-  booking.payments = payments;
-  
-  if (newPaid >= total) {
-    booking.paymentStatus = "fully_paid";
-    booking.status = "confirmed";
-  } else if (newPaid > 0) {
-    booking.paymentStatus = "deposit_paid";
-    booking.status = "confirmed";
-  } else {
-    booking.paymentStatus = "unpaid";
+export async function getInventory(): Promise<RentalItem[]> {
+  if (useFallback) return fallbackStore.inventory;
+  try {
+    await ensureInit();
+    const rows = await query<InventoryRow>("SELECT * FROM inventory ORDER BY CAST(id AS UNSIGNED)");
+    return rows.map(rowToItem);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory inventory store.", err);
+    useFallback = true;
+    return fallbackStore.inventory;
   }
-  
-  writeDb(db);
-  return true;
+}
+
+export async function updateInventoryItem(id: string, updates: Partial<RentalItem>): Promise<RentalItem | null> {
+  if (useFallback) {
+    const idx = fallbackStore.inventory.findIndex(item => item.id === id);
+    if (idx === -1) return null;
+    fallbackStore.inventory[idx] = { ...fallbackStore.inventory[idx], ...updates };
+    return fallbackStore.inventory[idx];
+  }
+  try {
+    await ensureInit();
+    const fieldMap: Record<string, string> = {
+      title: "title", category: "category", description: "description",
+      price: "price", depositAmount: "deposit_amount", availability: "availability",
+      dimensions: "dimensions", capacity: "capacity", image: "image",
+      rating: "rating", reviews: "reviews", stock: "stock",
+    };
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    for (const [key, val] of Object.entries(updates)) {
+      const col = fieldMap[key];
+      if (!col) continue;
+      setClauses.push(`${col} = ?`);
+      values.push(key === "availability" ? (val ? 1 : 0) : val);
+    }
+    if (setClauses.length === 0) return null;
+    values.push(id);
+    await query(`UPDATE inventory SET ${setClauses.join(", ")} WHERE id = ?`, values);
+    const rows = await query<InventoryRow>("SELECT * FROM inventory WHERE id = ?", [id]);
+    return rows.length ? rowToItem(rows[0]) : null;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return updateInventoryItem(id, updates);
+  }
+}
+
+export async function addInventoryItem(item: RentalItem): Promise<RentalItem> {
+  if (useFallback) {
+    fallbackStore.inventory.push(item);
+    return item;
+  }
+  try {
+    await ensureInit();
+    await query(
+      `INSERT INTO inventory (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [item.id, item.title, item.category, item.description, item.price, item.depositAmount,
+       item.availability ? 1 : 0, item.dimensions, item.capacity, item.image,
+       item.rating, item.reviews, item.stock ?? null]
+    );
+    return item;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return addInventoryItem(item);
+  }
+}
+
+export async function deleteInventoryItem(id: string): Promise<boolean> {
+  if (useFallback) {
+    const before = fallbackStore.inventory.length;
+    fallbackStore.inventory = fallbackStore.inventory.filter(item => item.id !== id);
+    return fallbackStore.inventory.length < before;
+  }
+  try {
+    await ensureInit();
+    const [result] = await getPool().execute<mysql.ResultSetHeader>("DELETE FROM inventory WHERE id = ?", [id]);
+    return result.affectedRows > 0;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return deleteInventoryItem(id);
+  }
+}
+
+// ─── Bookings ─────────────────────────────────────────────────────────────────
+
+type BookingRow = {
+  id: string; customer: Booking["customer"]; event_data: Booking["event"];
+  delivery: Booking["delivery"]; items: Record<string, number>;
+  item_count: number; estimated_total: number; payment_method: string;
+  status: Booking["status"]; notes: string | null; submitted_at: Date | string;
+  amount_paid: number; payment_status: Booking["paymentStatus"];
+  payments: Booking["payments"] | null;
+};
+
+function rowToBooking(r: BookingRow): Booking {
+  return {
+    id: r.id,
+    customer: r.customer,
+    event: r.event_data,
+    delivery: r.delivery,
+    items: r.items,
+    itemCount: r.item_count,
+    estimatedTotal: Number(r.estimated_total),
+    paymentMethod: r.payment_method,
+    status: r.status,
+    notes: r.notes ?? undefined,
+    submittedAt: r.submitted_at instanceof Date
+      ? r.submitted_at.toISOString()
+      : String(r.submitted_at),
+    amountPaid: Number(r.amount_paid),
+    paymentStatus: r.payment_status,
+    payments: r.payments ?? undefined,
+  };
+}
+
+export async function getBookings(): Promise<Booking[]> {
+  if (useFallback) return fallbackStore.bookings;
+  try {
+    await ensureInit();
+    const rows = await query<BookingRow>("SELECT * FROM bookings ORDER BY submitted_at DESC");
+    return rows.map(rowToBooking);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return fallbackStore.bookings;
+  }
+}
+
+export async function addBooking(booking: Booking): Promise<Booking> {
+  if (useFallback) {
+    fallbackStore.bookings.push(booking);
+    return booking;
+  }
+  try {
+    await ensureInit();
+    await query(
+      `INSERT INTO bookings
+        (id, customer, event_data, delivery, items, item_count, estimated_total,
+         payment_method, status, notes, submitted_at, amount_paid, payment_status, payments)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        booking.id,
+        JSON.stringify(booking.customer),
+        JSON.stringify(booking.event),
+        JSON.stringify(booking.delivery),
+        JSON.stringify(booking.items),
+        booking.itemCount,
+        booking.estimatedTotal,
+        booking.paymentMethod,
+        booking.status ?? "pending",
+        booking.notes ?? null,
+        booking.submittedAt,
+        booking.amountPaid ?? 0,
+        booking.paymentStatus ?? "unpaid",
+        booking.payments ? JSON.stringify(booking.payments) : null,
+      ]
+    );
+    return booking;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return addBooking(booking);
+  }
+}
+
+export async function getBookingById(id: string): Promise<Booking | null> {
+  if (useFallback) {
+    return fallbackStore.bookings.find(b => b.id === id) || null;
+  }
+  try {
+    await ensureInit();
+    const rows = await query<BookingRow>("SELECT * FROM bookings WHERE id = ?", [id]);
+    return rows.length ? rowToBooking(rows[0]) : null;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return getBookingById(id);
+  }
+}
+
+export async function deleteBooking(id: string): Promise<boolean> {
+  if (useFallback) {
+    const before = fallbackStore.bookings.length;
+    fallbackStore.bookings = fallbackStore.bookings.filter(b => b.id !== id);
+    return fallbackStore.bookings.length < before;
+  }
+  try {
+    await ensureInit();
+    const [result] = await getPool().execute<mysql.ResultSetHeader>(
+      "DELETE FROM bookings WHERE id = ?", [id]
+    );
+    return result.affectedRows > 0;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return deleteBooking(id);
+  }
+}
+
+export async function updateBookingStatus(
+  id: string,
+  status: "pending" | "confirmed" | "cancelled"
+): Promise<boolean> {
+  if (useFallback) {
+    const b = fallbackStore.bookings.find(x => x.id === id);
+    if (!b) return false;
+    b.status = status;
+    return true;
+  }
+  try {
+    await ensureInit();
+    const [result] = await getPool().execute<mysql.ResultSetHeader>(
+      "UPDATE bookings SET status = ? WHERE id = ?", [status, id]
+    );
+    return result.affectedRows > 0;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return updateBookingStatus(id, status);
+  }
+}
+
+export async function updateBookingPayment(
+  id: string,
+  amount: number,
+  method: string
+): Promise<boolean> {
+  if (useFallback) {
+    const booking = fallbackStore.bookings.find(x => x.id === id);
+    if (!booking) return false;
+
+    const currentPaid = booking.amountPaid ?? 0;
+    const newPaid = currentPaid + amount;
+
+    const payments = booking.payments ?? [];
+    payments.push({
+      id: "PAY-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      amount,
+      method,
+      timestamp: new Date().toISOString(),
+    });
+
+    booking.payments = payments;
+    booking.amountPaid = newPaid;
+
+    if (newPaid >= booking.estimatedTotal) {
+      booking.paymentStatus = "fully_paid";
+      booking.status = "confirmed";
+    } else if (newPaid > 0) {
+      booking.paymentStatus = "deposit_paid";
+      booking.status = "confirmed";
+    }
+    return true;
+  }
+  try {
+    await ensureInit();
+    const rows = await query<BookingRow>("SELECT * FROM bookings WHERE id = ?", [id]);
+    if (!rows.length) return false;
+
+    const booking = rowToBooking(rows[0]);
+    const currentPaid = booking.amountPaid ?? 0;
+    const newPaid = currentPaid + amount;
+
+    const payments = booking.payments ?? [];
+    payments.push({
+      id: "PAY-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      amount,
+      method,
+      timestamp: new Date().toISOString(),
+    });
+
+    let paymentStatus: Booking["paymentStatus"] = "unpaid";
+    let status: Booking["status"] = booking.status ?? "pending";
+    if (newPaid >= booking.estimatedTotal) {
+      paymentStatus = "fully_paid";
+      status = "confirmed";
+    } else if (newPaid > 0) {
+      paymentStatus = "deposit_paid";
+      status = "confirmed";
+    }
+
+    await query(
+      `UPDATE bookings SET amount_paid = ?, payment_status = ?, status = ?, payments = ? WHERE id = ?`,
+      [newPaid, paymentStatus, status, JSON.stringify(payments), id]
+    );
+    return true;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return updateBookingPayment(id, amount, method);
+  }
+}
+
+export async function getUserBookings(email: string): Promise<Booking[]> {
+  if (useFallback) {
+    return fallbackStore.bookings.filter(b => b.customer.email.toLowerCase() === email.toLowerCase());
+  }
+  try {
+    await ensureInit();
+    const rows = await query<BookingRow>(
+      "SELECT * FROM bookings WHERE JSON_UNQUOTE(JSON_EXTRACT(customer, '$.email')) = ? ORDER BY submitted_at DESC",
+      [email.toLowerCase()]
+    );
+    return rows.map(rowToBooking);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return getUserBookings(email);
+  }
+}
+
+// ─── Availability ─────────────────────────────────────────────────────────────
+
+export async function getItemAvailability(
+  itemId: string,
+  date: string
+): Promise<{ totalStock: number; rented: number; available: number }> {
+  if (useFallback) {
+    const item = fallbackStore.inventory.find(i => i.id === itemId);
+    if (!item) return { totalStock: 0, rented: 0, available: 0 };
+
+    let totalStock = 5;
+    if (item.category === "Chairs") totalStock = 500;
+    else if (item.category === "Tables") totalStock = 50;
+    else if (item.category === "Tents") totalStock = 8;
+    else if (item.category === "Bounce Houses" || item.category === "Water Slides") totalStock = 3;
+    if (item.stock !== null && item.stock !== undefined) totalStock = item.stock;
+
+    let rented = 0;
+    for (const b of fallbackStore.bookings) {
+      if (JSON.stringify(b.event.date) === JSON.stringify(date) && b.items[itemId]) {
+        rented += Number(b.items[itemId]);
+      }
+    }
+    return { totalStock, rented, available: Math.max(0, totalStock - rented) };
+  }
+  try {
+    await ensureInit();
+    const items = await query<InventoryRow>("SELECT * FROM inventory WHERE id = ?", [itemId]);
+    if (!items.length) return { totalStock: 0, rented: 0, available: 0 };
+
+    const item = items[0];
+    let totalStock = 5;
+    if (item.category === "Chairs") totalStock = 500;
+    else if (item.category === "Tables") totalStock = 50;
+    else if (item.category === "Tents") totalStock = 8;
+    else if (item.category === "Bounce Houses" || item.category === "Water Slides") totalStock = 3;
+    if (item.stock !== null) totalStock = item.stock;
+
+    // Sum quantities already booked for this date
+    const booked = await query<{ total: number }>(
+      `SELECT COALESCE(SUM(JSON_UNQUOTE(JSON_EXTRACT(items, CONCAT('$."', ?, '"')))), 0) as total
+       FROM bookings
+       WHERE JSON_UNQUOTE(JSON_EXTRACT(event_data, '$.date')) = ?
+         AND JSON_EXTRACT(items, CONCAT('$."', ?, '"')) IS NOT NULL`,
+      [itemId, date, itemId]
+    );
+
+    const rented = Number(booked[0]?.total ?? 0);
+    return { totalStock, rented, available: Math.max(0, totalStock - rented) };
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return getItemAvailability(itemId, date);
+  }
+}
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+type SettingsRow = {
+  id: number;
+  tent_planner_enabled: number;
+  maintenance_mode: number;
+  analytics_id: string;
+};
+
+export async function getSettings(): Promise<{
+  tentPlannerEnabled: boolean;
+  maintenanceMode?: boolean;
+  analyticsId?: string;
+}> {
+  if (useFallback) return fallbackStore.settings;
+  try {
+    await ensureInit();
+    const rows = await query<SettingsRow>("SELECT * FROM settings WHERE id = 1");
+    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "" };
+    return {
+      tentPlannerEnabled: Boolean(rows[0].tent_planner_enabled),
+      maintenanceMode: Boolean(rows[0].maintenance_mode),
+      analyticsId: rows[0].analytics_id,
+    };
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return fallbackStore.settings;
+  }
+}
+
+export async function updateSettings(updates: {
+  tentPlannerEnabled?: boolean;
+  maintenanceMode?: boolean;
+  analyticsId?: string;
+}): Promise<void> {
+  if (useFallback) {
+    fallbackStore.settings = { ...fallbackStore.settings, ...updates };
+    return;
+  }
+  try {
+    await ensureInit();
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    if (updates.tentPlannerEnabled !== undefined) {
+      setClauses.push("tent_planner_enabled = ?");
+      values.push(updates.tentPlannerEnabled ? 1 : 0);
+    }
+    if (updates.maintenanceMode !== undefined) {
+      setClauses.push("maintenance_mode = ?");
+      values.push(updates.maintenanceMode ? 1 : 0);
+    }
+    if (updates.analyticsId !== undefined) {
+      setClauses.push("analytics_id = ?");
+      values.push(updates.analyticsId);
+    }
+    if (setClauses.length === 0) return;
+    values.push(1);
+    await query(`UPDATE settings SET ${setClauses.join(", ")} WHERE id = ?`, values);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return updateSettings(updates);
+  }
+}
+
+// ─── Categories ───────────────────────────────────────────────────────────────
+
+type CategoryRow = {
+  id: string; name: string; icon: string; featured: number; order: number;
+};
+
+function rowToCategory(r: CategoryRow): Category {
+  return { id: r.id, name: r.name, icon: r.icon, featured: Boolean(r.featured), order: r.order };
+}
+
+export async function getCategories(): Promise<Category[]> {
+  if (useFallback) return fallbackStore.categories;
+  try {
+    await ensureInit();
+    const rows = await query<CategoryRow>("SELECT * FROM categories ORDER BY `order` ASC");
+    return rows.map(rowToCategory);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return fallbackStore.categories;
+  }
+}
+
+export async function saveCategories(categories: Category[]): Promise<void> {
+  if (useFallback) {
+    fallbackStore.categories = [...categories];
+    return;
+  }
+  try {
+    await ensureInit();
+    const conn = await getPool().getConnection();
+    try {
+      await conn.beginTransaction();
+      await conn.query("DELETE FROM categories");
+      for (const cat of categories) {
+        await conn.query(
+          "INSERT INTO categories (id, name, icon, featured, `order`) VALUES (?, ?, ?, ?, ?)",
+          [cat.id, cat.name, cat.icon, cat.featured ? 1 : 0, cat.order]
+        );
+      }
+      await conn.commit();
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return saveCategories(categories);
+  }
+}
+
+// ─── Site Content ─────────────────────────────────────────────────────────────
+
+export async function getSiteContent(): Promise<SiteContent> {
+  if (useFallback) return fallbackStore.siteContent;
+  try {
+    await ensureInit();
+    const rows = await query<{ id: number; content: SiteContent }>(
+      "SELECT * FROM site_content WHERE id = 1"
+    );
+    return rows.length ? rows[0].content : DEFAULT_SITE_CONTENT;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return fallbackStore.siteContent;
+  }
+}
+
+export async function updateSiteContent(updates: Partial<SiteContent>): Promise<void> {
+  if (useFallback) {
+    fallbackStore.siteContent = { ...fallbackStore.siteContent, ...updates };
+    return;
+  }
+  try {
+    await ensureInit();
+    const current = await getSiteContent();
+    const merged = { ...current, ...updates };
+    await query("UPDATE site_content SET content = ? WHERE id = 1", [JSON.stringify(merged)]);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return updateSiteContent(updates);
+  }
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+type UserRow = {
+  email: string; password_hash: string; name: string; phone: string;
+  address: string | null; city: string | null; zip_code: string | null;
+};
+
+function rowToUser(r: UserRow): User {
+  return {
+    email: r.email, passwordHash: r.password_hash, name: r.name, phone: r.phone,
+    address: r.address ?? undefined, city: r.city ?? undefined, zipCode: r.zip_code ?? undefined,
+  };
+}
+
+export async function getUsers(): Promise<User[]> {
+  if (useFallback) return fallbackStore.users;
+  try {
+    await ensureInit();
+    const rows = await query<UserRow>("SELECT * FROM users");
+    return rows.map(rowToUser);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return fallbackStore.users;
+  }
+}
+
+export async function addUser(user: User): Promise<User> {
+  if (useFallback) {
+    fallbackStore.users.push(user);
+    return user;
+  }
+  try {
+    await ensureInit();
+    await query(
+      "INSERT INTO users (email, password_hash, name, phone, address, city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [user.email, user.passwordHash, user.name, user.phone,
+       user.address ?? null, user.city ?? null, user.zipCode ?? null]
+    );
+    return user;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return addUser(user);
+  }
+}
+
+export async function updateUser(email: string, updates: Partial<User>): Promise<User | null> {
+  if (useFallback) {
+    const idx = fallbackStore.users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+    if (idx === -1) return null;
+    fallbackStore.users[idx] = { ...fallbackStore.users[idx], ...updates };
+    return fallbackStore.users[idx];
+  }
+  try {
+    await ensureInit();
+    const fieldMap: Record<string, string> = {
+      name: "name", phone: "phone", address: "address",
+      city: "city", zipCode: "zip_code", passwordHash: "password_hash",
+    };
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    for (const [key, val] of Object.entries(updates)) {
+      const col = fieldMap[key];
+      if (!col) continue;
+      setClauses.push(`${col} = ?`);
+      values.push(val ?? null);
+    }
+    if (setClauses.length === 0) return null;
+    values.push(email.toLowerCase());
+    await query(`UPDATE users SET ${setClauses.join(", ")} WHERE LOWER(email) = ?`, values);
+    const rows = await query<UserRow>("SELECT * FROM users WHERE LOWER(email) = ?", [email.toLowerCase()]);
+    return rows.length ? rowToUser(rows[0]) : null;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return updateUser(email, updates);
+  }
 }

@@ -1,28 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSettings, updateSettings } from "@/lib/db";
-
-const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "pinstripes2024";
-
-function isAuthorized(req: NextRequest): boolean {
-  return req.headers.get("x-admin-passcode") === ADMIN_PASSCODE;
-}
+import { isAdminAuthorized } from "@/lib/auth-security";
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const settings = getSettings();
+  const settings = await getSettings();
   return NextResponse.json({ success: true, ...settings });
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const body = await req.json();
-    updateSettings({
+    await updateSettings({
       tentPlannerEnabled: body.tentPlannerEnabled,
       maintenanceMode: body.maintenanceMode,
       analyticsId: body.analyticsId,

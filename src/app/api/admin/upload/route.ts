@@ -2,15 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { updateInventoryItem } from "@/lib/db";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-
-const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "pinstripes2024";
-
-function isAuthorized(req: NextRequest): boolean {
-  return req.headers.get("x-admin-passcode") === ADMIN_PASSCODE;
-}
+import { isAdminAuthorized } from "@/lib/auth-security";
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

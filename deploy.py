@@ -1,107 +1,196 @@
 import os
+import zipfile
 import sys
-import ftplib
+import time
 
-def load_ftp_credentials():
-    credentials = {}
-    env_paths = ['.env.local', '.env']
-    for path in env_paths:
-        if os.path.exists(path):
-            with open(path, 'r') as f:
+# Ensure paramiko is available
+try:
+    import paramiko
+except ImportError:
+    print("Installing required package 'paramiko'...")
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "paramiko"])
+    import paramiko
+
+def zip_project(zip_path):
+    print("Zipping local project files (including .next build)...")
+    exclude_dirs = {'.git', 'node_modules', 'out'}
+    exclude_files = {'project.zip', 'deploy.py'}
+    
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk('.'):
+            # Prune excluded directories
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
+            
+            for file in files:
+                if file in exclude_files or file.endswith('.zip') or file.startswith('.env'):
+                    continue
+                file_path = os.path.join(root, file)
+                archive_name = os.path.relpath(file_path, '.')
+                zipf.write(file_path, archive_name)
+    print("Zipping complete.")
+
+def load_env():
+    # Dynamic environment loader
+    env = {}
+    for filename in [".env.local", ".env"]:
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
                 for line in f:
                     line = line.strip()
-                    if not line or line.startswith('#') or '=' not in line:
+                    if not line or line.startswith("#"):
                         continue
-                    k, v = line.split('=', 1)
-                    credentials[k.strip()] = v.strip()
-            break # Stop after loading the first found env file
-    return credentials
-
-def upload_directory(ftp, local_path, remote_path):
-    print(f"Syncing directory: {local_path} -> {remote_path}")
-    for item in os.listdir(local_path):
-        local_item = os.path.join(local_path, item)
-        remote_item = f"{remote_path}/{item}" if remote_path else item
-
-        if os.path.isdir(local_item):
-            # Skip node_modules or git if accidentally in target
-            if item in ['.git', 'node_modules']:
-                continue
-            
-            # Enter or create directory relatively
-            try:
-                ftp.cwd(item)
-            except ftplib.all_errors:
-                # Directory doesn't exist, create it
-                ftp.mkd(item)
-                ftp.cwd(item)
-                
-            upload_directory(ftp, local_item, remote_item)
-            ftp.cwd("..") # Go back up one level
-        else:
-            # Upload file
-            filename = os.path.basename(local_item)
-            
-            # CRITICAL WARNING: Avoid overwriting the database file on Hostinger if it exists
-            if remote_item == "public_html/api/data/db.json" or remote_item == "api/data/db.json":
-                try:
-                    ftp.nlst(filename)
-                    print(f" [SKIP] {remote_item} already exists on server (preserving live data).")
-                    continue
-                except ftplib.all_errors:
-                    pass # File doesn't exist, proceed to upload
-
-            print(f" [UP] {local_item} -> {remote_item}")
-            with open(local_item, 'rb') as f:
-                ftp.storbinary(f'STOR {filename}', f)
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        # Strip quotes and leading/trailing whitespace
+                        k = k.strip()
+                        v = v.strip().strip("'").strip('"')
+                        # Precedence: .env.local takes priority, so only set if not already set
+                        if k not in env:
+                            env[k] = v
+    # Merge with system environment variables
+    for k, v in env.items():
+        if k not in os.environ:
+            os.environ[k] = v
 
 def main():
-    print("Preparing Hostinger FTP deployment...")
-    creds = load_ftp_credentials()
+    load_env()
+
+    host = os.environ.get("FTP_HOST") or "212.85.28.186"
+    user = os.environ.get("FTP_USER") or "u887289907"
+    password = os.environ.get("FTP_PASS")
+    port = int(os.environ.get("FTP_PORT") or 65002)
+
+    db_host = os.environ.get("DB_HOST") or "localhost"
+    db_port = os.environ.get("DB_PORT") or "3306"
+    db_name = os.environ.get("DB_NAME")
+    db_user = os.environ.get("DB_USER")
+    db_pass = os.environ.get("DB_PASS")
+    db_socket = os.environ.get("DB_SOCKET") or "/var/lib/mysql/mysql.sock"
+    admin_passcode = os.environ.get("ADMIN_PASSCODE")
+    resend_api_key = os.environ.get("RESEND_API_KEY")
     
-    ftp_host = creds.get('FTP_HOST')
-    ftp_user = creds.get('FTP_USER')
-    ftp_pass = creds.get('FTP_PASS')
-    
-    if not ftp_host or not ftp_user or not ftp_pass:
-        print("Error: Missing FTP credentials in .env.local.")
-        print("Please add the following variables to your .env.local file:")
-        print("  FTP_HOST=your_ftp_host")
-        print("  FTP_USER=your_ftp_username")
-        print("  FTP_PASS=your_ftp_password")
+    if not password:
+        print("Error: FTP_PASS is not set in environment or env files. Halting deployment.")
         sys.exit(1)
 
-    print(f"Connecting to {ftp_host}...")
+    if not db_name or not db_user or not db_pass:
+        print("Error: Database credentials (DB_NAME, DB_USER, DB_PASS) must be configured. Halting.")
+        sys.exit(1)
+    
+    local_zip = "project.zip"
+    remote_zip = "project.zip"
+    
+    # 1. Build local project first
+    print("Building Next.js application locally...")
+    build_status = os.system("npm run build")
+    if build_status != 0:
+        print("Error: Local build failed. Halting deployment.")
+        sys.exit(1)
+        
+    # 2. Zip files
+    zip_project(local_zip)
+    
+    # 3. Upload via SFTP
+    print(f"Connecting to {host}:{port} via SFTP...")
     try:
-        ftp = ftplib.FTP(ftp_host)
-        ftp.login(ftp_user, ftp_pass)
-        ftp.encoding = "utf-8"
-        print("Login successful.")
+        transport = paramiko.Transport((host, port))
+        transport.connect(username=user, password=password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
         
-        # Determine remote root path
-        # In Hostinger, shared hosting files go to public_html/
-        # Check if public_html exists
-        remote_root = "public_html"
-        try:
-            ftp.cwd(remote_root)
-        except ftplib.error_perm:
-            remote_root = "" # Fallback if already in public_html
-            print("Could not find 'public_html' directory. Deploying to current remote directory.")
-
-        local_build_dir = "out"
-        if not os.path.exists(local_build_dir):
-            print(f"Error: Local build directory '{local_build_dir}' not found.")
-            print("Please run 'npm run build' first.")
-            ftp.quit()
-            sys.exit(1)
-
-        upload_directory(ftp, local_build_dir, remote_root)
-        
-        ftp.quit()
-        print("\nDeployment completed successfully!")
+        print(f"Uploading {local_zip} to {remote_zip}...")
+        sftp.put(local_zip, remote_zip)
+        sftp.close()
+        transport.close()
+        print("Upload complete.")
     except Exception as e:
-        print(f"\nDeployment failed: {e}")
+        print("SFTP Upload failed:", e)
+        if os.path.exists(local_zip):
+            os.remove(local_zip)
         sys.exit(1)
+        
+    # 4. SSH into server to extract and reload
+    print("Connecting via SSH to extract files and restart app...")
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(host, port, user, password)
+        
+        commands = [
+            # Extract zip into the nodejs folder
+            "unzip -o project.zip -d domains/pinstripesrentals.com/nodejs/",
+            # Write the .env.local file on the server (injected from local credentials)
+            (
+                f"cat > domains/pinstripesrentals.com/nodejs/.env.local << 'ENVEOF'\n"
+                f"DB_HOST={db_host}\n"
+                f"DB_PORT={db_port}\n"
+                f"DB_NAME={db_name}\n"
+                f"DB_USER={db_user}\n"
+                f"DB_PASS={db_pass}\n"
+                f"DB_SOCKET={db_socket}\n"
+                f"ADMIN_PASSCODE={admin_passcode or ''}\n"
+                f"RESEND_API_KEY={resend_api_key or ''}\n"
+                f"ENVEOF"
+            ),
+            # Install dependencies on the server
+            "export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && cd domains/pinstripesrentals.com/nodejs && npm install",
+            # Initialise / seed the MySQL database (idempotent — safe to run every deploy)
+            # Pass env vars explicitly to bypass dotenvx interception issues
+            (
+                f"export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && "
+                f"cd domains/pinstripesrentals.com/nodejs && "
+                f"DB_HOST={db_host} "
+                f"DB_PORT={db_port} "
+                f"DB_NAME={db_name} "
+                f"DB_USER={db_user} "
+                f"DB_PASS='{db_pass}' "
+                f"DB_SOCKET={db_socket} "
+                f"npx tsx src/lib/db-init.ts"
+            ),
+            # Touch restart file to trigger Passenger restart
+            "mkdir -p domains/pinstripesrentals.com/nodejs/tmp && touch domains/pinstripesrentals.com/nodejs/tmp/restart.txt",
+            # Remove remote zip
+            "rm project.zip"
+        ]
+        
+        for cmd in commands:
+            # Mask sensitive tokens in logs
+            log_cmd = cmd
+            if "DB_PASS=" in cmd or "cat >" in cmd:
+                log_cmd = "[command containing sensitive configuration variables masked]"
+            print(f"\nRunning SSH command: {log_cmd}")
+            
+            stdin, stdout, stderr = ssh.exec_command(cmd)
+            
+            # Print output in real-time
+            while not stdout.channel.exit_status_ready():
+                if stdout.channel.recv_ready():
+                    out = stdout.channel.recv(1024).decode('utf-8', errors='ignore')
+                    print(out, end='')
+                if stderr.channel.recv_stderr_ready():
+                    err = stderr.channel.recv_stderr(1024).decode('utf-8', errors='ignore')
+                    print(err, end='', file=sys.stderr)
+                    
+            # Print any remaining output
+            out = stdout.read().decode('utf-8', errors='ignore')
+            if out:
+                print(out, end='')
+            err = stderr.read().decode('utf-8', errors='ignore')
+            if err:
+                print(err, end='', file=sys.stderr)
+                
+            status = stdout.channel.recv_exit_status()
+            print(f"\nCommand finished with exit status: {status}")
+            if status != 0 and "npm install" in cmd:
+                print("Warning: npm install returned non-zero status.")
+                
+        ssh.close()
+        print("\nDeployment successfully finished!")
+    except Exception as e:
+        print("SSH build execution failed:", e)
+    finally:
+        if os.path.exists(local_zip):
+            os.remove(local_zip)
 
 if __name__ == "__main__":
     main()

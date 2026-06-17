@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       ...body,
       submittedAt: new Date().toISOString(),
     };
-    addBooking(booking);
+    await addBooking(booking);
     return NextResponse.json({ success: true, id: booking.id });
   } catch (err) {
     console.error("Quote API error:", err);

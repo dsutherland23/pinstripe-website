@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSiteContent, updateSiteContent } from "@/lib/db";
-
-const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "pinstripes2024";
-
-function isAuthorized(req: NextRequest): boolean {
-  return req.headers.get("x-admin-passcode") === ADMIN_PASSCODE;
-}
+import { isAdminAuthorized } from "@/lib/auth-security";
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const content = getSiteContent();
+  const content = await getSiteContent();
   return NextResponse.json({ success: true, content });
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -28,9 +23,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "section and data are required" }, { status: 400 });
     }
 
-    const current = getSiteContent();
+    const current = await getSiteContent();
     const updated = { ...current, [section]: { ...(current as any)[section], ...data } };
-    updateSiteContent(updated);
+    await updateSiteContent(updated);
 
     return NextResponse.json({ success: true });
   } catch (err) {

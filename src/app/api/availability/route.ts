@@ -11,13 +11,13 @@ export async function GET(req: NextRequest) {
   }
 
   if (itemId) {
-    const availability = getItemAvailability(itemId, date);
+    const availability = await getItemAvailability(itemId, date);
     return NextResponse.json({ success: true, ...availability });
   } else {
-    const inventory = getInventory();
-    const availability: Record<string, any> = {};
+    const inventory = await getInventory();
+    const availability: Record<string, unknown> = {};
     for (const item of inventory) {
-      availability[item.id] = getItemAvailability(item.id, date);
+      availability[item.id] = await getItemAvailability(item.id, date);
     }
     return NextResponse.json({ success: true, date, availability });
   }

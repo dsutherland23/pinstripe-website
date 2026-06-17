@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUsers, addUser } from "@/lib/db";
+import { getUsers, addUser, updateUser } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const emailClean = email.trim().toLowerCase();
-    const users = getUsers();
+    const users = await getUsers();
 
     if (action === "signup") {
       const exists = users.some((u) => u.email.toLowerCase() === emailClean);
@@ -19,13 +20,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "An account with this email already exists" }, { status: 400 });
       }
 
-      // In a real application, we would salt and hash the password (e.g. using bcrypt).
-      // Here we store a simple mock hash for demonstration, ensuring the raw password is not plain text in the json db.
-      const mockHash = Buffer.from(password).toString("base64");
+      // Salt and hash the password using bcryptjs
+      const salt = await bcrypt.genSalt(10);
+      const bcryptHash = await bcrypt.hash(password, salt);
 
       const newUser = {
         email: emailClean,
-        passwordHash: mockHash,
+        passwordHash: bcryptHash,
         name: name || emailClean.split("@")[0],
         phone: phone || "",
         address: address || "",
@@ -33,8 +34,8 @@ export async function POST(req: NextRequest) {
         zipCode: zipCode || "",
       };
 
-      addUser(newUser);
-      
+      await addUser(newUser);
+
       // Return user details without passwordHash
       const { passwordHash: _, ...userWithoutPassword } = newUser;
       return NextResponse.json({ success: true, user: userWithoutPassword });
@@ -46,8 +47,34 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
       }
 
-      const checkHash = Buffer.from(password).toString("base64");
-      if (user.passwordHash !== checkHash) {
+      // Check if user is using a bcrypt hash
+      const isBcrypt = user.passwordHash.startsWith("$2a$") || 
+                       user.passwordHash.startsWith("$2b$") || 
+                       user.passwordHash.startsWith("$2y$");
+      let isMatch = false;
+
+      if (isBcrypt) {
+        isMatch = await bcrypt.compare(password, user.passwordHash);
+      } else {
+        // Fallback check for legacy Base64 hashes
+        const legacyHash = Buffer.from(password).toString("base64");
+        isMatch = user.passwordHash === legacyHash;
+
+        // If matched, migrate the user's password to bcrypt automatically
+        if (isMatch) {
+          try {
+            const salt = await bcrypt.genSalt(10);
+            const newBcryptHash = await bcrypt.hash(password, salt);
+            await updateUser(user.email, { passwordHash: newBcryptHash });
+            console.log(`Successfully migrated legacy password hash to bcrypt for user: ${user.email}`);
+          } catch (migrateErr) {
+            console.error(`Failed to migrate legacy password hash for user: ${user.email}`, migrateErr);
+            // Don't fail the login if migration fails, as long as authentication was correct.
+          }
+        }
+      }
+
+      if (!isMatch) {
         return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
       }
 

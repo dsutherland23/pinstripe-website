@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBookings, deleteBooking, updateBookingStatus, addBooking, getInventory } from "@/lib/db";
-
-const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || "pinstripes2024";
-
-function isAuthorized(req: NextRequest): boolean {
-  return req.headers.get("x-admin-passcode") === ADMIN_PASSCODE;
-}
+import { isAdminAuthorized } from "@/lib/auth-security";
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const bookings = getBookings();
+  const bookings = await getBookings();
   return NextResponse.json({ success: true, bookings });
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -25,7 +20,7 @@ export async function POST(req: NextRequest) {
     const { action, id, status } = body;
 
     if (action === "delete" && id) {
-      const deleted = deleteBooking(id);
+      const deleted = await deleteBooking(id);
       if (!deleted) {
         return NextResponse.json({ error: "Booking not found" }, { status: 404 });
       }
@@ -33,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "update-status" && id && status) {
-      const updated = updateBookingStatus(id, status);
+      const updated = await updateBookingStatus(id, status);
       if (!updated) {
         return NextResponse.json({ error: "Booking not found" }, { status: 404 });
       }
@@ -44,7 +39,7 @@ export async function POST(req: NextRequest) {
       const { customer, event, delivery, items, notes } = body.booking;
 
       // Calculate itemCount and estimatedTotal dynamically
-      const inventory = getInventory();
+      const inventory = await getInventory();
       let itemCount = 0;
       let estimatedTotal = 0;
 
@@ -84,7 +79,7 @@ export async function POST(req: NextRequest) {
         submittedAt: new Date().toISOString(),
       };
 
-      addBooking(newBooking);
+      await addBooking(newBooking);
       return NextResponse.json({ success: true, booking: newBooking });
     }
 
