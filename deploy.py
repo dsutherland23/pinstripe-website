@@ -13,21 +13,82 @@ except ImportError:
     import paramiko
 
 def zip_project(zip_path):
-    print("Zipping local project files (including .next build)...")
-    exclude_dirs = {'.git', 'node_modules', 'out', 'cache'}
-    exclude_files = {'project.zip', 'deploy.py'}
+    """
+    Zip the standalone build output for Hostinger Passenger deployment.
+    
+    Standalone builds produce:
+      .next/standalone/          <- the runnable Node server (with server.js at root)
+      .next/standalone/.next/    <- server-side files
+      .next/static/              <- client-side JS/CSS (must be served separately)
+      public/                    <- static public assets
+
+    We include:
+      - All of .next/standalone/**  (the actual server)
+      - .next/static/**             (client assets, placed so server can find them)
+      - public/**                   (static files)
+      - src/                        (for db-init.ts)
+      - package.json / package-lock.json
+      - tsconfig.json
+    """
+    print("Zipping standalone build output for Hostinger...")
+    
+    exclude_from_zip = {'project.zip', 'deploy.py'}
     
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk('.'):
-            # Prune excluded directories
-            dirs[:] = [d for d in dirs if d not in exclude_dirs]
-            
+        
+        # 1. Include .next/standalone/** -> maps to root of deployment
+        standalone_dir = os.path.join('.next', 'standalone')
+        if not os.path.isdir(standalone_dir):
+            print("ERROR: .next/standalone/ not found. Did the build use output: 'standalone'?")
+            sys.exit(1)
+        
+        for root, dirs, files in os.walk(standalone_dir):
+            # Skip node_modules inside standalone (they're baked in)
+            dirs[:] = [d for d in dirs if d not in {'cache'}]
             for file in files:
-                if file in exclude_files or file.endswith('.zip') or file.startswith('.env'):
+                if file in exclude_from_zip:
                     continue
                 file_path = os.path.join(root, file)
-                archive_name = os.path.relpath(file_path, '.')
+                # Strip the .next/standalone/ prefix so files land at the deployment root
+                archive_name = os.path.relpath(file_path, standalone_dir)
                 zipf.write(file_path, archive_name)
+        
+        # 2. Include .next/static/** -> must be at .next/static/ relative to deployment root
+        static_dir = os.path.join('.next', 'static')
+        if os.path.isdir(static_dir):
+            for root, dirs, files in os.walk(static_dir):
+                dirs[:] = [d for d in dirs if d not in {'cache'}]
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    # Archive as .next/static/...
+                    archive_name = os.path.relpath(file_path, '.')
+                    zipf.write(file_path, archive_name)
+        
+        # 3. Include public/** -> must be at public/ relative to deployment root
+        public_dir = 'public'
+        if os.path.isdir(public_dir):
+            for root, dirs, files in os.walk(public_dir):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    archive_name = os.path.relpath(file_path, '.')
+                    zipf.write(file_path, archive_name)
+        
+        # 4. Include src/ (for db-init.ts), package files, tsconfig
+        for extra_dir in ['src']:
+            if os.path.isdir(extra_dir):
+                for root, dirs, files in os.walk(extra_dir):
+                    dirs[:] = [d for d in dirs if d not in {'node_modules', '.next', 'cache'}]
+                    for file in files:
+                        if file.startswith('.env'):
+                            continue
+                        file_path = os.path.join(root, file)
+                        archive_name = os.path.relpath(file_path, '.')
+                        zipf.write(file_path, archive_name)
+        
+        for extra_file in ['package.json', 'package-lock.json', 'tsconfig.json', 'next.config.ts']:
+            if os.path.isfile(extra_file):
+                zipf.write(extra_file, extra_file)
+
     print("Zipping complete.")
 
 def load_env():
@@ -80,15 +141,21 @@ def main():
     
     local_zip = "project.zip"
     remote_zip = "project.zip"
+    remote_base = "domains/pinstripesrentals.com/nodejs"
     
     # 1. Build local project first
-    print("Building Next.js application locally...")
+    print("Building Next.js application locally (standalone mode)...")
     build_status = os.system("npm run build")
     if build_status != 0:
         print("Error: Local build failed. Halting deployment.")
         sys.exit(1)
+    
+    # Verify standalone was generated
+    if not os.path.isdir(os.path.join('.next', 'standalone')):
+        print("Error: .next/standalone/ was not created. Check next.config.ts has output: 'standalone'")
+        sys.exit(1)
         
-    # 2. Zip files
+    # 2. Zip files (standalone-aware)
     zip_project(local_zip)
     
     # 3. Upload via SFTP
@@ -117,11 +184,11 @@ def main():
         ssh.connect(host, port, user, password)
         
         commands = [
-            # Extract zip into the nodejs folder
-            "unzip -o project.zip -d domains/pinstripesrentals.com/nodejs/",
+            # Extract zip into the nodejs folder (standalone root lands here)
+            f"unzip -o project.zip -d {remote_base}/",
             # Write the .env.local file on the server (injected from local credentials)
             (
-                f"cat > domains/pinstripesrentals.com/nodejs/.env.local << 'ENVEOF'\n"
+                f"cat > {remote_base}/.env.local << 'ENVEOF'\n"
                 f"DB_HOST=localhost\n"
                 f"DB_PORT={db_port}\n"
                 f"DB_NAME={db_name}\n"
@@ -132,13 +199,12 @@ def main():
                 f"RESEND_API_KEY={resend_api_key or ''}\n"
                 f"ENVEOF"
             ),
-            # Install dependencies on the server
-            "export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && cd domains/pinstripesrentals.com/nodejs && npm install",
+            # Install dependencies on the server (for db-init and any server-side packages)
+            f"export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && cd {remote_base} && npm install --omit=dev",
             # Initialise / seed the MySQL database (idempotent — safe to run every deploy)
-            # Pass env vars explicitly to bypass dotenvx interception issues
             (
                 f"export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && "
-                f"cd domains/pinstripesrentals.com/nodejs && "
+                f"cd {remote_base} && "
                 f"DB_HOST=localhost "
                 f"DB_PORT={db_port} "
                 f"DB_NAME={db_name} "
@@ -148,7 +214,7 @@ def main():
                 f"npx tsx src/lib/db-init.ts"
             ),
             # Touch restart file to trigger Passenger restart
-            "mkdir -p domains/pinstripesrentals.com/nodejs/tmp && touch domains/pinstripesrentals.com/nodejs/tmp/restart.txt",
+            f"mkdir -p {remote_base}/tmp && touch {remote_base}/tmp/restart.txt",
             # Remove remote zip
             "rm project.zip"
         ]
