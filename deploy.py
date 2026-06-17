@@ -122,7 +122,7 @@ def main():
             # Write the .env.local file on the server (injected from local credentials)
             (
                 f"cat > domains/pinstripesrentals.com/nodejs/.env.local << 'ENVEOF'\n"
-                f"DB_HOST={db_host}\n"
+                f"DB_HOST=localhost\n"
                 f"DB_PORT={db_port}\n"
                 f"DB_NAME={db_name}\n"
                 f"DB_USER={db_user}\n"
@@ -139,7 +139,7 @@ def main():
             (
                 f"export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && "
                 f"cd domains/pinstripesrentals.com/nodejs && "
-                f"DB_HOST={db_host} "
+                f"DB_HOST=localhost "
                 f"DB_PORT={db_port} "
                 f"DB_NAME={db_name} "
                 f"DB_USER={db_user} "
