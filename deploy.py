@@ -14,7 +14,7 @@ except ImportError:
 
 def zip_project(zip_path):
     print("Zipping local project files (including .next build)...")
-    exclude_dirs = {'.git', 'node_modules', 'out'}
+    exclude_dirs = {'.git', 'node_modules', 'out', 'cache'}
     exclude_files = {'project.zip', 'deploy.py'}
     
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
