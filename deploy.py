@@ -195,8 +195,6 @@ def main():
             # Rename the standalone server.js to server_original.js so our wrapper can require it
             # (only if server.js exists and server_original.js doesn't already exist)
             f"[ ! -f {remote_base}/server_original.js ] && cp {remote_base}/server.js {remote_base}/server_original.js || true",
-            # Install dependencies on the server (for db-init and any server-side packages)
-            f"export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && cd {remote_base} && npm install --omit=dev",
             # Initialise / seed the MySQL database (idempotent — safe to run every deploy)
             (
                 f"export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && "
@@ -260,7 +258,7 @@ def main():
             'PassengerStartupFile server.js\n'
             'PassengerBaseURI /\n'
             'PassengerRestartDir /home/u887289907/domains/pinstripesrentals.com/nodejs/tmp\n'
-            'SetEnv NODE_OPTIONS "--require /home/u887289907/domains/pinstripesrentals.com/public_html/.builds/config/preload-timestamp.js --max-old-space-size=256"\n'
+            'PassengerEnvVar NODE_OPTIONS "--require /home/u887289907/domains/pinstripesrentals.com/public_html/.builds/config/preload-timestamp.js --max-old-space-size=256"\n'
             'SetEnv LSNODE_CONSOLE_LOG console.log\n'
             f'PassengerEnvVar UV_THREADPOOL_SIZE 1\n'
             f'PassengerEnvVar TOKIO_WORKER_THREADS 1\n'
