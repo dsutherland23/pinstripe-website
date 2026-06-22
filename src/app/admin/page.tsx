@@ -124,6 +124,18 @@ export default function AdminDashboard() {
   const [authError, setAuthError] = useState("");
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) setSidebarOpen(false);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Data
   const [inventory, setInventory]   = useState<RentalItem[]>([]);
@@ -562,76 +574,102 @@ export default function AdminDashboard() {
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#e5e5e5", fontFamily: "var(--font-body, system-ui, sans-serif)", display: "flex" }}>
 
+      {/* Backdrop overlay for mobile when sidebar is open */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: "fixed",
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 90,
+          }}
+        />
+      )}
+
       {/* ── SIDEBAR ──────────────────────────────────────────────────────── */}
       <aside style={{
-        width: sidebarOpen ? "240px" : "64px",
+        width: isMobile ? (sidebarOpen ? "240px" : "0px") : (sidebarOpen ? "240px" : "64px"),
         minHeight: "100vh", background: "#111111",
         borderRight: "1px solid rgba(255,255,255,0.06)",
         display: "flex", flexDirection: "column",
-        transition: "width 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-        flexShrink: 0, position: "sticky", top: 0, height: "100vh",
+        transition: "width 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        flexShrink: 0,
+        position: isMobile ? "fixed" : "sticky",
+        top: 0,
+        left: 0,
+        height: "100vh",
+        zIndex: isMobile ? 100 : 1,
         overflowY: "auto", overflowX: "hidden",
+        transform: isMobile && !sidebarOpen ? "translateX(-100%)" : "translateX(0)",
       }}>
         {/* Sidebar Header */}
-        <div style={{ padding: "1.25rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: "0.75rem", justifyContent: sidebarOpen ? "space-between" : "center" }}>
-          {sidebarOpen && (
+        <div style={{ padding: "1.25rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: "0.75rem", justifyContent: (isMobile || sidebarOpen) ? "space-between" : "center" }}>
+          {(isMobile || sidebarOpen) && (
             <div>
               <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "#D4AF37", letterSpacing: "0.05em", textTransform: "uppercase" }}>Pinstripes</div>
               <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Admin CMS</div>
             </div>
           )}
           <button onClick={() => setSidebarOpen(v => !v)} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: "0.25rem", display: "flex" }}>
-            <Menu size={18} />
+            {isMobile ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
 
         {/* Nav Links */}
         <nav style={{ flex: 1, padding: "0.75rem 0.5rem" }}>
-          {navItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              style={{
-                display: "flex", alignItems: "center", gap: "0.75rem",
-                width: "100%", padding: "0.75rem",
-                borderRadius: "0.75rem", border: "none",
-                background: activeTab === item.id ? "rgba(212,175,55,0.12)" : "transparent",
-                color: activeTab === item.id ? "#D4AF37" : "rgba(255,255,255,0.55)",
-                fontWeight: activeTab === item.id ? 700 : 500,
-                fontSize: "0.85rem", cursor: "pointer",
-                marginBottom: "0.25rem",
-                transition: "all 0.15s ease",
-                justifyContent: sidebarOpen ? "flex-start" : "center",
-                position: "relative",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-              }}
-              title={!sidebarOpen ? item.label : undefined}
-            >
-              <span style={{ flexShrink: 0 }}>{item.icon}</span>
-              {sidebarOpen && <span>{item.label}</span>}
-              {sidebarOpen && item.badge !== undefined && (
-                <span style={{ marginLeft: "auto", background: activeTab === item.id ? "rgba(212,175,55,0.3)" : "rgba(255,255,255,0.1)", borderRadius: "9999px", padding: "0.1rem 0.5rem", fontSize: "0.62rem", fontWeight: 700 }}>
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          ))}
+          {navItems.map(item => {
+            const isTabActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (isMobile) setSidebarOpen(false);
+                }}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.75rem",
+                  width: "100%", padding: "0.75rem",
+                  borderRadius: "0.75rem", border: "none",
+                  background: isTabActive ? "rgba(212,175,55,0.12)" : "transparent",
+                  color: isTabActive ? "#D4AF37" : "rgba(255,255,255,0.55)",
+                  fontWeight: isTabActive ? 700 : 500,
+                  fontSize: "0.85rem", cursor: "pointer",
+                  marginBottom: "0.25rem",
+                  transition: "all 0.15s ease",
+                  justifyContent: (isMobile || sidebarOpen) ? "flex-start" : "center",
+                  position: "relative",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                }}
+                title={(!isMobile && !sidebarOpen) ? item.label : undefined}
+              >
+                <span style={{ flexShrink: 0 }}>{item.icon}</span>
+                {(isMobile || sidebarOpen) && <span>{item.label}</span>}
+                {(isMobile || sidebarOpen) && item.badge !== undefined && (
+                  <span style={{ marginLeft: "auto", background: isTabActive ? "rgba(212,175,55,0.3)" : "rgba(255,255,255,0.1)", borderRadius: "9999px", padding: "0.1rem 0.5rem", fontSize: "0.62rem", fontWeight: 700 }}>
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Sidebar Footer */}
         <div style={{ padding: "0.75rem 0.5rem", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          {sidebarOpen && (
+          {(isMobile || sidebarOpen) && (
             <Link href="/" target="_blank" style={{ display: "flex", alignItems: "center", gap: "0.65rem", padding: "0.65rem 0.75rem", borderRadius: "0.625rem", color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", textDecoration: "none", marginBottom: "0.5rem" }}>
               <Eye size={15} />View Site
             </Link>
           )}
           <button
             onClick={handleLogout}
-            style={{ display: "flex", alignItems: "center", justifyContent: sidebarOpen ? "flex-start" : "center", gap: "0.65rem", width: "100%", padding: "0.65rem 0.75rem", borderRadius: "0.625rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", justifyContent: (isMobile || sidebarOpen) ? "flex-start" : "center", gap: "0.65rem", width: "100%", padding: "0.65rem 0.75rem", borderRadius: "0.625rem", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}
           >
             <Lock size={15} />
-            {sidebarOpen && "Logout"}
+            {(isMobile || sidebarOpen) && "Logout"}
           </button>
         </div>
       </aside>
@@ -640,18 +678,40 @@ export default function AdminDashboard() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
 
         {/* Top bar */}
-        <header style={{ background: "#111111", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", position: "sticky", top: 0, zIndex: 50 }}>
-          <div>
-            <h1 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>
-              {navItems.find(n => n.id === activeTab)?.label}
-            </h1>
-            <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
-              {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-            </p>
+        <header style={{ background: "#111111", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: isMobile ? "1rem" : "1rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", position: "sticky", top: 0, zIndex: 50 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            {(isMobile || !sidebarOpen) && (
+              <button
+                onClick={() => setSidebarOpen(v => !v)}
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: "0.5rem",
+                  color: "rgba(255,255,255,0.7)",
+                  padding: "0.5rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <Menu size={18} />
+              </button>
+            )}
+            <div>
+              <h1 style={{ fontSize: isMobile ? "1rem" : "1.1rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>
+                {navItems.find(n => n.id === activeTab)?.label}
+              </h1>
+              {!isMobile && (
+                <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+                  {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                </p>
+              )}
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <button onClick={() => loadAll()} style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.5rem", color: "rgba(255,255,255,0.7)", fontSize: "0.78rem", padding: "0.45rem 0.875rem", cursor: "pointer" }}>
-              <RefreshCw size={13} /> Refresh
+              <RefreshCw size={13} /> {!isMobile && "Refresh"}
             </button>
             <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "9999px", padding: "0.3rem 0.75rem" }}>
               <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
@@ -744,8 +804,8 @@ export default function AdminDashboard() {
 
           {/* ── INVENTORY TAB ────────────────────────────────────────────── */}
           {activeTab === "inventory" && (
-            <div style={{ display: "grid", gridTemplateColumns: (editingItem || isCreating) ? "1fr 400px" : "1fr", gap: "1.5rem", alignItems: "flex-start" }}>
-              {/* Table */}
+            <div style={{ display: "grid", gridTemplateColumns: (editingItem || isCreating) && !isMobile ? "1fr 400px" : "1fr", gap: "1.5rem", alignItems: "flex-start" }}>
+              {/* Table / Card List */}
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
                   <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#ffffff", margin: 0 }}>Rental Equipment ({filteredInventory.length})</h3>
@@ -766,64 +826,113 @@ export default function AdminDashboard() {
                   </select>
                 </div>
 
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-                    <thead>
-                      <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                        {["Image", "Title", "Category", "Price", "Stock", "Status", "Actions"].map(h => (
-                          <th key={h} style={{ padding: "8px 10px", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)", fontWeight: 700 }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredInventory.map(item => (
-                        <tr key={item.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                          <td style={{ padding: "10px" }}>
-                            <img src={item.image} alt="" style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "0.375rem", background: "#1a1a1a" }} onError={e => { (e.target as HTMLImageElement).src = "/images/canopy-tent.png"; }} />
-                          </td>
-                          <td style={{ padding: "10px", fontWeight: 600, color: "#ffffff", fontSize: "0.85rem", maxWidth: "200px" }}>
-                            <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-                          </td>
-                          <td style={{ padding: "10px" }}><Badge label={item.category} color="gray" /></td>
-                          <td style={{ padding: "10px", fontWeight: 700, color: "#D4AF37", fontSize: "0.88rem" }}>{fmt(item.price)}</td>
-                          <td style={{ padding: "10px", color: (item.stock ?? 5) <= 3 ? "#ef4444" : "rgba(255,255,255,0.7)", fontSize: "0.85rem", fontWeight: 600 }}>{item.stock ?? "–"}</td>
-                          <td style={{ padding: "10px" }}>
+                {isMobile ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    {filteredInventory.map(item => (
+                      <div key={item.id} style={{ ...cardStyle, background: "rgba(255,255,255,0.02)", display: "flex", gap: "0.75rem", padding: "1rem" }}>
+                        <img src={item.image} alt="" style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "0.5rem", background: "#1a1a1a", flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).src = "/images/canopy-tent.png"; }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontWeight: 700, color: "#ffffff", fontSize: "0.85rem", margin: "0 0 0.25rem 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
+                          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.4rem", flexWrap: "wrap" }}>
+                            <Badge label={item.category} color="gray" />
                             <Badge label={item.availability ? "Active" : "Off"} color={item.availability ? "green" : "red"} />
-                          </td>
-                          <td style={{ padding: "10px" }}>
-                            <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                              <button onClick={() => startEdit(item)} style={{ background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)", color: "#D4AF37", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }} title="Edit">
-                                <Edit size={14} />
-                              </button>
-                              <label style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }} title="Upload image">
-                                <Upload size={14} />
-                                <input type="file" accept="image/*" onChange={e => handleUploadImage(item.id, e)} style={{ display: "none" }} />
-                              </label>
-                              {deleteConfirmId === item.id ? (
-                                <>
-                                  <button onClick={() => handleDeleteItem(item.id)} style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", borderRadius: "0.375rem", padding: "0.35rem 0.6rem", cursor: "pointer", fontSize: "0.7rem", fontWeight: 700 }}>Confirm</button>
-                                  <button onClick={() => setDeleteConfirmId(null)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }}><X size={14} /></button>
-                                </>
-                              ) : (
-                                <button onClick={() => setDeleteConfirmId(item.id)} style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }} title="Delete">
-                                  <Trash2 size={14} />
-                                </button>
-                              )}
+                          </div>
+                          <p style={{ color: "#D4AF37", fontWeight: 800, fontSize: "0.85rem", margin: 0 }}>{fmt(item.price)} <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem", fontWeight: 400 }}>/ day · Stock: {item.stock ?? "–"}</span></p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", justifyContent: "center" }}>
+                          <div style={{ display: "flex", gap: "0.35rem" }}>
+                            <button onClick={() => startEdit(item)} style={{ background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)", color: "#D4AF37", borderRadius: "0.375rem", padding: "0.45rem", cursor: "pointer", display: "flex" }} title="Edit">
+                              <Edit size={14} />
+                            </button>
+                            <label style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", borderRadius: "0.375rem", padding: "0.45rem", cursor: "pointer", display: "flex" }} title="Upload image">
+                              <Upload size={14} />
+                              <input type="file" accept="image/*" onChange={e => handleUploadImage(item.id, e)} style={{ display: "none" }} />
+                            </label>
+                          </div>
+                          {deleteConfirmId === item.id ? (
+                            <div style={{ display: "flex", gap: "0.25rem" }}>
+                              <button onClick={() => handleDeleteItem(item.id)} style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", borderRadius: "0.375rem", padding: "0.25rem 0.5rem", cursor: "pointer", fontSize: "0.68rem", fontWeight: 700 }}>Confirm</button>
+                              <button onClick={() => setDeleteConfirmId(null)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", borderRadius: "0.375rem", padding: "0.25rem", cursor: "pointer", display: "flex" }}><X size={12} /></button>
                             </div>
-                          </td>
+                          ) : (
+                            <button onClick={() => setDeleteConfirmId(item.id)} style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444", borderRadius: "0.375rem", padding: "0.45rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Delete">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {filteredInventory.length === 0 && (
+                      <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>No items found</div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                          {["Image", "Title", "Category", "Price", "Stock", "Status", "Actions"].map(h => (
+                            <th key={h} style={{ padding: "8px 10px", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)", fontWeight: 700 }}>{h}</th>
+                          ))}
                         </tr>
-                      ))}
-                      {filteredInventory.length === 0 && (
-                        <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>No items found</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {filteredInventory.map(item => (
+                          <tr key={item.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                            <td style={{ padding: "10px" }}>
+                              <img src={item.image} alt="" style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "0.375rem", background: "#1a1a1a" }} onError={e => { (e.target as HTMLImageElement).src = "/images/canopy-tent.png"; }} />
+                            </td>
+                            <td style={{ padding: "10px", fontWeight: 600, color: "#ffffff", fontSize: "0.85rem", maxWidth: "200px" }}>
+                              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+                            </td>
+                            <td style={{ padding: "10px" }}><Badge label={item.category} color="gray" /></td>
+                            <td style={{ padding: "10px", fontWeight: 700, color: "#D4AF37", fontSize: "0.88rem" }}>{fmt(item.price)}</td>
+                            <td style={{ padding: "10px", color: (item.stock ?? 5) <= 3 ? "#ef4444" : "rgba(255,255,255,0.7)", fontSize: "0.85rem", fontWeight: 600 }}>{item.stock ?? "–"}</td>
+                            <td style={{ padding: "10px" }}>
+                              <Badge label={item.availability ? "Active" : "Off"} color={item.availability ? "green" : "red"} />
+                            </td>
+                            <td style={{ padding: "10px" }}>
+                              <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
+                                <button onClick={() => startEdit(item)} style={{ background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)", color: "#D4AF37", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }} title="Edit">
+                                  <Edit size={14} />
+                                </button>
+                                <label style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }} title="Upload image">
+                                  <Upload size={14} />
+                                  <input type="file" accept="image/*" onChange={e => handleUploadImage(item.id, e)} style={{ display: "none" }} />
+                                </label>
+                                {deleteConfirmId === item.id ? (
+                                  <>
+                                    <button onClick={() => handleDeleteItem(item.id)} style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", borderRadius: "0.375rem", padding: "0.35rem 0.6rem", cursor: "pointer", fontSize: "0.7rem", fontWeight: 700 }}>Confirm</button>
+                                    <button onClick={() => setDeleteConfirmId(null)} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }}><X size={14} /></button>
+                                  </>
+                                ) : (
+                                  <button onClick={() => setDeleteConfirmId(item.id)} style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", color: "#ef4444", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }} title="Delete">
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {filteredInventory.length === 0 && (
+                          <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>No items found</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
 
               {/* Editor Panel */}
               {(editingItem || isCreating) && (
-                <div style={{ ...cardStyle, border: "1px solid rgba(212,175,55,0.25)", position: "sticky", top: "80px", maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}>
+                <div style={{
+                  ...cardStyle,
+                  border: "1px solid rgba(212,175,55,0.25)",
+                  position: isMobile ? "static" : "sticky",
+                  top: isMobile ? undefined : "80px",
+                  maxHeight: isMobile ? undefined : "calc(100vh - 100px)",
+                  overflowY: isMobile ? undefined : "auto"
+                }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
                     <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>
                       {isCreating ? "Create New Item" : `Edit #${editingItem?.id}`}
@@ -924,7 +1033,7 @@ export default function AdminDashboard() {
 
           {/* ── CATEGORIES TAB ───────────────────────────────────────────── */}
           {activeTab === "categories" && (
-            <div style={{ display: "grid", gridTemplateColumns: (editingCat || isCreatingCat) ? "1fr 360px" : "1fr", gap: "1.5rem", alignItems: "flex-start" }}>
+            <div style={{ display: "grid", gridTemplateColumns: (editingCat || isCreatingCat) && !isMobile ? "1fr 360px" : "1fr", gap: "1.5rem", alignItems: "flex-start" }}>
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
                   <div>
@@ -987,7 +1096,12 @@ export default function AdminDashboard() {
 
               {/* Category Editor */}
               {(editingCat || isCreatingCat) && (
-                <div style={{ ...cardStyle, border: "1px solid rgba(212,175,55,0.25)", position: "sticky", top: "80px" }}>
+                <div style={{
+                  ...cardStyle,
+                  border: "1px solid rgba(212,175,55,0.25)",
+                  position: isMobile ? "static" : "sticky",
+                  top: isMobile ? undefined : "80px"
+                }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
                     <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>
                       {isCreatingCat ? "New Category" : `Edit "${editingCat?.name}"`}
@@ -1294,7 +1408,7 @@ export default function AdminDashboard() {
                             {booking.delivery.address}<br />{booking.delivery.city}, VA {booking.delivery.zipCode}
                           </p>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center" }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", justifyContent: "center" }}>
                           <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>Total</p>
                           <p style={{ fontSize: "1.5rem", color: "#D4AF37", fontWeight: 900, margin: 0 }}>{fmt(booking.estimatedTotal)}</p>
                           <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>{booking.paymentMethod}</p>
