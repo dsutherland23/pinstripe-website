@@ -182,17 +182,52 @@ if ($res === TRUE) {{
     echo "Error: Failed to open zip file, code: $res\\n";
 }}
 
-echo "\\n--- Running Database Migration (gallery_enabled) ---\\n";
+echo "\\n--- Running Database Migrations & Seeding ---\\n";
 $conn = new mysqli("localhost", "{db_user}", "{db_pass}", "{db_name}");
 if ($conn->connect_error) {{
     echo "MySQL connection failed: " . $conn->connect_error . "\\n";
 }} else {{
+    // 1. settings table migration
     $result = $conn->query("ALTER TABLE settings ADD COLUMN gallery_enabled TINYINT(1) NOT NULL DEFAULT 1");
     if ($result) {{
         echo "Successfully added gallery_enabled column to settings table.\\n";
     }} else {{
-        echo "Alter table result: " . $conn->error . " (expected if column already exists)\\n";
+        echo "Alter settings table result: " . $conn->error . " (expected if column already exists)\\n";
     }}
+    
+    // 2. categories table seeding
+    $stmt = $conn->prepare("INSERT IGNORE INTO categories (id, name, icon, featured, `order`) VALUES (?, ?, ?, ?, ?)");
+    if ($stmt) {{
+        $cat_id = 'cat-9'; $cat_name = 'Snow-cone Machines'; $cat_icon = 'ice'; $cat_feat = 0; $cat_ord = 9;
+        $stmt->bind_param("sssii", $cat_id, $cat_name, $cat_icon, $cat_feat, $cat_ord);
+        if ($stmt->execute()) {{
+            echo "Category 'cat-9' seeded or already exists.\\n";
+        }} else {{
+            echo "Error seeding category: " . $stmt->error . "\\n";
+        }}
+        $stmt->close();
+    }} else {{
+        echo "Prepare failed for category seeding: " . $conn->error . "\\n";
+    }}
+    
+    // 3. inventory table seeding
+    $stmt2 = $conn->prepare("INSERT IGNORE INTO inventory (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt2) {{
+        $id = '9'; $title = 'Professional Snow-cone Machine'; $cat = 'Snow-cone Machines';
+        $desc = 'High-yield commercial-grade snow-cone shaver. Easy to operate and produces perfectly crushed ice for cool summer treats.';
+        $price = 75.00; $deposit = 20.00; $avail = 1; $dims = '16″ × 16″ × 24″'; $cap = '120 Cones / hr';
+        $img = '/images/kids-snowcones.png'; $rat = 4.8; $revs = 15; $stock = 5;
+        $stmt2->bind_param("ssssddisssdii", $id, $title, $cat, $desc, $price, $deposit, $avail, $dims, $cap, $img, $rat, $revs, $stock);
+        if ($stmt2->execute()) {{
+            echo "Snow-cone Machine item seeded or already exists.\\n";
+        }} else {{
+            echo "Error seeding Snow-cone Machine: " . $stmt2->error . "\\n";
+        }}
+        $stmt2->close();
+    }} else {{
+        echo "Prepare failed for inventory seeding: " . $conn->error . "\\n";
+    }}
+    
     $conn->close();
 }}
 
