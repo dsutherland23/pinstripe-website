@@ -77,6 +77,14 @@ if (fs.existsSync(publicHtmlDir)) {
     console.log('Successfully copied static chunks.');
   }
 
+  // Remove legacy PHP API folder if present in web root to avoid routing conflicts
+  const legacyApiDir = path.join(publicHtmlDir, 'api');
+  if (fs.existsSync(legacyApiDir)) {
+    console.log('Removing legacy PHP api/ folder from public_html to prevent conflicts...');
+    fs.rmSync(legacyApiDir, { recursive: true, force: true });
+    console.log('Legacy api/ folder removed.');
+  }
+
   // Auto-inject Rewrite rules into .htaccess if missing
   const htaccessPath = path.join(publicHtmlDir, '.htaccess');
   if (fs.existsSync(htaccessPath)) {
