@@ -199,22 +199,10 @@ def main():
             f"[ ! -f {remote_base}/server_original.js ] && cp {remote_base}/server.js {remote_base}/server_original.js || true",
             # Copy public/ assets → public_html/ so Apache serves them directly (no Passenger overhead)
             # This fixes 502 Bad Gateway errors on /images/* routes
-            f"rsync -a --exclude='.htaccess' {remote_base}/public/ /home/u887289907/{public_html}/",
+            f"cp -r {remote_base}/public/* /home/u887289907/{public_html}/",
             # Copy .next/static/ → public_html/_next/static/ so Apache serves JS chunks directly
             # This fixes 404 ChunkLoadErrors after a fresh deploy
-            f"mkdir -p /home/u887289907/{public_html}/_next && rsync -a {remote_base}/.next/static/ /home/u887289907/{public_html}/_next/static/",
-            # Initialise / seed the MySQL database (idempotent — safe to run every deploy)
-            (
-                f"export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && "
-                f"cd {remote_base} && "
-                f"DB_HOST=localhost "
-                f"DB_PORT={db_port} "
-                f"DB_NAME={db_name} "
-                f"DB_USER={db_user} "
-                f"DB_PASS='{db_pass}' "
-                f"DB_SOCKET={db_socket} "
-                f"npx tsx src/lib/db-init.ts"
-            ),
+            f"mkdir -p /home/u887289907/{public_html}/_next && cp -r {remote_base}/.next/static /home/u887289907/{public_html}/_next/",
             # Remove remote zip
             "rm project.zip"
         ]
