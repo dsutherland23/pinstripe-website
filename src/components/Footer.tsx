@@ -135,24 +135,20 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
             <div style={{ marginBottom: "1.25rem", display: "inline-flex" }}>
               <div
                 style={{
-                  background: "rgba(255, 255, 255, 0.96)",
                   width: "68px",
                   height: "68px",
-                  borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
                 }}
               >
                 <img
-                  src="/images/pinstripes-logo.png?v=20260623"
+                  src="/images/pinstripes-logo-new.png?v=20260623"
                   alt="Pinstripes Party & Event Rentals"
                   style={{
-                    height: "52px",
-                    width: "52px",
+                    height: "100%",
+                    width: "100%",
                     objectFit: "contain",
-                    borderRadius: "50%",
                   }}
                 />
               </div>

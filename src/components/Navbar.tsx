@@ -207,23 +207,18 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: (scrolled || !isHome) ? "transparent" : "rgba(255, 255, 255, 0.96)",
                   width: (scrolled || !isHome) ? "64px" : "88px",
                   height: (scrolled || !isHome) ? "64px" : "88px",
-                  borderRadius: "50%",
-                  boxShadow: (scrolled || !isHome) ? "none" : "0 4px 20px rgba(0, 0, 0, 0.08)",
                   transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                  border: (scrolled || !isHome) ? "1px solid transparent" : "1px solid rgba(255, 255, 255, 0.1)",
                 }}
               >
                 <img
-                  src="/images/pinstripes-logo.png?v=20260623"
+                  src="/images/pinstripes-logo-new.png?v=20260623"
                   alt="Pinstripes Party & Event Rentals"
                   style={{
-                    height: (scrolled || !isHome) ? "52px" : "72px",
-                    width: (scrolled || !isHome) ? "52px" : "72px",
+                    height: "100%",
+                    width: "100%",
                     objectFit: "contain",
-                    borderRadius: "50%",
                     transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                 />
@@ -598,29 +593,24 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
               background: "transparent",
             }}
           >
-            {/* Elegant Circle Brand Logo Wrapper */}
+            {/* Elegant Brand Logo Wrapper */}
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <div
                 style={{
-                  background: isEvening ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)",
-                  border: "1px solid #D4AF37",
                   width: "56px",
                   height: "56px",
-                  borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  boxShadow: "0 4px 16px rgba(212, 175, 55, 0.15)",
                 }}
               >
                 <img
-                  src="/images/pinstripes-logo.png?v=20260623"
+                  src="/images/pinstripes-logo-new.png?v=20260623"
                   alt="Pinstripes Logo"
                   style={{
-                    height: "44px",
-                    width: "44px",
+                    height: "100%",
+                    width: "100%",
                     objectFit: "contain",
-                    borderRadius: "50%",
                   }}
                 />
               </div>
