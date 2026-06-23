@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Mail, Phone, MapPin, ShieldCheck } from "lucide-react";
 
@@ -53,6 +53,19 @@ const socials = [
 ];
 
 export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: FooterProps) {
+  const [galleryEnabled, setGalleryEnabled] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data.galleryEnabled === "boolean") {
+          setGalleryEnabled(data.galleryEnabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <footer id="contact" style={{ background: "#0f0f0f", color: "rgba(255,255,255,0.55)", position: "relative", overflow: "hidden" }}>
       {/* ---- CTA BANNER ---- */}
@@ -192,27 +205,29 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
               Quick Links
             </h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {["Home", "Rentals", "Gallery", "My Account", "About", "Contact"].map((link) => (
-                <li key={link}>
-                  <a
-                    href={link === "My Account" ? "/portal" : `#${link.toLowerCase()}`}
-                    onClick={(e) => {
-                      if (link === "About") {
-                        e.preventDefault();
-                        onOpenAbout();
-                      } else if (link === "Contact") {
-                        e.preventDefault();
-                        onOpenContact();
-                      }
-                    }}
-                    style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "0.82rem", color: "rgba(255,255,255,0.55)", textDecoration: "none", transition: "color 0.2s" }}
-                    onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "#D4AF37"; }}
-                    onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
-                  >
-                    {link === "My Account" ? "My Account / Sign In" : link}
-                  </a>
-                </li>
-              ))}
+              {["Home", "Rentals", "Gallery", "My Account", "About", "Contact"]
+                .filter((link) => link !== "Gallery" || galleryEnabled)
+                .map((link) => (
+                  <li key={link}>
+                    <a
+                      href={link === "My Account" ? "/portal" : `#${link.toLowerCase()}`}
+                      onClick={(e) => {
+                        if (link === "About") {
+                          e.preventDefault();
+                          onOpenAbout();
+                        } else if (link === "Contact") {
+                          e.preventDefault();
+                          onOpenContact();
+                        }
+                      }}
+                      style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "0.82rem", color: "rgba(255,255,255,0.55)", textDecoration: "none", transition: "color 0.2s" }}
+                      onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "#D4AF37"; }}
+                      onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
+                    >
+                      {link === "My Account" ? "My Account / Sign In" : link}
+                    </a>
+                  </li>
+                ))}
             </ul>
           </div>
 

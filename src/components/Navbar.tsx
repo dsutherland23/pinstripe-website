@@ -47,6 +47,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   const [rentalsDropdownOpen, setRentalsDropdownOpen] = useState(false);
   const [mobileRentalsOpen, setMobileRentalsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [galleryEnabled, setGalleryEnabled] = useState(true);
   const rentalsRef = useRef<HTMLDivElement>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -54,6 +55,16 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
     const hasClass = document.body.classList.contains("evening");
     setIsEvening(hasClass);
     setMounted(true);
+
+    // Fetch settings to check if gallery is enabled
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data.galleryEnabled === "boolean") {
+          setGalleryEnabled(data.galleryEnabled);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const toggleTheme = () => {
@@ -125,13 +136,16 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   };
 
   const links = [
-    { label: "Home",       href: getLinkHref("Home", "#home"),           num: "01", desc: "Return to grand showcase" },
-    { label: "Rentals",    href: getLinkHref("Rentals", "/inventory"),   num: "02", desc: "Browse tents, tables & slides" },
-    { label: "Gallery",    href: getLinkHref("Gallery", "#gallery"),     num: "03", desc: "Real celebration inspiration" },
-    { label: "My Account", href: "/portal",                              num: "04", desc: "Sign in, register or track orders" },
-    { label: "About",      href: "#about",                               num: "05", desc: "Our story & premium quality" },
-    { label: "Contact",    href: "#contact",                             num: "06", desc: "Get direct quotes & pricing" },
-  ];
+    { label: "Home",       href: getLinkHref("Home", "#home"),           desc: "Return to grand showcase" },
+    { label: "Rentals",    href: getLinkHref("Rentals", "/inventory"),   desc: "Browse tents, tables & slides" },
+    ...(galleryEnabled ? [{ label: "Gallery",    href: getLinkHref("Gallery", "#gallery"),     desc: "Real celebration inspiration" }] : []),
+    { label: "My Account", href: "/portal",                              desc: "Sign in, register or track orders" },
+    { label: "About",      href: "#about",                               desc: "Our story & premium quality" },
+    { label: "Contact",    href: "#contact",                             desc: "Get direct quotes & pricing" },
+  ].map((item, index) => ({
+    ...item,
+    num: String(index + 1).padStart(2, "0")
+  }));
 
   const renderIcon = (label: string, size = 16) => {
     switch (label) {

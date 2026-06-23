@@ -4,10 +4,35 @@ process.env.TOKIO_WORKER_THREADS = '1';
 
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+
+console.log(`wrapper: Original process.env.PORT is: ${process.env.PORT}`);
+
+// Intercept process.env.PORT if it's a domain socket path (not a pure number)
+const originalPort = process.env.PORT;
+let passengerSocket = null;
+
+if (originalPort && isNaN(Number(originalPort))) {
+  console.log(`wrapper: Detected Unix domain socket port: ${originalPort}`);
+  passengerSocket = originalPort;
+  // Set PORT to 3000 temporarily so Next.js doesn't crash on parsing
+  process.env.PORT = '3000';
+}
+
+// Monkeypatch http.Server.prototype.listen to bind to Passenger socket if Next.js attempts to bind to 3000
+const originalListen = http.Server.prototype.listen;
+http.Server.prototype.listen = function(...args) {
+  if (passengerSocket && (args[0] === 3000 || args[0] === '3000' || Number.isNaN(args[0]))) {
+    console.log(`wrapper: Redirecting listen from 3000 to Passenger socket: ${passengerSocket}`);
+    // Unix domain sockets take a single path argument
+    return originalListen.call(this, passengerSocket, () => {
+      console.log(`wrapper: Node server is now listening on Passenger socket: ${passengerSocket}`);
+    });
+  }
+  return originalListen.apply(this, args);
+};
 
 // Look for .env.secure in multiple potential locations
-// Storing it in the parent directory (/home/u887289907/domains/pinstripesrentals.com/.env.secure)
-// ensures it is outside the nodejs/ deployment directory and won't be deleted by Git CI.
 const envLocations = [
   path.join(__dirname, '.env.secure'),
   path.join(__dirname, '..', '.env.secure'),
@@ -26,7 +51,6 @@ for (const envFile of envLocations) {
         if (eq > 0) {
           const key = line.substring(0, eq).trim();
           const val = line.substring(eq + 1).trim();
-          // Unconditionally overwrite to bypass Apache .htaccess truncation bugs
           process.env[key] = val;
         }
       });
