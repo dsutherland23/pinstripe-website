@@ -63,6 +63,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [quoteRef, setQuoteRef] = useState<string | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const { errors, validateOnBlur, validateStepFields, clearAllErrors } = useFormValidation();
 
   // Availability state
@@ -395,8 +396,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
               <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.2rem", color: "var(--text-primary)", marginBottom: "0.75rem" }}>
                 {city === "Other" ? "Extended Service Area Review 🚚" : "Booking Request Received!"}
               </h3>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "2rem", maxWidth: "440px", margin: "0 auto 2rem" }}>
-                {city === "Other" ? (
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "1.5rem" }}>
+                {checkoutUrl ? (
+                  <>
+                    Thank you <strong>{firstName} {lastName}</strong>! Your event booking is reserved. You are being redirected to our secure Stripe checkout page to complete your payment...
+                  </>
+                ) : city === "Other" ? (
                   <>
                     Thank you <strong>{firstName} {lastName}</strong>! Since your venue is located in <strong>{customCity}</strong> (outside our standard service area, which is <em>Coming Soon</em>), our travel logistics team will review our schedule and contact you at <strong>{phone}</strong> or <strong>{email}</strong> within 2 hours with custom adjusted travel reservation details if we can accommodate your event.
                   </>
@@ -424,6 +429,38 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                   }}
                 >
                   Booking Reference #: {quoteRef}
+                </div>
+              )}
+
+              {checkoutUrl && (
+                <div style={{ marginTop: "0.5rem", marginBottom: "1.5rem" }}>
+                  <a
+                    href={checkoutUrl}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      background: "#D4AF37",
+                      color: "#0f0f0f",
+                      border: "none",
+                      borderRadius: "0.875rem",
+                      padding: "0.875rem 2rem",
+                      fontFamily: "var(--font-heading)",
+                      fontWeight: 800,
+                      fontSize: "0.75rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      textDecoration: "none",
+                      boxShadow: "0 6px 20px rgba(212,175,55,0.3)",
+                      transition: "all 0.2s ease",
+                    }}
+                    className="btn-press"
+                  >
+                    💳 Pay Securely with Card
+                  </a>
+                  <p style={{ margin: "0.5rem 0 0", fontSize: "0.68rem", color: "var(--text-secondary)", opacity: 0.8 }}>
+                    If you are not redirected automatically in 2 seconds, click the button above.
+                  </p>
                 </div>
               )}
 
@@ -584,8 +621,15 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                   });
                   const json = await res.json();
                   if (res.ok && json.success) {
-                    setQuoteRef(json.quoteRef ?? null);
+                    setQuoteRef(json.id ?? json.quoteRef ?? null);
+                    setCheckoutUrl(json.checkoutUrl ?? null);
                     setDone(true);
+                    
+                    if (json.checkoutUrl) {
+                      setTimeout(() => {
+                        window.location.href = json.checkoutUrl;
+                      }, 2500);
+                    }
                   } else {
                     setSubmitError(json.error || "Something went wrong. Please try again.");
                   }

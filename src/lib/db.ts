@@ -631,7 +631,8 @@ export async function updateBookingStatus(
 export async function updateBookingPayment(
   id: string,
   amount: number,
-  method: string
+  method: string,
+  paymentId?: string
 ): Promise<boolean> {
   if (useFallback) {
     const booking = fallbackStore.bookings.find(x => x.id === id);
@@ -642,7 +643,7 @@ export async function updateBookingPayment(
 
     const payments = booking.payments ?? [];
     payments.push({
-      id: "PAY-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      id: paymentId || "PAY-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
       amount,
       method,
       timestamp: new Date().toISOString(),
@@ -671,7 +672,7 @@ export async function updateBookingPayment(
 
     const payments = booking.payments ?? [];
     payments.push({
-      id: "PAY-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      id: paymentId || "PAY-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
       amount,
       method,
       timestamp: new Date().toISOString(),
@@ -695,7 +696,7 @@ export async function updateBookingPayment(
   } catch (err) {
     console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
     useFallback = true;
-    return updateBookingPayment(id, amount, method);
+    return updateBookingPayment(id, amount, method, paymentId);
   }
 }
 

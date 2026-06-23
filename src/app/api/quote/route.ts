@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addBooking } from "@/lib/db";
+import Stripe from "stripe";
+
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-01-27.acacia" as any,
+    })
+  : null;
 
 function generateId(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -13,15 +20,57 @@ function generateId(): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    const { estimatedTotal, paymentMethod, email } = body;
+
     const booking = {
       id: generateId(),
       ...body,
       submittedAt: new Date().toISOString(),
     };
+
     await addBooking(booking);
+
+    if (paymentMethod === "Pay Online Now" && stripe) {
+      const origin = req.headers.get("origin") || "https://pinstripesrentals.com";
+      try {
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ["card"],
+          mode: "payment",
+          customer_email: email,
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: `Booking Deposit/Total for ${booking.id}`,
+                  description: "Pinstripes Party & Event Rentals reservation",
+                },
+                unit_amount: Math.round(Number(estimatedTotal) * 100),
+              },
+              quantity: 1,
+            },
+          ],
+          success_url: `${origin}/portal?bookingId=${booking.id}&session_id={CHECKOUT_SESSION_ID}&success=true`,
+          cancel_url: `${origin}/portal?bookingId=${booking.id}&cancel=true`,
+          metadata: {
+            bookingId: booking.id,
+          },
+        });
+
+        return NextResponse.json({ 
+          success: true, 
+          id: booking.id, 
+          checkoutUrl: session.url 
+        });
+      } catch (stripeErr: any) {
+        console.error("Stripe Checkout session creation failed:", stripeErr);
+      }
+    }
+
     return NextResponse.json({ success: true, id: booking.id });
   } catch (err) {
     console.error("Quote API error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
