@@ -512,7 +512,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
               {isEvening ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <button className="btn-primary btn-press" onClick={onOpenQuote} style={{ fontSize: "0.65rem", padding: "0.65rem 1.4rem" }}>
-              Get Instant Quote
+              Book & Reserve
             </button>
           </div>
 
@@ -1174,7 +1174,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 boxShadow: "0 8px 24px rgba(212,175,55,0.25)",
               }}
             >
-              Get Instant Quote
+              Book & Reserve
             </button>
           </div>
         </div>

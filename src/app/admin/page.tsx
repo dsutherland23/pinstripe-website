@@ -142,7 +142,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings]     = useState<Booking[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [siteContent, setSiteContent] = useState<SiteContent | null>(null);
-  const [settings, setSettings]     = useState({ tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "" });
+  const [settings, setSettings]     = useState({ tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true });
 
   // UI state
   const [loading, setLoading]       = useState(false);
@@ -235,7 +235,7 @@ export default function AdminDashboard() {
       if (bkRes.ok)   { const d = await bkRes.json();      setBookings(d.bookings || []); }
       if (catRes.ok)  { const d = await catRes.json();     setCategories(d.categories || []); }
       if (contentRes.ok) { const d = await contentRes.json(); setSiteContent(d.content); setContentForm(d.content); }
-      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "" }); }
+      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true }); }
     } catch { setErrorMsg("Network error loading data."); }
     finally { setLoading(false); }
   };
@@ -1523,6 +1523,7 @@ export default function AdminDashboard() {
                   {[
                     { key: "tentPlannerEnabled", label: "Tent Layout Simulator", desc: "Show the interactive tent planner widget on the homepage." },
                     { key: "maintenanceMode",    label: "Maintenance Mode",     desc: "Put the public site into maintenance — admins still have access." },
+                    { key: "payInPersonEnabled", label: "Pay in Person Option", desc: "Allow users to choose Pay in Person (Cash / Check / Zelle) during booking." },
                   ].map(toggle => (
                     <div key={toggle.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                       <div>

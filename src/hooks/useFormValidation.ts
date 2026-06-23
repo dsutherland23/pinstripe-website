@@ -73,6 +73,11 @@ export function validateField(name: string, value: string, extra?: { city?: stri
       if (extra?.city === "Other" && !value.trim()) return "Please specify your city";
       return undefined;
 
+    case "eventLoc":
+      if (!value.trim()) return "Event location is required";
+      if (value.trim().length < 3) return "Please enter a valid event location";
+      return undefined;
+
     default:
       return undefined;
   }
@@ -92,6 +97,9 @@ export function validateStep(
 
     const guestErr = validateField("guestCount", values.guestCount || "");
     if (guestErr) errors.guestCount = guestErr;
+
+    const locErr = validateField("eventLoc", values.eventLoc || "");
+    if (locErr) errors.eventLoc = locErr;
   }
 
   if (step === 2) {

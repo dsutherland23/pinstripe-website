@@ -101,7 +101,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
               onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
             >
-              Get Instant Quote
+              Book & Reserve
             </button>
           </div>
         </div>

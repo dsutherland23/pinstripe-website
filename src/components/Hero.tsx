@@ -201,7 +201,7 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
           >
             <button className="btn-primary btn-press" onClick={onOpenQuote}>
               <Calendar size={15} />
-              Get Instant Quote
+              Book & Reserve
             </button>
             <a
               href="#rentals"

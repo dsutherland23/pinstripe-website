@@ -116,6 +116,26 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   const [zipCode, setZipCode] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Pay in Person");
+  const [payInPersonEnabled, setPayInPersonEnabled] = useState(true);
+
+  // Fetch settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setPayInPersonEnabled(data.payInPersonEnabled ?? true);
+          if (data.payInPersonEnabled === false) {
+            setPaymentMethod("Pay Online Now");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     if (selectedPackageFromUI) {
@@ -198,6 +218,31 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
       return { ...prev, [id]: Math.max(1, nextVal) };
     });
 
+  const isPhotoBoothApplicable = () => {
+    if (bookingMode === "package") return true;
+    if (selectedItemFromInventory) {
+      const item = mockInventory.find((i) => i.id === selectedItemFromInventory.id);
+      if (item && item.category === "Photo Booths") return true;
+      return false;
+    }
+    const totalSelectedCount = Object.values(selected).reduce((sum, val) => sum + val, 0);
+    if (totalSelectedCount === 0) return true;
+
+    const hasSelectedPhotoBooth = Object.keys(selected).some((id) => {
+      if (selected[id] <= 0) return false;
+      const item = mockInventory.find((i) => i.id === id);
+      return item?.category === "Photo Booths";
+    });
+    return hasSelectedPhotoBooth;
+  };
+
+  // Force bookingMode to "items" if photobooth is not applicable
+  useEffect(() => {
+    if (!isPhotoBoothApplicable()) {
+      setBookingMode("items");
+    }
+  }, [selected, selectedItemFromInventory]);
+
   const selectedPkg = PHOTO_BOOTH_PACKAGES.find((p) => p.name === selectedPackageName);
   const packageBaseTotal = selectedPkg ? selectedPkg.price : 0;
   const extraHoursPrice = Math.max(0, packageHours - 4) * 65;
@@ -241,10 +286,10 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "1.5rem" }}>
             <div>
               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#D4AF37", marginBottom: "0.25rem" }}>
-                Instant Quote Builder
+                Instant Booking & Reservation
               </div>
               <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.4rem", color: "var(--text-primary)", lineHeight: 1.2 }}>
-                {done ? "Quote Submitted! 🎉" : steps[step - 1]}
+                {done ? "Booking Reserved! 🎉" : steps[step - 1]}
               </h2>
             </div>
             <button
@@ -324,7 +369,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
               <p style={{ fontFamily: "var(--font-body)", fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "2rem", maxWidth: "440px", margin: "0 auto 2rem" }}>
                 {city === "Other" ? (
                   <>
-                    Thank you <strong>{firstName} {lastName}</strong>! Since your venue is located in <strong>{customCity}</strong> (outside our standard service area, which is <em>Coming Soon</em>), our travel logistics team will review our schedule and contact you at <strong>{phone}</strong> or <strong>{email}</strong> within 2 hours with a custom adjusted travel quote if we can accommodate your event.
+                    Thank you <strong>{firstName} {lastName}</strong>! Since your venue is located in <strong>{customCity}</strong> (outside our standard service area, which is <em>Coming Soon</em>), our travel logistics team will review our schedule and contact you at <strong>{phone}</strong> or <strong>{email}</strong> within 2 hours with custom adjusted travel reservation details if we can accommodate your event.
                   </>
                 ) : (
                   <>
@@ -349,7 +394,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                     marginBottom: "1.5rem",
                   }}
                 >
-                  Reference #: {quoteRef}
+                  Booking Reference #: {quoteRef}
                 </div>
               )}
 
@@ -518,7 +563,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         placeholder="e.g. 50"
                         value={guestCount}
                         onChange={(e) => setGuestCount(e.target.value)}
+                        onBlur={() => validateOnBlur("guestCount", guestCount)}
+                        style={errors.guestCount ? { borderColor: "#ef4444" } : {}}
                       />
+                      {errors.guestCount && (
+                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.guestCount}</p>
+                      )}
                     </div>
                   </div>
 
@@ -533,23 +583,32 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                           className="field"
                           value={eventDate}
                           onChange={(e) => setEventDate(e.target.value)}
-                          style={{ paddingLeft: "2.3rem" }}
+                          onBlur={() => validateOnBlur("eventDate", eventDate)}
+                          style={{ paddingLeft: "2.3rem", ...(errors.eventDate ? { borderColor: "#ef4444" } : {}) }}
                         />
                       </div>
+                      {errors.eventDate && (
+                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.eventDate}</p>
+                      )}
                     </div>
                     <div>
-                      <label style={labelStyle}>Event Location Landmark</label>
+                      <label style={labelStyle}>Event Location *</label>
                       <div style={{ position: "relative" }}>
                         <span style={iconStyle}>📍</span>
                         <input
+                          required
                           type="text"
                           className="field"
                           placeholder="e.g. Town Point Park, Norfolk"
                           value={eventLoc}
                           onChange={(e) => setEventLoc(e.target.value)}
-                          style={{ paddingLeft: "2.3rem" }}
+                          onBlur={() => validateOnBlur("eventLoc", eventLoc)}
+                          style={{ paddingLeft: "2.3rem", ...(errors.eventLoc ? { borderColor: "#ef4444" } : {}) }}
                         />
                       </div>
+                      {errors.eventLoc && (
+                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.eventLoc}</p>
+                      )}
                     </div>
                   </div>
                 </>
@@ -559,52 +618,54 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
               {step === 2 && (
                 <>
                   {/* Segmented Mode Selector */}
-                  <div style={{ display: "flex", gap: "0.5rem", padding: "0.25rem", background: "var(--bg-secondary)", borderRadius: "0.75rem", border: "1px solid var(--border-primary)", marginBottom: "1.25rem" }}>
-                    <button
-                      type="button"
-                      onClick={() => setBookingMode("package")}
-                      style={{
-                        flex: 1,
-                        padding: "0.5rem 1rem",
-                        borderRadius: "0.5rem",
-                        border: "none",
-                        background: bookingMode === "package" ? "var(--card-bg)" : "transparent",
-                        color: bookingMode === "package" ? "var(--text-primary)" : "var(--text-secondary)",
-                        fontFamily: "var(--font-heading)",
-                        fontWeight: 700,
-                        fontSize: "0.72rem",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                        cursor: "pointer",
-                        boxShadow: bookingMode === "package" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
-                        transition: "all 0.2s ease"
-                      }}
-                    >
-                      Curated Packages
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBookingMode("items")}
-                      style={{
-                        flex: 1,
-                        padding: "0.5rem 1rem",
-                        borderRadius: "0.5rem",
-                        border: "none",
-                        background: bookingMode === "items" ? "var(--card-bg)" : "transparent",
-                        color: bookingMode === "items" ? "var(--text-primary)" : "var(--text-secondary)",
-                        fontFamily: "var(--font-heading)",
-                        fontWeight: 700,
-                        fontSize: "0.72rem",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                        cursor: "pointer",
-                        boxShadow: bookingMode === "items" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
-                        transition: "all 0.2s ease"
-                      }}
-                    >
-                      Individual Rentals
-                    </button>
-                  </div>
+                  {isPhotoBoothApplicable() && (
+                    <div style={{ display: "flex", gap: "0.5rem", padding: "0.25rem", background: "var(--bg-secondary)", borderRadius: "0.75rem", border: "1px solid var(--border-primary)", marginBottom: "1.25rem" }}>
+                      <button
+                        type="button"
+                        onClick={() => setBookingMode("package")}
+                        style={{
+                          flex: 1,
+                          padding: "0.5rem 1rem",
+                          borderRadius: "0.5rem",
+                          border: "none",
+                          background: bookingMode === "package" ? "var(--card-bg)" : "transparent",
+                          color: bookingMode === "package" ? "var(--text-primary)" : "var(--text-secondary)",
+                          fontFamily: "var(--font-heading)",
+                          fontWeight: 700,
+                          fontSize: "0.72rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          cursor: "pointer",
+                          boxShadow: bookingMode === "package" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        Curated Packages
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBookingMode("items")}
+                        style={{
+                          flex: 1,
+                          padding: "0.5rem 1rem",
+                          borderRadius: "0.5rem",
+                          border: "none",
+                          background: bookingMode === "items" ? "var(--card-bg)" : "transparent",
+                          color: bookingMode === "items" ? "var(--text-primary)" : "var(--text-secondary)",
+                          fontFamily: "var(--font-heading)",
+                          fontWeight: 700,
+                          fontSize: "0.72rem",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          cursor: "pointer",
+                          boxShadow: bookingMode === "items" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        Individual Rentals
+                      </button>
+                    </div>
+                  )}
 
                   {bookingMode === "package" ? (
                     /* PACKAGES MODE */
@@ -1072,12 +1133,16 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                     <label style={labelStyle}>Payment Method</label>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
                       {[
-                        {
-                          id: "Pay in Person",
-                          title: "Pay in Person (Cash / Check / Zelle)",
-                          desc: "Pay the full total at delivery or setup.",
-                          priceText: `$${total.toFixed(2)}`,
-                        },
+                        ...(payInPersonEnabled
+                          ? [
+                              {
+                                id: "Pay in Person",
+                                title: "Pay in Person (Cash / Check / Zelle)",
+                                desc: "Pay the full total at delivery or setup.",
+                                priceText: `$${total.toFixed(2)}`,
+                              },
+                            ]
+                          : []),
                         {
                           id: "Pay Online Now",
                           title: "Pay now (Online Secure Card Payment)",
@@ -1220,7 +1285,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                     <button
                       type="button"
                       onClick={() => {
-                        const vals = { eventDate, guestCount, city, customCity, firstName, lastName, email, phone, address, zipCode };
+                        const vals = { eventDate, guestCount, eventLoc, city, customCity, firstName, lastName, email, phone, address, zipCode };
                         const itemsCount = bookingMode === "package" ? 1 : Object.keys(selected).length;
                         const isValid = validateStepFields(step, vals, itemsCount);
                         if (isValid) setStep((s) => s + 1);
@@ -1271,7 +1336,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       }}
                       className="btn-press"
                     >
-                      {isSubmitting ? "Submitting…" : <>Submit Quote <Send size={14} /></>}
+                      {isSubmitting ? "Submitting…" : <>Submit Booking <Send size={14} /></>}
                     </button>
                   )}
                 </div>

@@ -135,7 +135,7 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "1fr",
             gap: "1rem",
             marginBottom: "1.25rem",
             background: "var(--bg-secondary)",
@@ -143,6 +143,7 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
             padding: "1rem",
             border: "1px solid var(--border-primary)",
             transition: "all 0.4s ease",
+            textAlign: "center",
           }}
         >
           <div>
@@ -154,17 +155,6 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
             </div>
             <div style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-secondary)", opacity: 0.8, marginTop: "0.2rem" }}>
               per day
-            </div>
-          </div>
-          <div>
-            <div style={{ fontFamily: "var(--font-heading)", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)", opacity: 0.8, marginBottom: "0.25rem" }}>
-              Deposit
-            </div>
-            <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.75rem", color: "var(--text-primary)", lineHeight: 1 }}>
-              ${item.depositAmount}
-            </div>
-            <div style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "#22c55e", marginTop: "0.2rem", fontWeight: 600 }}>
-              Fully refundable
             </div>
           </div>
         </div>
@@ -320,7 +310,7 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
             }}
           >
             <Calendar size={14} />
-            Add to Quote
+            Add to Booking/Reserve
           </button>
         </div>
       </div>

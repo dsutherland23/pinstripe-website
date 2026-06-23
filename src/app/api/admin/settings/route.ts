@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       tentPlannerEnabled: body.tentPlannerEnabled,
       maintenanceMode: body.maintenanceMode,
       analyticsId: body.analyticsId,
+      payInPersonEnabled: body.payInPersonEnabled,
     });
     return NextResponse.json({ success: true });
   } catch (err) {
