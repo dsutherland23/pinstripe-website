@@ -435,7 +435,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                           {/* Card Image vignette */}
                           <div className="img-zoom" style={{ position: "relative", aspectRatio: "4/3", background: "var(--bg-secondary)", overflow: "hidden" }}>
                             <img 
-                              src={item.image} 
+                              src={item.image && item.image.startsWith('/images/') ? `${item.image}?v=20260623` : item.image} 
                               alt={item.title} 
                               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} 
                               loading="lazy" 

@@ -103,7 +103,7 @@ export default function Testimonials({ galleryEnabled = true }: TestimonialsProp
                 >
                   {/* Background Image */}
                   <img
-                    src={item.img}
+                    src={item.img.startsWith('/images/') ? `${item.img}?v=20260623` : item.img}
                     alt={item.title}
                     className="absolute inset-0 w-full h-full object-cover"
                     loading="lazy"

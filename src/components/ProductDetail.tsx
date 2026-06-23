@@ -73,7 +73,7 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
       {/* Hero image */}
       <div style={{ position: "relative", aspectRatio: "16/7", overflow: "hidden", background: "var(--bg-secondary)" }}>
         <img
-          src={item.image}
+          src={item.image && item.image.startsWith('/images/') ? `${item.image}?v=20260623` : item.image}
           alt={item.title}
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           onError={(e) => {

@@ -65,7 +65,7 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
         {slides.map((slide, idx) => (
           <img
             key={slide.src}
-            src={slide.src}
+            src={`${slide.src}?v=20260623`}
             alt={slide.alt}
             className={idx === activeIndex ? "animate-kenburns" : ""}
             fetchPriority={idx === 0 ? "high" : "low"}

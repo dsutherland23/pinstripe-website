@@ -189,9 +189,8 @@ def main():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(host, port, user, password)
         
-        # Web root on Hostinger is the home dir (~/ = /home/u887289907/)
-        # NOT ~/domains/pinstripesrentals.com/public_html/ (that dir is empty/unused)
-        web_root = "/home/u887289907"
+        # Web root on Hostinger is the domain public_html folder
+        web_root = "/home/u887289907/domains/pinstripesrentals.com/public_html"
 
         commands = [
             # Extract zip into the nodejs folder (standalone root lands here)
@@ -201,7 +200,7 @@ def main():
             f"[ ! -f {remote_base}/server_original.js ] && cp {remote_base}/server.js {remote_base}/server_original.js || true",
             # Copy public/ assets → web root so Apache serves them directly (no Passenger overhead)
             # Fixes 502 Bad Gateway errors on /images/* routes
-            f"cp -r {remote_base}/public/* {web_root}/",
+            f"mkdir -p {web_root}/images && cp -r {remote_base}/public/* {web_root}/",
             # Copy .next/static/ → web root _next/static/ so Apache serves JS chunks directly
             # URL /_next/static/chunks/foo.js → disk: {web_root}/_next/static/chunks/foo.js
             # Fixes 404 ChunkLoadErrors after a fresh deploy
@@ -281,8 +280,8 @@ def main():
         transport2.connect(username=user, password=password)
         sftp2 = paramiko.SFTPClient.from_transport(transport2)
         
-        # Write .htaccess to web root (~/  = /home/u887289907/ on Hostinger)
-        htaccess_path = ".htaccess"
+        # Write .htaccess to web root (domains/pinstripesrentals.com/public_html/.htaccess)
+        htaccess_path = "domains/pinstripesrentals.com/public_html/.htaccess"
         with sftp2.open(htaccess_path, 'w') as f:
             f.write(htaccess_content)
         

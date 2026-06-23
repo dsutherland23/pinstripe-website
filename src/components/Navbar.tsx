@@ -217,7 +217,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 }}
               >
                 <img
-                  src="/images/pinstripes-logo.png"
+                  src="/images/pinstripes-logo.png?v=20260623"
                   alt="Pinstripes Party & Event Rentals"
                   style={{
                     height: (scrolled || !isHome) ? "40px" : "56px",
@@ -614,7 +614,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 }}
               >
                 <img
-                  src="/images/pinstripes-logo.png"
+                  src="/images/pinstripes-logo.png?v=20260623"
                   alt="Pinstripes Logo"
                   style={{
                     height: "36px",

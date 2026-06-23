@@ -146,7 +146,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                 }}
               >
                 <img
-                  src="/images/pinstripes-logo.png"
+                  src="/images/pinstripes-logo.png?v=20260623"
                   alt="Pinstripes Party & Event Rentals"
                   style={{
                     height: "52px",
