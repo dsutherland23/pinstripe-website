@@ -366,7 +366,7 @@ export default function FeaturedRentals({
                           onMouseLeave={(e) => { e.currentTarget.style.background = "#D4AF37"; }}
                         >
                           <Calendar size={13} />
-                          Quote
+                          Reserve
                         </button>
                       )}
                     </div>

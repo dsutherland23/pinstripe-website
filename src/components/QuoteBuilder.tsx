@@ -1336,7 +1336,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       }}
                       className="btn-press"
                     >
-                      {isSubmitting ? "Submitting…" : <>Submit Booking <Send size={14} /></>}
+                      {isSubmitting ? "Submitting…" : <>Reserve <Send size={14} /></>}
                     </button>
                   )}
                 </div>

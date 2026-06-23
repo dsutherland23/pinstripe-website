@@ -574,7 +574,7 @@ export default function InventoryClientPage() {
                                 onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, #D4AF37, #f5e8a0)"; }}
                               >
                                 <Calendar size={12} />
-                                Quote
+                                Reserve
                               </button>
                             </div>
                           </div>
