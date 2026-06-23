@@ -22,14 +22,16 @@ import {
   Camera,
   Coffee,
   User,
+  Tent,
 } from "lucide-react";
 
 const rentalSubItems = [
-  { label: "Tables",               href: "/inventory#tables",               categorySlug: "tables",               icon: <Table2 size={15} />,   desc: "Banquet, round & specialty tables" },
-  { label: "Chairs",               href: "/inventory#chairs",               categorySlug: "chairs",               icon: <Armchair size={15} />, desc: "Folding, cross-back & chiavari" },
-  { label: "Inflatables",          href: "/inventory#inflatables",          categorySlug: "inflatables",          icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },
-  { label: "Photo Booth",          href: "/inventory#photobooth",          categorySlug: "photobooth",          icon: <Camera size={15} />,   desc: "360° & open-air photo experiences" },
-  { label: "Concession Equipment", href: "/inventory#concession-equipment", categorySlug: "concession-equipment", icon: <Coffee size={15} />,   desc: "Popcorn, cotton candy & more" },
+  { label: "Tents",                href: "/inventory/tents",                categorySlug: "tents",                icon: <Tent size={15} />,     desc: "High-peak wedding & party tents" },
+  { label: "Tables",               href: "/inventory/tables",               categorySlug: "tables",               icon: <Table2 size={15} />,   desc: "Banquet, round & specialty tables" },
+  { label: "Chairs",               href: "/inventory/chairs",               categorySlug: "chairs",               icon: <Armchair size={15} />, desc: "Folding, cross-back & chiavari" },
+  { label: "Inflatables",          href: "/inventory/inflatables",          categorySlug: "inflatables",          icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },
+  { label: "Photo Booth",          href: "/inventory/photobooth",          categorySlug: "photobooth",          icon: <Camera size={15} />,   desc: "360° & open-air photo experiences" },
+  { label: "Concession Equipment", href: "/inventory/concession-equipment", categorySlug: "concession-equipment", icon: <Coffee size={15} />,   desc: "Popcorn, cotton candy & more" },
 ];
 
 
@@ -115,27 +117,10 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
     setMobileRentalsOpen(false);
 
     if (typeof window !== "undefined") {
-      const isInventoryPage = window.location.pathname === "/inventory";
-      
-      if (isInventoryPage) {
-        if (categorySlug === "all") {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        } else {
-          // Scroll to the specific section on `/inventory`
-          const targetSection = document.getElementById(categorySlug);
-          if (targetSection) {
-            const navbarHeight = 90;
-            const top = targetSection.getBoundingClientRect().top + window.scrollY - navbarHeight;
-            window.scrollTo({ top, behavior: "smooth" });
-          }
-        }
+      if (categorySlug === "all") {
+        window.location.href = "/inventory";
       } else {
-        // Redirect to /inventory#categorySlug
-        if (categorySlug === "all") {
-          window.location.href = "/inventory";
-        } else {
-          window.location.href = `/inventory#${categorySlug}`;
-        }
+        window.location.href = `/inventory/${categorySlug}`;
       }
     }
   };

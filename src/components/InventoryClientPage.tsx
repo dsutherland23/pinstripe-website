@@ -17,7 +17,11 @@ import type { RentalItem } from "@/data/mockInventory";
 
 const FALLBACK = "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=60";
 
-export default function InventoryClientPage() {
+interface InventoryClientPageProps {
+  selectedCategorySlug?: string;
+}
+
+export default function InventoryClientPage({ selectedCategorySlug }: InventoryClientPageProps) {
   const [inventory, setInventory] = useState<RentalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<RentalItem | null>(null);
@@ -101,7 +105,7 @@ export default function InventoryClientPage() {
   const concessions = inventory.filter((item) => (item.category === "Cotton Candy Machines" || item.category === "Popcorn Machines") && matchesSearch(item));
 
   // Category listing configuration
-  const sectionsConfig = [
+  const rawSections = [
     { 
       title: "Premium High-Peak Tents", 
       id: "tents", 
@@ -146,6 +150,10 @@ export default function InventoryClientPage() {
     },
   ];
 
+  const sectionsConfig = selectedCategorySlug
+    ? rawSections.filter((s) => s.id === selectedCategorySlug)
+    : rawSections;
+
   return (
     <main className="pb-18 lg:pb-0" style={{ fontFamily: "var(--font-body)", background: "var(--bg-primary)", color: "var(--text-primary)", minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
       
@@ -173,15 +181,22 @@ export default function InventoryClientPage() {
         }}
       >
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <div className="section-label" style={{ justifyContent: "center", display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.4rem 1rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-            ★ Commercial-Grade Rentals ★
-          </div>
-          <h1 className="section-title text-gradient" style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "1.25rem", marginTop: "1rem" }}>
-            The Full Inventory
-          </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", lineHeight: 1.6, maxWidth: "620px", margin: "0 auto 2.5rem" }}>
-            Explore our premium selection of sanitised, professional event gear. Filter by categories below or search to find the perfect assets for your date.
-          </p>
+          {(() => {
+            const activeSection = rawSections.find((s) => s.id === selectedCategorySlug);
+            return (
+              <>
+                <div className="section-label" style={{ justifyContent: "center", display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.4rem 1rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                  ★ {activeSection ? activeSection.title : "Commercial-Grade Rentals"} ★
+                </div>
+                <h1 className="section-title text-gradient" style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "1.25rem", marginTop: "1rem" }}>
+                  {activeSection ? activeSection.title : "The Full Inventory"}
+                </h1>
+                <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", lineHeight: 1.6, maxWidth: "620px", margin: "0 auto 2.5rem" }}>
+                  {activeSection ? activeSection.desc : "Explore our premium selection of sanitised, professional event gear. Filter by categories below or search to find the perfect assets for your date."}
+                </p>
+              </>
+            );
+          })()}
 
           {/* Premium Search input in Hero */}
           <div 
@@ -200,7 +215,7 @@ export default function InventoryClientPage() {
             </span>
             <input 
               type="text" 
-              placeholder="Search tents, chairs, bounce houses..."
+              placeholder={selectedCategorySlug ? `Search in this category...` : "Search tents, chairs, bounce houses..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -215,80 +230,103 @@ export default function InventoryClientPage() {
               }}
             />
           </div>
+          {selectedCategorySlug && (
+            <div style={{ marginTop: "1.5rem" }}>
+              <a
+                href="/inventory"
+                style={{
+                  color: "#D4AF37",
+                  fontSize: "0.85rem",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  transition: "opacity 0.2s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.8"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+              >
+                ← View Full Catalog
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
       {/* Sticky Glassmorphism Jump Bar */}
-      <div
-        style={{
-          position: "sticky",
-          top: "72px",
-          zIndex: 900,
-          background: "rgba(10, 10, 10, 0.82)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid var(--border-primary)",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-          overflowX: "auto",
-          whiteSpace: "nowrap",
-          padding: "0.85rem 1.5rem",
-          display: "flex",
-          justifyContent: "center",
-          gap: "0.75rem",
-        }}
-        className="no-scrollbar"
-      >
-        {sectionsConfig.map((sec) => {
-          const hasItems = sec.items.length > 0;
-          return (
-            <button
-              key={sec.id}
-              disabled={!hasItems && !!searchQuery}
-              onClick={() => {
-                const el = document.getElementById(sec.id);
-                if (el) {
-                  const navbarHeight = 155; // Navbar + Sticky jump bar
-                  const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight;
-                  window.scrollTo({ top, behavior: "smooth" });
-                }
-              }}
-              style={{
-                padding: "0.6rem 1.15rem",
-                borderRadius: "9999px",
-                background: "rgba(212,175,55,0.04)",
-                border: "1px solid rgba(212,175,55,0.15)",
-                fontFamily: "var(--font-heading)",
-                fontSize: "0.68rem",
-                fontWeight: 800,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                color: "#D4AF37",
-                cursor: "pointer",
-                transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.4rem",
-                opacity: (!hasItems && !!searchQuery) ? 0.3 : 1
-              }}
-              onMouseEnter={(e) => {
-                if (!hasItems && !!searchQuery) return;
-                e.currentTarget.style.background = "#D4AF37";
-                e.currentTarget.style.color = "#0f0f0f";
-                e.currentTarget.style.boxShadow = "0 4px 14px rgba(212,175,55,0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(212,175,55,0.04)";
-                e.currentTarget.style.color = "#D4AF37";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              {sec.icon}
-              {sec.title.split(" ").slice(-1)[0]} {/* Show last word for compact labels */}
-              {searchQuery && <span style={{ fontSize: "0.6rem", opacity: 0.7 }}>({sec.items.length})</span>}
-            </button>
-          );
-        })}
-      </div>
+      {!selectedCategorySlug && (
+        <div
+          style={{
+            position: "sticky",
+            top: "72px",
+            zIndex: 900,
+            background: "rgba(10, 10, 10, 0.82)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderBottom: "1px solid var(--border-primary)",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+            overflowX: "auto",
+            whiteSpace: "nowrap",
+            padding: "0.85rem 1.5rem",
+            display: "flex",
+            justifyContent: "center",
+            gap: "0.75rem",
+          }}
+          className="no-scrollbar"
+        >
+          {sectionsConfig.map((sec) => {
+            const hasItems = sec.items.length > 0;
+            return (
+              <button
+                key={sec.id}
+                disabled={!hasItems && !!searchQuery}
+                onClick={() => {
+                  const el = document.getElementById(sec.id);
+                  if (el) {
+                    const navbarHeight = 155; // Navbar + Sticky jump bar
+                    const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight;
+                    window.scrollTo({ top, behavior: "smooth" });
+                  }
+                }}
+                style={{
+                  padding: "0.6rem 1.15rem",
+                  borderRadius: "9999px",
+                  background: "rgba(212,175,55,0.04)",
+                  border: "1px solid rgba(212,175,55,0.15)",
+                  fontFamily: "var(--font-heading)",
+                  fontSize: "0.68rem",
+                  fontWeight: 800,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  color: "#D4AF37",
+                  cursor: "pointer",
+                  transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  opacity: (!hasItems && !!searchQuery) ? 0.3 : 1
+                }}
+                onMouseEnter={(e) => {
+                  if (!hasItems && !!searchQuery) return;
+                  e.currentTarget.style.background = "#D4AF37";
+                  e.currentTarget.style.color = "#0f0f0f";
+                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(212,175,55,0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(212,175,55,0.04)";
+                  e.currentTarget.style.color = "#D4AF37";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                {sec.icon}
+                {sec.title.split(" ").slice(-1)[0]} {/* Show last word for compact labels */}
+                {searchQuery && <span style={{ fontSize: "0.6rem", opacity: 0.7 }}>({sec.items.length})</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Grouped Catalog Sections */}
       <div style={{ maxWidth: "1280px", margin: "4rem auto 7rem", padding: "0 1.5rem", display: "flex", flexDirection: "column", gap: "6rem", position: "relative", zIndex: 1 }}>
