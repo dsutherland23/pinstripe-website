@@ -26,6 +26,7 @@ const categories = [
   { name: "Chairs",                icon: "chair",   featured: false },
   { name: "Cotton Candy Machines", icon: "candy",   featured: false },
   { name: "Popcorn Machines",      icon: "popcorn", featured: false },
+  { name: "Snow-cone Machines",    icon: "ice",     featured: false },
   { name: "Photo Booths",          icon: "camera",  featured: false },
 ];
 

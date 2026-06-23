@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import {
   Menu,
   X,
@@ -41,6 +42,8 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: NavbarProps) {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [isEvening, setIsEvening] = useState(false);
@@ -170,60 +173,62 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
           right: 0,
           zIndex: 1000,
           transition: "all 0.35s ease",
-          ...(scrolled
-            ? {
-                background: "rgba(255,255,255,0.95)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                boxShadow: "0 2px 24px rgba(0,0,0,0.08)",
-                padding: "0.625rem 0",
-              }
-            : {
-                background: "transparent",
-                padding: "1.25rem 0",
-              }),
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1280px",
-            margin: "0 auto",
-            padding: "0 1.25rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "1.5rem",
+            ...((scrolled || !isHome)
+              ? {
+                  background: isEvening ? "rgba(15,15,15,0.95)" : "rgba(255,255,255,0.95)",
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  boxShadow: isEvening ? "0 4px 30px rgba(0, 0, 0, 0.5)" : "0 2px 24px rgba(0,0,0,0.08)",
+                  borderBottom: isEvening ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(0,0,0,0.05)",
+                  padding: "0.625rem 0",
+                }
+              : {
+                  background: "transparent",
+                  borderBottom: "1px solid transparent",
+                  padding: "1.25rem 0",
+                }),
           }}
         >
-          {/* LOGO */}
-          <a href={getLinkHref("Home", "#home")} style={{ textDecoration: "none", flexShrink: 0 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: scrolled ? "transparent" : "rgba(255, 255, 255, 0.96)",
-                width: scrolled ? "52px" : "72px",
-                height: scrolled ? "52px" : "72px",
-                borderRadius: "50%",
-                boxShadow: scrolled ? "none" : "0 4px 20px rgba(0, 0, 0, 0.08)",
-                transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                border: scrolled ? "1px solid transparent" : "1px solid rgba(255, 255, 255, 0.1)",
-              }}
-            >
-              <img
-                src="/images/pinstripes-logo.png"
-                alt="Pinstripes Party & Event Rentals"
+          <div
+            style={{
+              maxWidth: "1280px",
+              margin: "0 auto",
+              padding: "0 1.25rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "1.5rem",
+            }}
+          >
+            {/* LOGO */}
+            <a href={getLinkHref("Home", "#home")} style={{ textDecoration: "none", flexShrink: 0 }}>
+              <div
                 style={{
-                  height: scrolled ? "40px" : "56px",
-                  width: scrolled ? "40px" : "56px",
-                  objectFit: "contain",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: (scrolled || !isHome) ? "transparent" : "rgba(255, 255, 255, 0.96)",
+                  width: (scrolled || !isHome) ? "52px" : "72px",
+                  height: (scrolled || !isHome) ? "52px" : "72px",
                   borderRadius: "50%",
+                  boxShadow: (scrolled || !isHome) ? "none" : "0 4px 20px rgba(0, 0, 0, 0.08)",
                   transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                  border: (scrolled || !isHome) ? "1px solid transparent" : "1px solid rgba(255, 255, 255, 0.1)",
                 }}
-              />
-            </div>
-          </a>
+              >
+                <img
+                  src="/images/pinstripes-logo.png"
+                  alt="Pinstripes Party & Event Rentals"
+                  style={{
+                    height: (scrolled || !isHome) ? "40px" : "56px",
+                    width: (scrolled || !isHome) ? "40px" : "56px",
+                    objectFit: "contain",
+                    borderRadius: "50%",
+                    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                  }}
+                />
+              </div>
+            </a>
 
           {/* DESKTOP NAV */}
           <nav
@@ -259,7 +264,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                         fontSize: "0.72rem",
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
-                        color: rentalsDropdownOpen ? "#D4AF37" : (scrolled ? "#0f0f0f" : "rgba(255,255,255,0.9)"),
+                        color: rentalsDropdownOpen ? "#D4AF37" : ((scrolled || !isHome) ? (isEvening ? "rgba(255,255,255,0.9)" : "#0f0f0f") : "rgba(255,255,255,0.9)"),
                         background: "transparent",
                         border: "none",
                         cursor: "pointer",
@@ -444,7 +449,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                     fontSize: "0.72rem",
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
-                    color: scrolled ? "#0f0f0f" : "rgba(255,255,255,0.9)",
+                    color: (scrolled || !isHome) ? (isEvening ? "rgba(255,255,255,0.9)" : "#0f0f0f") : "rgba(255,255,255,0.9)",
                     textDecoration: "none",
                     transition: "color 0.2s",
                     padding: "0.25rem 0",
@@ -492,7 +497,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
               style={{
                 background: isEvening ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.04)",
                 border: "1px solid",
-                borderColor: scrolled ? (isEvening ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)") : "rgba(255, 255, 255, 0.2)",
+                borderColor: (scrolled || !isHome) ? (isEvening ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.1)") : "rgba(255, 255, 255, 0.2)",
                 borderRadius: "9999px",
                 width: "36px",
                 height: "36px",
@@ -501,7 +506,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 justifyContent: "center",
                 cursor: "pointer",
                 transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                color: isEvening ? "#D4AF37" : (scrolled ? "#0f0f0f" : "#ffffff"),
+                color: isEvening ? "#D4AF37" : ((scrolled || !isHome) ? "#0f0f0f" : "#ffffff"),
               }}
               title={isEvening ? "Switch to Daytime Warmth" : "Switch to Evening Elegance"}
             >
@@ -519,7 +524,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
             style={{
               background: "transparent",
               border: "none",
-              color: scrolled ? "#0f0f0f" : "#ffffff",
+              color: (scrolled || !isHome) ? (isEvening ? "rgba(255,255,255,0.9)" : "#0f0f0f") : "#ffffff",
               cursor: "pointer",
               padding: "0.5rem",
               zIndex: 1100,

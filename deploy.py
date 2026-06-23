@@ -43,8 +43,8 @@ def zip_project(zip_path):
             sys.exit(1)
         
         for root, dirs, files in os.walk(standalone_dir):
-            # Skip node_modules inside standalone (they're baked in)
-            dirs[:] = [d for d in dirs if d not in {'cache'}]
+            # Skip node_modules inside standalone (they're already on the server)
+            dirs[:] = [d for d in dirs if d not in {'cache', 'node_modules'}]
             for file in files:
                 if file in exclude_from_zip:
                     continue

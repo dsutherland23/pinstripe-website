@@ -226,39 +226,34 @@ export async function initDb(): Promise<void> {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
-    // Seed default data if tables are empty
-    const [invCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM inventory");
-    if ((invCount as mysql.RowDataPacket[])[0].c === 0) {
-      for (const item of mockInventory) {
-        await conn.query(
-          `INSERT IGNORE INTO inventory
-            (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [item.id, item.title, item.category, item.description, item.price, item.depositAmount,
-           item.availability ? 1 : 0, item.dimensions, item.capacity, item.image,
-           item.rating, item.reviews, item.stock ?? null]
-        );
-      }
+    // Seed default data: unconditionally run INSERT IGNORE for mock items and categories
+    for (const item of mockInventory) {
+      await conn.query(
+        `INSERT IGNORE INTO inventory
+          (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [item.id, item.title, item.category, item.description, item.price, item.depositAmount,
+         item.availability ? 1 : 0, item.dimensions, item.capacity, item.image,
+         item.rating, item.reviews, item.stock ?? null]
+      );
     }
 
-    const [catCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM categories");
-    if ((catCount as mysql.RowDataPacket[])[0].c === 0) {
-      const DEFAULT_CATEGORIES: Category[] = [
-        { id: "cat-1", name: "Bounce Houses",        icon: "castle",  featured: true,  order: 1 },
-        { id: "cat-2", name: "Water Slides",          icon: "water",   featured: true,  order: 2 },
-        { id: "cat-3", name: "Tents",                 icon: "tent",    featured: true,  order: 3 },
-        { id: "cat-4", name: "Tables",                icon: "table",   featured: false, order: 4 },
-        { id: "cat-5", name: "Chairs",                icon: "chair",   featured: false, order: 5 },
-        { id: "cat-6", name: "Cotton Candy Machines", icon: "candy",   featured: false, order: 6 },
-        { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
-        { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
-      ];
-      for (const cat of DEFAULT_CATEGORIES) {
-        await conn.query(
-          "INSERT IGNORE INTO categories (id, name, icon, featured, `order`) VALUES (?, ?, ?, ?, ?)",
-          [cat.id, cat.name, cat.icon, cat.featured ? 1 : 0, cat.order]
-        );
-      }
+    const DEFAULT_CATEGORIES: Category[] = [
+      { id: "cat-1", name: "Bounce Houses",        icon: "castle",  featured: true,  order: 1 },
+      { id: "cat-2", name: "Water Slides",          icon: "water",   featured: true,  order: 2 },
+      { id: "cat-3", name: "Tents",                 icon: "tent",    featured: true,  order: 3 },
+      { id: "cat-4", name: "Tables",                icon: "table",   featured: false, order: 4 },
+      { id: "cat-5", name: "Chairs",                icon: "chair",   featured: false, order: 5 },
+      { id: "cat-6", name: "Cotton Candy Machines", icon: "candy",   featured: false, order: 6 },
+      { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
+      { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
+      { id: "cat-9", name: "Snow-cone Machines",    icon: "ice",     featured: false, order: 9 },
+    ];
+    for (const cat of DEFAULT_CATEGORIES) {
+      await conn.query(
+        "INSERT IGNORE INTO categories (id, name, icon, featured, `order`) VALUES (?, ?, ?, ?, ?)",
+        [cat.id, cat.name, cat.icon, cat.featured ? 1 : 0, cat.order]
+      );
     }
 
     const [scCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM site_content");
@@ -367,6 +362,7 @@ const fallbackStore = {
     { id: "cat-6", name: "Cotton Candy Machines", icon: "candy",   featured: false, order: 6 },
     { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
     { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
+    { id: "cat-9", name: "Snow-cone Machines",    icon: "ice",     featured: false, order: 9 },
   ],
   siteContent: { ...DEFAULT_SITE_CONTENT },
   settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true },

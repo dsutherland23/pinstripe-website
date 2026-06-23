@@ -135,4 +135,20 @@ export const mockInventory: RentalItem[] = [
     rating: 5,
     reviews: 53,
   },
+  {
+    id: "9",
+    title: "Professional Snow-cone Machine",
+    category: "Snow-cone Machines",
+    description:
+      "High-yield commercial-grade snow-cone shaver. Easy to operate and produces perfectly crushed ice for cool summer treats.",
+    price: 75,
+    depositAmount: 20,
+    availability: true,
+    dimensions: "16″ × 16″ × 24″",
+    capacity: "120 Cones / hr",
+    image: "/images/kids-snowcones.png",
+    rating: 4.8,
+    reviews: 15,
+    stock: 5,
+  },
 ];

@@ -106,7 +106,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
   const chairs = inventory.filter((item) => item.category === "Chairs" && matchesSearch(item));
   const inflatables = inventory.filter((item) => (item.category === "Bounce Houses" || item.category === "Water Slides") && matchesSearch(item));
   const photoBooths = inventory.filter((item) => item.category === "Photo Booths" && matchesSearch(item));
-  const concessions = inventory.filter((item) => (item.category === "Cotton Candy Machines" || item.category === "Popcorn Machines") && matchesSearch(item));
+  const concessions = inventory.filter((item) => (item.category === "Cotton Candy Machines" || item.category === "Popcorn Machines" || item.category === "Snow-cone Machines") && matchesSearch(item));
 
   // Category listing configuration
   const rawSections = [
