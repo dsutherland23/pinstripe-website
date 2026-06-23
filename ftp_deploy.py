@@ -188,11 +188,15 @@ if ($conn->connect_error) {{
     echo "MySQL connection failed: " . $conn->connect_error . "\\n";
 }} else {{
     // 1. settings table migration
-    $result = $conn->query("ALTER TABLE settings ADD COLUMN gallery_enabled TINYINT(1) NOT NULL DEFAULT 1");
-    if ($result) {{
-        echo "Successfully added gallery_enabled column to settings table.\\n";
-    }} else {{
-        echo "Alter settings table result: " . $conn->error . " (expected if column already exists)\\n";
+    try {{
+        $result = $conn->query("ALTER TABLE settings ADD COLUMN gallery_enabled TINYINT(1) NOT NULL DEFAULT 1");
+        if ($result) {{
+            echo "Successfully added gallery_enabled column to settings table.\\n";
+        }} else {{
+            echo "Alter settings table result: " . $conn->error . " (expected if column already exists)\\n";
+        }}
+    }} catch (Exception $e) {{
+        echo "Alter settings table notice: " . $e->getMessage() . " (expected if column already exists)\\n";
     }}
     
     // 2. categories table seeding
