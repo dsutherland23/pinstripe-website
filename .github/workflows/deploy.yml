@@ -1,0 +1,47 @@
+name: Deploy Next.js App to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install Python Dependencies
+        run: pip install paramiko
+
+      - name: Build and Deploy via Python script
+        env:
+          FTP_HOST: "212.85.28.186"
+          FTP_USER: "u887289907"
+          FTP_PORT: "65002"
+          FTP_PASS: ${{ secrets.FTP_PASS }}
+          DB_HOST: "localhost"
+          DB_PORT: "3306"
+          DB_NAME: "u887289907_pinsdb"
+          DB_USER: "u887289907_pinuser"
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_SOCKET: "/var/lib/mysql/mysql.sock"
+          ADMIN_PASSCODE: ${{ secrets.ADMIN_PASSCODE }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: python deploy.py
