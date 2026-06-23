@@ -7,6 +7,7 @@ import { RadialGlowCard } from "./CursorReactive";
 
 interface PackagesProps {
   onOpenQuote: (pkgName?: string) => void;
+  isEmbedded?: boolean;
 }
 
 const pkgs = [
@@ -80,18 +81,20 @@ const pkgs = [
   },
 ];
 
-export default function Packages({ onOpenQuote }: PackagesProps) {
+export default function Packages({ onOpenQuote, isEmbedded }: PackagesProps) {
   return (
-    <section id="packages" style={{ padding: "5rem 0", background: "var(--bg-secondary)", transition: "all 0.5s ease" }}>
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.25rem" }}>
+    <section id={isEmbedded ? undefined : "packages"} style={{ padding: isEmbedded ? "0" : "5rem 0", background: isEmbedded ? "transparent" : "var(--bg-secondary)", transition: "all 0.5s ease" }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: isEmbedded ? "0" : "0 1.25rem" }}>
         {/* Header */}
-        <div style={{ textAlign: "center", maxWidth: "560px", margin: "0 auto 3.5rem" }}>
-          <span className="section-label">Photo Booth</span>
-          <h2 className="section-title text-gradient">Photo Booth Packages</h2>
-          <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.7, marginTop: "0.875rem" }}>
-            Choose the perfect booth experience for your event. All packages include GIFs, Boomerangs & Slow Motion. Additional hours available at $65/hr.
-          </p>
-        </div>
+        {!isEmbedded && (
+          <div style={{ textAlign: "center", maxWidth: "560px", margin: "0 auto 3.5rem" }}>
+            <span className="section-label">Photo Booth</span>
+            <h2 className="section-title text-gradient">Photo Booth Packages</h2>
+            <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.7, marginTop: "0.875rem" }}>
+              Choose the perfect booth experience for your event. All packages include GIFs, Boomerangs & Slow Motion. Additional hours available at $65/hr.
+            </p>
+          </div>
+        )}
 
         {/* Cards grid */}
         <div

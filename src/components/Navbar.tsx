@@ -10,7 +10,6 @@ import {
   Moon,
   Home,
   Compass,
-  Package,
   Image as ImageIcon,
   Award,
   MessageSquare,
@@ -128,18 +127,16 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   const links = [
     { label: "Home",       href: getLinkHref("Home", "#home"),           num: "01", desc: "Return to grand showcase" },
     { label: "Rentals",    href: getLinkHref("Rentals", "/inventory"),   num: "02", desc: "Browse tents, tables & slides" },
-    { label: "Packages",   href: getLinkHref("Packages", "#packages"),   num: "03", desc: "View curated event setups" },
-    { label: "Gallery",    href: getLinkHref("Gallery", "#gallery"),     num: "04", desc: "Real celebration inspiration" },
-    { label: "My Account", href: "/portal",                              num: "05", desc: "Sign in, register or track orders" },
-    { label: "About",      href: "#about",                               num: "06", desc: "Our story & premium quality" },
-    { label: "Contact",    href: "#contact",                             num: "07", desc: "Get direct quotes & pricing" },
+    { label: "Gallery",    href: getLinkHref("Gallery", "#gallery"),     num: "03", desc: "Real celebration inspiration" },
+    { label: "My Account", href: "/portal",                              num: "04", desc: "Sign in, register or track orders" },
+    { label: "About",      href: "#about",                               num: "05", desc: "Our story & premium quality" },
+    { label: "Contact",    href: "#contact",                             num: "06", desc: "Get direct quotes & pricing" },
   ];
 
   const renderIcon = (label: string, size = 16) => {
     switch (label) {
       case "Home":       return <Home size={size} />;
       case "Rentals":    return <Compass size={size} />;
-      case "Packages":   return <Package size={size} />;
       case "Gallery":    return <ImageIcon size={size} />;
       case "My Account": return <User size={size} />;
       case "About":      return <Award size={size} />;

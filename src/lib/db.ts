@@ -197,12 +197,19 @@ export async function initDb(): Promise<void> {
         tent_planner_enabled TINYINT(1) NOT NULL DEFAULT 1,
         maintenance_mode     TINYINT(1) NOT NULL DEFAULT 0,
         analytics_id         VARCHAR(128) NOT NULL DEFAULT '',
-        pay_in_person_enabled TINYINT(1) NOT NULL DEFAULT 1
+        pay_in_person_enabled TINYINT(1) NOT NULL DEFAULT 1,
+        gallery_enabled       TINYINT(1) NOT NULL DEFAULT 1
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
     try {
       await conn.query("ALTER TABLE settings ADD COLUMN pay_in_person_enabled TINYINT(1) NOT NULL DEFAULT 1");
+    } catch (err) {
+      // Ignore if column already exists
+    }
+
+    try {
+      await conn.query("ALTER TABLE settings ADD COLUMN gallery_enabled TINYINT(1) NOT NULL DEFAULT 1");
     } catch (err) {
       // Ignore if column already exists
     }
@@ -295,7 +302,7 @@ export async function initDb(): Promise<void> {
     const [setCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM settings");
     if ((setCount as mysql.RowDataPacket[])[0].c === 0) {
       await conn.query(
-        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled) VALUES (1, 1, 0, '', 1)"
+        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled, gallery_enabled) VALUES (1, 1, 0, '', 1, 1)"
       );
     }
   } finally {
@@ -362,7 +369,7 @@ const fallbackStore = {
     { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
   ],
   siteContent: { ...DEFAULT_SITE_CONTENT },
-  settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true },
+  settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true },
   bookings: [] as Booking[],
   users: [] as User[],
 };
@@ -766,6 +773,7 @@ type SettingsRow = {
   maintenance_mode: number;
   analytics_id: string;
   pay_in_person_enabled: number;
+  gallery_enabled: number;
 };
 
 export async function getSettings(): Promise<{
@@ -773,17 +781,19 @@ export async function getSettings(): Promise<{
   maintenanceMode?: boolean;
   analyticsId?: string;
   payInPersonEnabled?: boolean;
+  galleryEnabled?: boolean;
 }> {
   if (useFallback) return fallbackStore.settings;
   try {
     await ensureInit();
     const rows = await query<SettingsRow>("SELECT * FROM settings WHERE id = 1");
-    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true };
+    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true };
     return {
       tentPlannerEnabled: Boolean(rows[0].tent_planner_enabled),
       maintenanceMode: Boolean(rows[0].maintenance_mode),
       analyticsId: rows[0].analytics_id,
       payInPersonEnabled: Boolean(rows[0].pay_in_person_enabled ?? 1),
+      galleryEnabled: Boolean(rows[0].gallery_enabled ?? 1),
     };
   } catch (err) {
     console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
@@ -797,6 +807,7 @@ export async function updateSettings(updates: {
   maintenanceMode?: boolean;
   analyticsId?: string;
   payInPersonEnabled?: boolean;
+  galleryEnabled?: boolean;
 }): Promise<void> {
   if (useFallback) {
     fallbackStore.settings = { ...fallbackStore.settings, ...updates };
@@ -821,6 +832,10 @@ export async function updateSettings(updates: {
     if (updates.payInPersonEnabled !== undefined) {
       setClauses.push("pay_in_person_enabled = ?");
       values.push(updates.payInPersonEnabled ? 1 : 0);
+    }
+    if (updates.galleryEnabled !== undefined) {
+      setClauses.push("gallery_enabled = ?");
+      values.push(updates.galleryEnabled ? 1 : 0);
     }
     if (setClauses.length === 0) return;
     values.push(1);

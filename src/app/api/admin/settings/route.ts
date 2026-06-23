@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
       maintenanceMode: body.maintenanceMode,
       analyticsId: body.analyticsId,
       payInPersonEnabled: body.payInPersonEnabled,
+      galleryEnabled: body.galleryEnabled,
     });
     return NextResponse.json({ success: true });
   } catch (err) {

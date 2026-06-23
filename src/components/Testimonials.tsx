@@ -30,7 +30,11 @@ const faqs = [
 
 const FALLBACK = "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=60";
 
-export default function Testimonials() {
+interface TestimonialsProps {
+  galleryEnabled?: boolean;
+}
+
+export default function Testimonials({ galleryEnabled = true }: TestimonialsProps) {
   const [filter, setFilter] = useState("All");
   const [activeIndex, setActiveIndex] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -45,12 +49,13 @@ export default function Testimonials() {
   return (
     <>
       {/* ===== GALLERY ===== */}
-      <section id="gallery" style={{ padding: "5rem 0", background: "#ffffff" }}>
-        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.25rem" }}>
-          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <span className="section-label">Inspiration Gallery</span>
-            <h2 className="section-title">Real Events, Real Smiles</h2>
-          </div>
+      {galleryEnabled && (
+        <section id="gallery" style={{ padding: "5rem 0", background: "#ffffff" }}>
+          <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.25rem" }}>
+            <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+              <span className="section-label">Inspiration Gallery</span>
+              <h2 className="section-title">Real Events, Real Smiles</h2>
+            </div>
 
           {/* Filter pills */}
           <div
@@ -141,6 +146,7 @@ export default function Testimonials() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ===== TESTIMONIALS ===== */}
       <section id="about" style={{ padding: "5rem 0", background: "#fafafa", borderTop: "1px solid #f0f0f0" }}>

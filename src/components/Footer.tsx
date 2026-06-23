@@ -192,7 +192,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
               Quick Links
             </h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {["Home", "Rentals", "Packages", "Gallery", "My Account", "About", "Contact"].map((link) => (
+              {["Home", "Rentals", "Gallery", "My Account", "About", "Contact"].map((link) => (
                 <li key={link}>
                   <a
                     href={link === "My Account" ? "/portal" : `#${link.toLowerCase()}`}

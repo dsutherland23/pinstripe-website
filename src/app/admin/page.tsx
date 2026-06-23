@@ -142,7 +142,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings]     = useState<Booking[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [siteContent, setSiteContent] = useState<SiteContent | null>(null);
-  const [settings, setSettings]     = useState({ tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true });
+  const [settings, setSettings]     = useState({ tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true });
 
   // UI state
   const [loading, setLoading]       = useState(false);
@@ -235,7 +235,7 @@ export default function AdminDashboard() {
       if (bkRes.ok)   { const d = await bkRes.json();      setBookings(d.bookings || []); }
       if (catRes.ok)  { const d = await catRes.json();     setCategories(d.categories || []); }
       if (contentRes.ok) { const d = await contentRes.json(); setSiteContent(d.content); setContentForm(d.content); }
-      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true }); }
+      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true }); }
     } catch { setErrorMsg("Network error loading data."); }
     finally { setLoading(false); }
   };
@@ -1522,6 +1522,7 @@ export default function AdminDashboard() {
                   <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", marginBottom: "1.25rem" }}>Feature Toggles</h3>
                   {[
                     { key: "tentPlannerEnabled", label: "Tent Layout Simulator", desc: "Show the interactive tent planner widget on the homepage." },
+                    { key: "galleryEnabled",     label: "Gallery / Instagram",  desc: "Show the Gallery / Instagram section on the homepage." },
                     { key: "maintenanceMode",    label: "Maintenance Mode",     desc: "Put the public site into maintenance — admins still have access." },
                     { key: "payInPersonEnabled", label: "Pay in Person Option", desc: "Allow users to choose Pay in Person (Cash / Check / Zelle) during booking." },
                   ].map(toggle => (

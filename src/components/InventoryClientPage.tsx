@@ -14,6 +14,7 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import Reveal from "@/components/Reveal";
 import { RadialGlowCard } from "@/components/CursorReactive";
 import type { RentalItem } from "@/data/mockInventory";
+import Packages from "@/components/Packages";
 
 const FALLBACK = "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=60";
 
@@ -27,6 +28,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
   const [selectedItem, setSelectedItem] = useState<RentalItem | null>(null);
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [quotePreItem, setQuotePreItem] = useState<RentalItem | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [aboutContactOpen, setAboutContactOpen] = useState(false);
   const [aboutContactTab, setAboutContactTab] = useState<"about" | "contact">("about");
   
@@ -75,13 +77,15 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
     setAboutContactOpen(true);
   };
 
-  const handleOpenQuote = () => {
+  const handleOpenQuote = (pkgName?: string) => {
     setQuotePreItem(null);
+    setSelectedPackage(pkgName || null);
     setQuoteOpen(true);
   };
 
   const handleOpenQuoteWithItem = (item: RentalItem) => {
     setQuotePreItem(item);
+    setSelectedPackage(null);
     setQuoteOpen(true);
   };
 
@@ -162,7 +166,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
       <div style={{ position: "absolute", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 70%)", top: "45%", right: "-150px", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
 
       <Navbar
-        onOpenQuote={handleOpenQuote}
+        onOpenQuote={() => handleOpenQuote()}
         onOpenAbout={handleOpenAbout}
         onOpenContact={handleOpenContact}
       />
@@ -359,6 +363,41 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                   </p>
                 </div>
               </Reveal>
+
+              {sec.id === "photobooth" && !searchQuery && (
+                <div style={{ marginBottom: "3.5rem" }}>
+                  <Reveal>
+                    <div style={{ marginBottom: "1.5rem" }}>
+                      <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>
+                        Curated Packages
+                      </span>
+                      <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+                        All-Inclusive Photo Booth Packages
+                      </h3>
+                      <p style={{ color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.5, maxWidth: "600px", marginBottom: "1.5rem" }}>
+                        Select one of our popular all-inclusive options featuring delivery, backdrop, props, and staffing options.
+                      </p>
+                    </div>
+                  </Reveal>
+                  <Packages onOpenQuote={handleOpenQuote} isEmbedded={true} />
+                  
+                  {sec.items.length > 0 && (
+                    <Reveal>
+                      <div style={{ marginTop: "4.5rem", marginBottom: "2.5rem", borderTop: "1px solid var(--border-primary)", paddingTop: "3.5rem" }}>
+                        <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>
+                          Individual Rentals
+                        </span>
+                        <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+                          A La Carte Options & Equipment
+                        </h3>
+                        <p style={{ color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.5, maxWidth: "600px" }}>
+                          Rent items individually or add them to your custom event plan.
+                        </p>
+                      </div>
+                    </Reveal>
+                  )}
+                </div>
+              )}
 
               {loading ? (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", gap: "1.5rem" }}>
@@ -675,6 +714,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
         isOpen={quoteOpen}
         onClose={() => setQuoteOpen(false)}
         selectedItemFromInventory={quotePreItem}
+        selectedPackageFromUI={selectedPackage}
       />
 
       <AboutContactModal

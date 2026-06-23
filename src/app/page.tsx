@@ -7,7 +7,6 @@ import SearchBar from "@/components/SearchBar";
 import Categories from "@/components/Categories";
 import FeaturedRentals, { type RentalItem } from "@/components/FeaturedRentals";
 import TentLayoutSimulator from "@/components/TentLayoutSimulator";
-import Packages from "@/components/Packages";
 import Testimonials from "@/components/Testimonials";
 import StatsBar from "@/components/StatsBar";
 import Footer from "@/components/Footer";
@@ -41,13 +40,19 @@ export default function Home() {
   const [aboutContactOpen, setAboutContactOpen] = useState(false);
   const [aboutContactTab, setAboutContactTab]   = useState<"about" | "contact">("about");
   const [plannerEnabled, setPlannerEnabled]     = useState(true);
+  const [galleryEnabled, setGalleryEnabled]     = useState(true);
 
   useEffect(() => {
     fetch(`/api/settings?t=${Date.now()}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data && typeof data.tentPlannerEnabled === "boolean") {
-          setPlannerEnabled(data.tentPlannerEnabled);
+        if (data) {
+          if (typeof data.tentPlannerEnabled === "boolean") {
+            setPlannerEnabled(data.tentPlannerEnabled);
+          }
+          if (typeof data.galleryEnabled === "boolean") {
+            setGalleryEnabled(data.galleryEnabled);
+          }
         }
       })
       .catch(() => {});
@@ -170,11 +175,7 @@ export default function Home() {
       )}
 
       <Reveal>
-        <Packages onOpenQuote={handleOpenQuote} />
-      </Reveal>
-
-      <Reveal>
-        <Testimonials />
+        <Testimonials galleryEnabled={galleryEnabled} />
       </Reveal>
 
       {/* ---- Footer needs top spacing for CTA overlap ---- */}
