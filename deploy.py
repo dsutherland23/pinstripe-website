@@ -274,6 +274,13 @@ def main():
             'RewriteEngine On\n'
             'RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f\n'
             'RewriteRule ^ - [L]\n'
+            # Disable caching for dynamic HTML routes so that the CDN never serves stale HTML pages
+            '<IfModule mod_headers.c>\n'
+            '    SetEnvIf Request_URI "^/(images/|_next/)" is_static=1\n'
+            '    Header set Cache-Control "no-cache, no-store, must-revalidate" env=!is_static\n'
+            '    Header set Pragma "no-cache" env=!is_static\n'
+            '    Header set Expires "0" env=!is_static\n'
+            '</IfModule>\n'
         )
         
         transport2 = paramiko.Transport((host, port))
