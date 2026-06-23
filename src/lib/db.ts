@@ -232,9 +232,21 @@ export async function initDb(): Promise<void> {
         `INSERT IGNORE INTO inventory
           (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [item.id, item.title, item.category, item.description, item.price, item.depositAmount,
-         item.availability ? 1 : 0, item.dimensions, item.capacity, item.image,
-         item.rating, item.reviews, item.stock ?? null]
+        [
+          item.id,
+          item.title,
+          item.category,
+          item.description,
+          item.price ?? 0,
+          item.depositAmount ?? 0,
+          item.availability ? 1 : 0,
+          item.dimensions ?? "",
+          item.capacity ?? "",
+          item.image ?? "",
+          item.rating ?? 5.0,
+          item.reviews ?? 0,
+          item.stock ?? null
+        ]
       );
     }
 
@@ -424,7 +436,7 @@ export async function updateInventoryItem(id: string, updates: Partial<RentalIte
       const col = fieldMap[key];
       if (!col) continue;
       setClauses.push(`${col} = ?`);
-      values.push(key === "availability" ? (val ? 1 : 0) : val);
+      values.push(key === "availability" ? (val ? 1 : 0) : (val ?? null));
     }
     if (setClauses.length === 0) return null;
     values.push(id);
@@ -448,9 +460,21 @@ export async function addInventoryItem(item: RentalItem): Promise<RentalItem> {
     await query(
       `INSERT INTO inventory (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [item.id, item.title, item.category, item.description, item.price, item.depositAmount,
-       item.availability ? 1 : 0, item.dimensions, item.capacity, item.image,
-       item.rating, item.reviews, item.stock ?? null]
+      [
+        item.id,
+        item.title,
+        item.category,
+        item.description,
+        item.price ?? 0,
+        item.depositAmount ?? 0,
+        item.availability ? 1 : 0,
+        item.dimensions ?? "",
+        item.capacity ?? "",
+        item.image ?? "",
+        item.rating ?? 5.0,
+        item.reviews ?? 0,
+        item.stock ?? null
+      ]
     );
     return item;
   } catch (err) {
@@ -548,16 +572,16 @@ export async function addBooking(booking: Booking): Promise<Booking> {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         booking.id,
-        JSON.stringify(booking.customer),
-        JSON.stringify(booking.event),
-        JSON.stringify(booking.delivery),
-        JSON.stringify(booking.items),
-        booking.itemCount,
-        booking.estimatedTotal,
-        booking.paymentMethod,
+        JSON.stringify(booking.customer ?? null),
+        JSON.stringify(booking.event ?? null),
+        JSON.stringify(booking.delivery ?? null),
+        JSON.stringify(booking.items ?? {}),
+        booking.itemCount ?? 0,
+        booking.estimatedTotal ?? 0,
+        booking.paymentMethod ?? "",
         booking.status ?? "pending",
         booking.notes ?? null,
-        booking.submittedAt,
+        booking.submittedAt ?? new Date().toISOString(),
         booking.amountPaid ?? 0,
         booking.paymentStatus ?? "unpaid",
         booking.payments ? JSON.stringify(booking.payments) : null,
@@ -702,7 +726,10 @@ export async function updateBookingPayment(
 
 export async function getUserBookings(email: string): Promise<Booking[]> {
   if (useFallback) {
-    return fallbackStore.bookings.filter(b => b.customer.email.toLowerCase() === email.toLowerCase());
+    return fallbackStore.bookings.filter(b => {
+      const emailVal = b.customer?.email || (b as any).email;
+      return emailVal && emailVal.toLowerCase() === email.toLowerCase();
+    });
   }
   try {
     await ensureInit();
@@ -981,8 +1008,15 @@ export async function addUser(user: User): Promise<User> {
     await ensureInit();
     await query(
       "INSERT INTO users (email, password_hash, name, phone, address, city, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [user.email, user.passwordHash, user.name, user.phone,
-       user.address ?? null, user.city ?? null, user.zipCode ?? null]
+      [
+        user.email,
+        user.passwordHash,
+        user.name ?? "",
+        user.phone ?? "",
+        user.address ?? null,
+        user.city ?? null,
+        user.zipCode ?? null
+      ]
     );
     return user;
   } catch (err) {

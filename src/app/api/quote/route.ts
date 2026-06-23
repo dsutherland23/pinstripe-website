@@ -20,12 +20,57 @@ function generateId(): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { estimatedTotal, paymentMethod, email } = body;
+    const {
+      eventType,
+      eventDate,
+      eventLocation,
+      guestCount,
+      selectedItems,
+      firstName,
+      lastName,
+      email,
+      phone,
+      address,
+      city,
+      customCity,
+      zipCode,
+      notes,
+      paymentMethod,
+      estimatedTotal,
+    } = body;
+
+    const deliveryCity = city === "Other" ? customCity : city;
+    const finalItems = selectedItems || {};
+    const itemCount = Number(Object.values(finalItems).reduce((a: any, b: any) => a + Number(b), 0)) || 0;
 
     const booking = {
       id: generateId(),
-      ...body,
+      customer: {
+        name: `${firstName || ""} ${lastName || ""}`.trim(),
+        email: email || "",
+        phone: phone || "",
+      },
+      event: {
+        type: eventType || "",
+        date: eventDate || "",
+        location: eventLocation || "",
+        guestCount: Number(guestCount) || 0,
+      },
+      delivery: {
+        address: address || "",
+        city: deliveryCity || "",
+        zipCode: zipCode || "",
+      },
+      items: finalItems,
+      itemCount,
+      estimatedTotal: Number(estimatedTotal) || 0,
+      paymentMethod: paymentMethod || "",
+      status: "pending" as const,
+      notes: notes || "",
       submittedAt: new Date().toISOString(),
+      amountPaid: 0,
+      paymentStatus: "unpaid" as const,
+      payments: [],
     };
 
     await addBooking(booking);
@@ -66,7 +111,6 @@ export async function POST(req: NextRequest) {
         console.error("Stripe Checkout session creation failed:", stripeErr);
       }
     }
-
     return NextResponse.json({ success: true, id: booking.id });
   } catch (err) {
     console.error("Quote API error:", err);
