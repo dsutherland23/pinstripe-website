@@ -45,4 +45,5 @@ jobs:
           DB_SOCKET: "/var/lib/mysql/mysql.sock"
           ADMIN_PASSCODE: ${{ secrets.ADMIN_PASSCODE }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: python deploy.py

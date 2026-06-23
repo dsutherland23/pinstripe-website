@@ -100,6 +100,7 @@ def main():
     db_socket = os.environ.get("DB_SOCKET") or "/var/lib/mysql/mysql.sock"
     admin_passcode = os.environ.get("ADMIN_PASSCODE") or "01717381932"
     resend_api_key = os.environ.get("RESEND_API_KEY") or ""
+    stripe_secret_key = os.environ.get("STRIPE_SECRET_KEY") or ""
     
     local_zip = "project.zip"
     remote_base = "domains/pinstripesrentals.com/nodejs"
@@ -141,6 +142,7 @@ def main():
             f"DB_SOCKET={db_socket}\n"
             f"ADMIN_PASSCODE={admin_passcode}\n"
             f"RESEND_API_KEY={resend_api_key}\n"
+            f"STRIPE_SECRET_KEY={stripe_secret_key}\n"
         )
         env_bytes = secure_env_content.encode('utf-8')
         import io
@@ -300,6 +302,7 @@ echo "Touched restart.txt to reload Passenger.\\n";
         safe_pass = db_pass.replace('"', '\\"')
         safe_passcode = admin_passcode.replace('"', '\\"')
         safe_resend = resend_api_key.replace('"', '\\"')
+        safe_stripe = stripe_secret_key.replace('"', '\\"')
         
         htaccess_content = (
             'PassengerAppRoot /home/u887289907/domains/pinstripesrentals.com/nodejs\n'
@@ -320,6 +323,7 @@ echo "Touched restart.txt to reload Passenger.\\n";
             f'PassengerEnvVar DB_SOCKET {db_socket}\n'
             f'PassengerEnvVar ADMIN_PASSCODE {safe_passcode}\n'
             f'PassengerEnvVar RESEND_API_KEY {safe_resend}\n'
+            f'PassengerEnvVar STRIPE_SECRET_KEY {safe_stripe}\n'
             'RewriteRule ^\\.builds - [F,L]\n'
         )
         htaccess_bytes = htaccess_content.encode('utf-8')

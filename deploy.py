@@ -136,6 +136,7 @@ def main():
     db_socket = os.environ.get("DB_SOCKET") or "/var/lib/mysql/mysql.sock"
     admin_passcode = os.environ.get("ADMIN_PASSCODE")
     resend_api_key = os.environ.get("RESEND_API_KEY")
+    stripe_secret_key = os.environ.get("STRIPE_SECRET_KEY")
     
     if not password:
         print("Error: FTP_PASS is not set in environment or env files. Halting deployment.")
@@ -250,6 +251,7 @@ def main():
         safe_pass = db_pass.replace('"', '\\"')
         safe_passcode = (admin_passcode or '').replace('"', '\\"')
         safe_resend = (resend_api_key or '').replace('"', '\\"')
+        safe_stripe = (stripe_secret_key or '').replace('"', '\\"')
         
         htaccess_content = (
             'PassengerAppRoot /home/u887289907/domains/pinstripesrentals.com/nodejs\n'
@@ -270,6 +272,7 @@ def main():
             f'PassengerEnvVar DB_SOCKET {db_socket}\n'
             f'PassengerEnvVar ADMIN_PASSCODE {safe_passcode}\n'
             f'PassengerEnvVar RESEND_API_KEY {safe_resend}\n'
+            f'PassengerEnvVar STRIPE_SECRET_KEY {safe_stripe}\n'
             # Static file passthrough: web root is ~/ on Hostinger.
             # If a file exists on disk (images, _next/static chunks), Apache serves it directly
             # without going through Passenger/Node. Fixes 502s on images, 404s on JS chunks.
@@ -304,6 +307,7 @@ def main():
             f"DB_SOCKET={db_socket}\n"
             f"ADMIN_PASSCODE={admin_passcode or ''}\n"
             f"RESEND_API_KEY={resend_api_key or ''}\n"
+            f"STRIPE_SECRET_KEY={stripe_secret_key or ''}\n"
         )
         with sftp2.open(f"{remote_base}/.env.secure", 'w') as f:
             f.write(secure_env_content)
