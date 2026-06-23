@@ -153,6 +153,44 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     fetchSettings();
   }, []);
 
+  // Auto-fill form fields from logged-in user profile
+  useEffect(() => {
+    if (isOpen) {
+      const savedUser = localStorage.getItem("pinstripe_portal_user");
+      if (savedUser) {
+        try {
+          const user = JSON.parse(savedUser);
+          if (user.email) setEmail(user.email);
+          if (user.name) {
+            const parts = user.name.trim().split(/\s+/);
+            if (parts.length > 1) {
+              setFirstName(parts[0]);
+              setLastName(parts.slice(1).join(" "));
+            } else {
+              setFirstName(user.name);
+              setLastName("");
+            }
+          }
+          if (user.phone) setPhone(user.phone);
+          if (user.address) setAddress(user.address);
+          if (user.zipCode) setZipCode(user.zipCode);
+          if (user.city) {
+            const standardCities = ["Norfolk", "Virginia Beach", "Chesapeake", "Portsmouth", "Suffolk", "Hampton", "Newport News", "Williamsburg", "Poquoson"];
+            if (standardCities.includes(user.city)) {
+              setCity(user.city);
+              setCustomCity("");
+            } else {
+              setCity("Other");
+              setCustomCity(user.city);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to parse logged-in user from localStorage:", e);
+        }
+      }
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     setItemAddons({});
     if (selectedPackageFromUI) {
