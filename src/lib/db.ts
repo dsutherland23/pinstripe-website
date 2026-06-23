@@ -492,13 +492,25 @@ type BookingRow = {
   payments: Booking["payments"] | null;
 };
 
+function safeParseJson<T>(val: any, fallback: T): T {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === "string") {
+    try {
+      return JSON.parse(val) as T;
+    } catch {
+      return fallback;
+    }
+  }
+  return val as T;
+}
+
 function rowToBooking(r: BookingRow): Booking {
   return {
     id: r.id,
-    customer: r.customer,
-    event: r.event_data,
-    delivery: r.delivery,
-    items: r.items,
+    customer: safeParseJson(r.customer, { name: "", email: "", phone: "" }),
+    event: safeParseJson(r.event_data, { type: "", date: "", location: "", guestCount: 0 }),
+    delivery: safeParseJson(r.delivery, { address: "", city: "", zipCode: "" }),
+    items: safeParseJson(r.items, {}),
     itemCount: r.item_count,
     estimatedTotal: Number(r.estimated_total),
     paymentMethod: r.payment_method,
@@ -509,7 +521,7 @@ function rowToBooking(r: BookingRow): Booking {
       : String(r.submitted_at),
     amountPaid: Number(r.amount_paid),
     paymentStatus: r.payment_status,
-    payments: r.payments ?? undefined,
+    payments: safeParseJson(r.payments, null) ?? undefined,
   };
 }
 
@@ -907,10 +919,11 @@ export async function getSiteContent(): Promise<SiteContent> {
   if (useFallback) return fallbackStore.siteContent;
   try {
     await ensureInit();
-    const rows = await query<{ id: number; content: SiteContent }>(
+    const rows = await query<{ id: number; content: any }>(
       "SELECT * FROM site_content WHERE id = 1"
     );
-    return rows.length ? rows[0].content : DEFAULT_SITE_CONTENT;
+    if (!rows.length) return DEFAULT_SITE_CONTENT;
+    return safeParseJson<SiteContent>(rows[0].content, DEFAULT_SITE_CONTENT);
   } catch (err) {
     console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
     useFallback = true;
