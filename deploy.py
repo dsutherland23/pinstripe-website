@@ -189,12 +189,20 @@ def main():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(host, port, user, password)
         
+        public_html = "domains/pinstripesrentals.com/public_html"
+
         commands = [
             # Extract zip into the nodejs folder (standalone root lands here)
             f"unzip -o project.zip -d {remote_base}/",
             # Rename the standalone server.js to server_original.js so our wrapper can require it
             # (only if server.js exists and server_original.js doesn't already exist)
             f"[ ! -f {remote_base}/server_original.js ] && cp {remote_base}/server.js {remote_base}/server_original.js || true",
+            # Copy public/ assets → public_html/ so Apache serves them directly (no Passenger overhead)
+            # This fixes 502 Bad Gateway errors on /images/* routes
+            f"rsync -a --exclude='.htaccess' {remote_base}/public/ /home/u887289907/{public_html}/",
+            # Copy .next/static/ → public_html/_next/static/ so Apache serves JS chunks directly
+            # This fixes 404 ChunkLoadErrors after a fresh deploy
+            f"mkdir -p /home/u887289907/{public_html}/_next && rsync -a {remote_base}/.next/static/ /home/u887289907/{public_html}/_next/static/",
             # Initialise / seed the MySQL database (idempotent — safe to run every deploy)
             (
                 f"export PATH=/opt/alt/alt-nodejs22/root/usr/bin:$PATH && "
@@ -270,7 +278,13 @@ def main():
             f'PassengerEnvVar DB_SOCKET {db_socket}\n'
             f'PassengerEnvVar ADMIN_PASSCODE {safe_passcode}\n'
             f'PassengerEnvVar RESEND_API_KEY {safe_resend}\n'
-            'RewriteRule ^\\.builds - [F,L]\n'
+            # Static file passthrough: if the file exists in public_html, Apache serves it directly.
+            # This prevents Passenger/Node from handling /images/*, /_next/static/*, etc.
+            # Fixes: 502 Bad Gateway on images, 404 ChunkLoadErrors on JS chunks.
+            'RewriteEngine On\n'
+            'RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f\n'
+            'RewriteRule ^ - [L]\n'
+            'RewriteRule ^\.builds - [F,L]\n'
         )
         
         transport2 = paramiko.Transport((host, port))
