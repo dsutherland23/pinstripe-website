@@ -189,7 +189,9 @@ def main():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(host, port, user, password)
         
-        public_html = "domains/pinstripesrentals.com/public_html"
+        # Web root on Hostinger is the home dir (~/ = /home/u887289907/)
+        # NOT ~/domains/pinstripesrentals.com/public_html/ (that dir is empty/unused)
+        web_root = "/home/u887289907"
 
         commands = [
             # Extract zip into the nodejs folder (standalone root lands here)
@@ -197,12 +199,13 @@ def main():
             # Rename the standalone server.js to server_original.js so our wrapper can require it
             # (only if server.js exists and server_original.js doesn't already exist)
             f"[ ! -f {remote_base}/server_original.js ] && cp {remote_base}/server.js {remote_base}/server_original.js || true",
-            # Copy public/ assets → public_html/ so Apache serves them directly (no Passenger overhead)
-            # This fixes 502 Bad Gateway errors on /images/* routes
-            f"cp -r {remote_base}/public/* /home/u887289907/{public_html}/",
-            # Copy .next/static/ → public_html/_next/static/ so Apache serves JS chunks directly
-            # This fixes 404 ChunkLoadErrors after a fresh deploy
-            f"mkdir -p /home/u887289907/{public_html}/_next && cp -r {remote_base}/.next/static /home/u887289907/{public_html}/_next/",
+            # Copy public/ assets → web root so Apache serves them directly (no Passenger overhead)
+            # Fixes 502 Bad Gateway errors on /images/* routes
+            f"cp -r {remote_base}/public/* {web_root}/",
+            # Copy .next/static/ → web root _next/static/ so Apache serves JS chunks directly
+            # URL /_next/static/chunks/foo.js → disk: {web_root}/_next/static/chunks/foo.js
+            # Fixes 404 ChunkLoadErrors after a fresh deploy
+            f"rm -rf {web_root}/_next && mkdir -p {web_root}/_next/static && cp -r {remote_base}/.next/static/* {web_root}/_next/static/",
             # Remove remote zip
             "rm project.zip"
         ]
@@ -254,7 +257,7 @@ def main():
             'PassengerStartupFile server.js\n'
             'PassengerBaseURI /\n'
             'PassengerRestartDir /home/u887289907/domains/pinstripesrentals.com/nodejs/tmp\n'
-            'PassengerEnvVar NODE_OPTIONS "--require /home/u887289907/domains/pinstripesrentals.com/public_html/.builds/config/preload-timestamp.js --max-old-space-size=256"\n'
+            'PassengerEnvVar NODE_OPTIONS "--max-old-space-size=256"\n'
             'SetEnv LSNODE_CONSOLE_LOG console.log\n'
             f'PassengerEnvVar UV_THREADPOOL_SIZE 1\n'
             f'PassengerEnvVar TOKIO_WORKER_THREADS 1\n'
@@ -266,21 +269,20 @@ def main():
             f'PassengerEnvVar DB_SOCKET {db_socket}\n'
             f'PassengerEnvVar ADMIN_PASSCODE {safe_passcode}\n'
             f'PassengerEnvVar RESEND_API_KEY {safe_resend}\n'
-            # Static file passthrough: if the file exists in public_html, Apache serves it directly.
-            # This prevents Passenger/Node from handling /images/*, /_next/static/*, etc.
-            # Fixes: 502 Bad Gateway on images, 404 ChunkLoadErrors on JS chunks.
+            # Static file passthrough: web root is ~/ on Hostinger.
+            # If a file exists on disk (images, _next/static chunks), Apache serves it directly
+            # without going through Passenger/Node. Fixes 502s on images, 404s on JS chunks.
             'RewriteEngine On\n'
             'RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f\n'
             'RewriteRule ^ - [L]\n'
-            'RewriteRule ^\.builds - [F,L]\n'
         )
         
         transport2 = paramiko.Transport((host, port))
         transport2.connect(username=user, password=password)
         sftp2 = paramiko.SFTPClient.from_transport(transport2)
         
-        # Write .htaccess
-        htaccess_path = "domains/pinstripesrentals.com/public_html/.htaccess"
+        # Write .htaccess to web root (~/  = /home/u887289907/ on Hostinger)
+        htaccess_path = ".htaccess"
         with sftp2.open(htaccess_path, 'w') as f:
             f.write(htaccess_content)
         
