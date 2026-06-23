@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateBookingPayment, getBookingById } from "@/lib/db";
+import Stripe from "stripe";
+
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-01-27.acacia" as any,
+    })
+  : null;
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,9 +22,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    // In a real app we'd connect to Stripe API here:
-    // const charge = await stripe.charges.create({ amount: amount * 100, ... })
-    // For this demonstration, we simulate card validation
     if (paymentMethod === "Credit Card" && cardDetails) {
       const { number, expiry, cvc } = cardDetails;
       if (!number || number.replace(/\s/g, "").length < 15) {
@@ -28,6 +32,55 @@ export async function POST(req: NextRequest) {
       }
       if (!cvc || cvc.length < 3) {
         return NextResponse.json({ error: "Invalid CVC code" }, { status: 400 });
+      }
+
+      if (stripe) {
+        // Parse expiry MM/YY
+        const [expMonthStr, expYearStr] = expiry.split("/");
+        const exp_month = parseInt(expMonthStr, 10);
+        const shortYear = parseInt(expYearStr, 10);
+        const exp_year = shortYear < 100 ? 2000 + shortYear : shortYear;
+
+        try {
+          // 1. Create a PaymentMethod with the card details
+          const paymentMethodObj = await stripe.paymentMethods.create({
+            type: "card",
+            card: {
+              number: number.replace(/\s/g, ""),
+              exp_month,
+              exp_year,
+              cvc,
+            },
+          });
+
+          // 2. Create and confirm a PaymentIntent
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: Math.round(Number(amount) * 100), // Stripe expects amount in cents
+            currency: "usd",
+            payment_method: paymentMethodObj.id,
+            confirm: true,
+            description: `Payment for Booking #${bookingId}`,
+            automatic_payment_methods: {
+              enabled: true,
+              allow_redirects: "never",
+            },
+          });
+
+          if (paymentIntent.status !== "succeeded") {
+            return NextResponse.json(
+              { error: `Payment failed with status: ${paymentIntent.status}` },
+              { status: 400 }
+            );
+          }
+        } catch (stripeErr: any) {
+          console.error("Stripe payment processing error:", stripeErr);
+          return NextResponse.json(
+            { error: stripeErr.message || "Stripe transaction failed" },
+            { status: 400 }
+          );
+        }
+      } else {
+        console.warn("Stripe is not configured. Simulating payment.");
       }
     }
 
@@ -43,3 +96,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
