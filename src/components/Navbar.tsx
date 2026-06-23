@@ -208,8 +208,8 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   alignItems: "center",
                   justifyContent: "center",
                   background: (scrolled || !isHome) ? "transparent" : "rgba(255, 255, 255, 0.96)",
-                  width: (scrolled || !isHome) ? "52px" : "72px",
-                  height: (scrolled || !isHome) ? "52px" : "72px",
+                  width: (scrolled || !isHome) ? "64px" : "88px",
+                  height: (scrolled || !isHome) ? "64px" : "88px",
                   borderRadius: "50%",
                   boxShadow: (scrolled || !isHome) ? "none" : "0 4px 20px rgba(0, 0, 0, 0.08)",
                   transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -220,8 +220,8 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   src="/images/pinstripes-logo.png?v=20260623"
                   alt="Pinstripes Party & Event Rentals"
                   style={{
-                    height: (scrolled || !isHome) ? "40px" : "56px",
-                    width: (scrolled || !isHome) ? "40px" : "56px",
+                    height: (scrolled || !isHome) ? "52px" : "72px",
+                    width: (scrolled || !isHome) ? "52px" : "72px",
                     objectFit: "contain",
                     borderRadius: "50%",
                     transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -604,8 +604,8 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 style={{
                   background: isEvening ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.02)",
                   border: "1px solid #D4AF37",
-                  width: "48px",
-                  height: "48px",
+                  width: "56px",
+                  height: "56px",
                   borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
@@ -617,8 +617,8 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   src="/images/pinstripes-logo.png?v=20260623"
                   alt="Pinstripes Logo"
                   style={{
-                    height: "36px",
-                    width: "36px",
+                    height: "44px",
+                    width: "44px",
                     objectFit: "contain",
                     borderRadius: "50%",
                   }}
@@ -628,7 +628,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 <span
                   style={{
                     fontFamily: "var(--font-heading)",
-                    fontSize: "0.85rem",
+                    fontSize: "0.95rem",
                     fontWeight: 900,
                     letterSpacing: "0.15em",
                     textTransform: "uppercase",
@@ -642,7 +642,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 <span
                   style={{
                     fontFamily: "var(--font-heading)",
-                    fontSize: "0.55rem",
+                    fontSize: "0.62rem",
                     fontWeight: 700,
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
