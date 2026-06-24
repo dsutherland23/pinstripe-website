@@ -8,7 +8,7 @@ import {
   X, Save, Star, Package, LayoutGrid, Palette, FileText, BarChart3,
   Phone, Mail, MapPin, Link2, Share2, Menu, Search, Filter,
   ArrowUp, ArrowDown, ToggleLeft, ToggleRight, Image as ImageIcon,
-  CheckCircle, XCircle, Clock, Zap,
+  CheckCircle, XCircle, Clock, Zap, Download,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -31,6 +31,7 @@ interface Booking {
   amountPaid?: number;
   paymentStatus?: "unpaid" | "deposit_paid" | "fully_paid";
   payments?: Array<{ id: string; amount: number; method: string; timestamp: string }>;
+  hasUnreadMessages?: boolean;
 }
 
 interface Category {
@@ -229,6 +230,13 @@ export default function AdminDashboard() {
     fetchChat(); // Instant load
     const interval = setInterval(fetchChat, 3000);
     return () => clearInterval(interval);
+  }, [activeChatBookingId]);
+
+  // Instantly mark a booking as read locally when chat is opened
+  useEffect(() => {
+    if (activeChatBookingId) {
+      setBookings(prev => prev.map(b => b.id === activeChatBookingId ? { ...b, hasUnreadMessages: false } : b));
+    }
   }, [activeChatBookingId]);
 
   // Settings
@@ -1441,16 +1449,49 @@ export default function AdminDashboard() {
                               alignItems: "center",
                               gap: "0.3rem",
                               padding: "0.35rem 0.75rem",
-                              border: "1px solid rgba(16,185,129,0.25)",
+                              border: booking.hasUnreadMessages 
+                                ? "1px solid rgba(16,185,129,0.7)" 
+                                : "1px solid rgba(16,185,129,0.25)",
                               borderRadius: "0.375rem",
                               color: "#10b981",
-                              background: "rgba(16,185,129,0.05)",
+                              background: booking.hasUnreadMessages 
+                                ? "rgba(16,185,129,0.15)" 
+                                : "rgba(16,185,129,0.05)",
                               fontSize: "0.72rem",
                               fontWeight: 600,
                               cursor: "pointer",
+                              position: "relative",
+                              boxShadow: booking.hasUnreadMessages 
+                                ? "0 0 8px rgba(16,185,129,0.4)" 
+                                : "none",
+                              animation: booking.hasUnreadMessages 
+                                ? "chatPulse 2s infinite ease-in-out" 
+                                : "none"
                             }}
                           >
-                            <Mail size={12} /> Chat
+                            {booking.hasUnreadMessages && (
+                              <style>{`
+                                @keyframes chatPulse {
+                                  0% { box-shadow: 0 0 4px rgba(16,185,129,0.2); }
+                                  50% { box-shadow: 0 0 12px rgba(16,185,129,0.6); border-color: rgba(16,185,129,0.9); }
+                                  100% { box-shadow: 0 0 4px rgba(16,185,129,0.2); }
+                                }
+                              `}</style>
+                            )}
+                            <Mail size={12} />
+                            <span>Chat</span>
+                            {booking.hasUnreadMessages && (
+                              <span style={{
+                                width: "6px",
+                                height: "6px",
+                                borderRadius: "50%",
+                                background: "#10b981",
+                                position: "absolute",
+                                top: "-2px",
+                                right: "-2px",
+                                boxShadow: "0 0 6px #10b981"
+                              }} />
+                            )}
                           </button>
                           {bookingDeleteConfirm === booking.id ? (
                             <>
@@ -2099,8 +2140,26 @@ export default function AdminDashboard() {
                         boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                       }}>
                         {msg.mediaUrl && (
-                          <div style={{ marginBottom: "0.5rem", borderRadius: "0.5rem", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                          <div style={{ marginBottom: "0.5rem", borderRadius: "0.5rem", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", position: "relative" }}>
                             <img src={msg.mediaUrl} alt="Chat attachment" style={{ maxWidth: "100%", maxHeight: "180px", display: "block" }} />
+                            <a 
+                              href={msg.mediaUrl} 
+                              download={msg.mediaUrl.split('/').pop() || "download"} 
+                              style={{ 
+                                position: "absolute", bottom: "6px", right: "6px", 
+                                background: "rgba(10,10,10,0.75)", backdropFilter: "blur(4px)", 
+                                WebkitBackdropFilter: "blur(4px)", color: "#ffffff", 
+                                padding: "4px 8px", borderRadius: "4px", fontSize: "0.68rem", 
+                                textDecoration: "none", display: "flex", alignItems: "center", gap: "4px", 
+                                fontWeight: 700, border: "1px solid rgba(255,255,255,0.15)",
+                                transition: "background 0.2s"
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = "rgba(10,10,10,0.95)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = "rgba(10,10,10,0.75)"; }}
+                            >
+                              <Download size={11} strokeWidth={2.5} />
+                              <span>Download</span>
+                            </a>
                           </div>
                         )}
                         <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{msg.text}</p>

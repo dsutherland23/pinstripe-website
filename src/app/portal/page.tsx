@@ -6,7 +6,7 @@ import {
   Search, CheckCircle2, Clock, Truck, PackageCheck, FileText, 
   CalendarDays, MapPin, Users, CreditCard, User, LogOut, 
   ShieldAlert, Sparkles, Lock, Check, Landmark, UserPlus,
-  Mail, Image as ImageIcon, X
+  Mail, Image as ImageIcon, X, Download
 } from "lucide-react";
 
 interface Booking {
@@ -956,8 +956,26 @@ export default function CustomerPortal() {
                           boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                         }}>
                           {msg.mediaUrl && (
-                            <div style={{ marginBottom: "0.5rem", borderRadius: "0.5rem", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                            <div style={{ marginBottom: "0.5rem", borderRadius: "0.5rem", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", position: "relative" }}>
                               <img src={msg.mediaUrl} alt="Chat attachment" style={{ maxWidth: "100%", maxHeight: "180px", display: "block" }} />
+                              <a 
+                                href={msg.mediaUrl} 
+                                download={msg.mediaUrl.split('/').pop() || "download"} 
+                                style={{ 
+                                  position: "absolute", bottom: "6px", right: "6px", 
+                                  background: "rgba(10,10,10,0.75)", backdropFilter: "blur(4px)", 
+                                  WebkitBackdropFilter: "blur(4px)", color: "#ffffff", 
+                                  padding: "4px 8px", borderRadius: "4px", fontSize: "0.68rem", 
+                                  textDecoration: "none", display: "flex", alignItems: "center", gap: "4px", 
+                                  fontWeight: 700, border: "1px solid rgba(255,255,255,0.15)",
+                                  transition: "background 0.2s"
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = "rgba(10,10,10,0.95)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = "rgba(10,10,10,0.75)"; }}
+                              >
+                                <Download size={11} strokeWidth={2.5} />
+                                <span>Download</span>
+                              </a>
                             </div>
                           )}
                           <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{msg.text}</p>

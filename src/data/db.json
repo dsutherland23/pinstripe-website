@@ -384,5 +384,26 @@
       "city": "Portmore",
       "zipCode": ""
     }
+  ],
+  "messages": [
+    {
+      "id": "MSG-WBCN45-1782279338051",
+      "bookingId": "PSR-MPWZHLOB",
+      "senderId": "admin",
+      "senderRole": "admin",
+      "text": "hi",
+      "timestamp": "2026-06-24T05:35:38.051Z",
+      "status": "sent"
+    },
+    {
+      "id": "MSG-PLHVKJ-1782279381533",
+      "bookingId": "PSR-MPWZHLOB",
+      "senderId": "admin",
+      "senderRole": "admin",
+      "text": "test",
+      "mediaUrl": "/images/chats/chat-PSR-MPWZHLOB-1782279374999.jpeg",
+      "timestamp": "2026-06-24T05:36:21.533Z",
+      "status": "sent"
+    }
   ]
 }

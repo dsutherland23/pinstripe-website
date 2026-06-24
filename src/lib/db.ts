@@ -39,6 +39,7 @@ export interface Booking {
   amountPaid?: number;
   paymentStatus?: "unpaid" | "deposit_paid" | "fully_paid";
   payments?: Array<{ id: string; amount: number; method: string; timestamp: string }>;
+  hasUnreadMessages?: boolean;
 }
 
 export interface Message {
@@ -609,15 +610,38 @@ function rowToBooking(r: BookingRow): Booking {
 }
 
 export async function getBookings(): Promise<Booking[]> {
-  if (useFallback) return fallbackStore.bookings;
+  if (useFallback) {
+    return fallbackStore.bookings.map(b => {
+      const hasUnread = fallbackStore.messages.some(
+        m => m.bookingId === b.id && m.senderRole === "customer" && m.status !== "read"
+      );
+      return { ...b, hasUnreadMessages: hasUnread };
+    });
+  }
   try {
     await ensureInit();
     const rows = await query<BookingRow>("SELECT * FROM bookings ORDER BY submitted_at DESC");
-    return rows.map(rowToBooking);
+    const bookings = rows.map(rowToBooking);
+    
+    // Fetch bookings with unread customer messages
+    const unreadRows = await query<{ booking_id: string }>(
+      "SELECT DISTINCT booking_id FROM messages WHERE sender_role = 'customer' AND status != 'read'"
+    );
+    const unreadBookingIds = new Set(unreadRows.map(r => r.booking_id));
+    
+    return bookings.map(b => ({
+      ...b,
+      hasUnreadMessages: unreadBookingIds.has(b.id)
+    }));
   } catch (err) {
     console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
     useFallback = true;
-    return fallbackStore.bookings;
+    return fallbackStore.bookings.map(b => {
+      const hasUnread = fallbackStore.messages.some(
+        m => m.bookingId === b.id && m.senderRole === "customer" && m.status !== "read"
+      );
+      return { ...b, hasUnreadMessages: hasUnread };
+    });
   }
 }
 
