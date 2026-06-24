@@ -1391,6 +1391,16 @@ export default function AdminDashboard() {
                               booking.status === "cancelled" ? "red" : "gold"
                             } 
                           />
+                          <Badge 
+                            label={
+                              booking.paymentStatus === "fully_paid" ? "Paid" :
+                              booking.paymentStatus === "deposit_paid" ? "Deposit Paid" : "Unpaid"
+                            } 
+                            color={
+                              booking.paymentStatus === "fully_paid" ? "green" :
+                              booking.paymentStatus === "deposit_paid" ? "blue" : "red"
+                            } 
+                          />
                         </div>
                         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                           <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>{new Date(booking.submittedAt).toLocaleDateString()}</span>
