@@ -5,6 +5,7 @@ import ftplib
 import urllib.request
 import ssl
 import time
+import io
 
 def zip_project(zip_path):
     print("Zipping standalone build output for Hostinger...")
@@ -61,9 +62,6 @@ def zip_project(zip_path):
         for extra_file in ['package.json', 'package-lock.json', 'tsconfig.json', 'next.config.ts']:
             if os.path.isfile(extra_file):
                 zipf.write(extra_file, extra_file)
-        
-        if os.path.isfile('server.js'):
-            zipf.write('server.js', 'server.js')
             
     print("Zipping complete.")
 
@@ -106,6 +104,13 @@ def main():
     remote_base = "domains/pinstripesrentals.com/nodejs"
     public_html = "domains/pinstripesrentals.com/public_html"
     
+    # 0. Build Next.js application locally (standalone mode)
+    print("Building Next.js application locally (standalone mode)...")
+    build_status = os.system("npm run build")
+    if build_status != 0:
+        print("ERROR: Next.js build failed. Halting deployment.")
+        sys.exit(1)
+        
     # 1. Local Zip
     zip_project(local_zip)
     
@@ -145,11 +150,10 @@ def main():
             f"STRIPE_SECRET_KEY={stripe_secret_key}\n"
         )
         env_bytes = secure_env_content.encode('utf-8')
-        import io
         ftp.storbinary(f'STOR {remote_base}/.env.secure', io.BytesIO(env_bytes))
         print("Wrote .env.secure successfully.")
         
-        # Write deploy_helper.php
+        # Write deploy_helper.php script (retains server.js and server_original.js from zip without destructive rename)
         print("Writing deploy_helper.php script...")
         php_content = f"""<?php
 error_reporting(E_ALL);
@@ -161,6 +165,7 @@ header('Content-Type: text/plain');
 echo "--- Unzipping standalone build ---\\n";
 $zipFile = '/home/u887289907/project.zip';
 $extractTo = '/home/u887289907/{remote_base}/';
+$webRoot = '/home/u887289907/{public_html}/';
 
 if (!file_exists($zipFile)) {{
     die("Error: project.zip not found at $zipFile");
@@ -172,16 +177,54 @@ if ($res === TRUE) {{
     $zip->extractTo($extractTo);
     $zip->close();
     echo "Success: Extracted project.zip to $extractTo\\n";
-    
-    // Copy server.js to server_original.js if not already present
-    $serverJs = $extractTo . 'server.js';
-    $serverOrigJs = $extractTo . 'server_original.js';
-    if (file_exists($serverJs) && !file_exists($serverOrigJs)) {{
-        copy($serverJs, $serverOrigJs);
-        echo "Copied server.js to server_original.js\\n";
-    }}
 }} else {{
     echo "Error: Failed to open zip file, code: $res\\n";
+}}
+
+function recurse_copy($src, $dst) {{
+    if (!is_dir($src)) return;
+    $dir = opendir($src);
+    @mkdir($dst, 0755, true);
+    while (false !== ($file = readdir($dir))) {{
+        if (($file != '.') && ($file != '..')) {{
+            if (is_dir($src . '/' . $file)) {{
+                recurse_copy($src . '/' . $file, $dst . '/' . $file);
+            }} else {{
+                copy($src . '/' . $file, $dst . '/' . $file);
+            }}
+        }}
+    }}
+    closedir($dir);
+}}
+
+function delete_directory($dir) {{
+    if (!is_dir($dir)) return;
+    $files = array_diff(scandir($dir), array('.', '..'));
+    foreach ($files as $file) {{
+        (is_dir("$dir/$file")) ? delete_directory("$dir/$file") : unlink("$dir/$file");
+    }}
+    return rmdir($dir);
+}}
+
+echo "\\n--- Copying static assets to web root ---\\n";
+if (is_dir($extractTo . 'public')) {{
+    echo "Copying public assets to $webRoot...\\n";
+    recurse_copy($extractTo . 'public', $webRoot);
+    echo "Public assets copied successfully.\\n";
+}}
+
+if (is_dir($extractTo . '.next/static')) {{
+    echo "Cleaning up old _next/static folder...\\n";
+    delete_directory($webRoot . '_next');
+    echo "Copying Next.js static files to " . $webRoot . "_next/static...\\n";
+    recurse_copy($extractTo . '.next/static', $webRoot . '_next/static');
+    echo "Static files copied successfully.\\n";
+}}
+
+if (is_dir($webRoot . 'api')) {{
+    echo "Removing legacy PHP api folder...\\n";
+    delete_directory($webRoot . 'api');
+    echo "Legacy API folder removed.\\n";
 }}
 
 echo "\\n--- Running Database Migrations & Seeding ---\\n";
@@ -307,11 +350,11 @@ echo "Touched restart.txt to reload Passenger.\\n";
         htaccess_content = (
             'PassengerAppRoot /home/u887289907/domains/pinstripesrentals.com/nodejs\n'
             'PassengerAppType node\n'
-            'PassengerNodejs /opt/alt/alt-nodejs22/root/bin/node\n'
+            'PassengerNodejs /opt/alt/alt-nodejs20/root/bin/node\n'
             'PassengerStartupFile server.js\n'
             'PassengerBaseURI /\n'
             'PassengerRestartDir /home/u887289907/domains/pinstripesrentals.com/nodejs/tmp\n'
-            'PassengerEnvVar NODE_OPTIONS "--max-old-space-size=256"\n'
+            'PassengerEnvVar NODE_OPTIONS "--max-old-space-size=256 --v8-pool-size=2"\n'
             'SetEnv LSNODE_CONSOLE_LOG console.log\n'
             f'PassengerEnvVar UV_THREADPOOL_SIZE 1\n'
             f'PassengerEnvVar TOKIO_WORKER_THREADS 1\n'
@@ -327,7 +370,6 @@ echo "Touched restart.txt to reload Passenger.\\n";
             'RewriteRule ^\\.builds - [F,L]\n'
         )
         htaccess_bytes = htaccess_content.encode('utf-8')
-        import io
         ftp.storbinary(f'STOR {public_html}/.htaccess', io.BytesIO(htaccess_bytes))
         print("Wrote final .htaccess successfully.")
         

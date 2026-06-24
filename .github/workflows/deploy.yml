@@ -28,14 +28,10 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install Python Dependencies
-        run: pip install paramiko
-
       - name: Build and Deploy via Python script
         env:
           FTP_HOST: "212.85.28.186"
           FTP_USER: "u887289907"
-          FTP_PORT: "65002"
           FTP_PASS: ${{ secrets.FTP_PASS }}
           DB_HOST: "localhost"
           DB_PORT: "3306"
@@ -46,4 +42,4 @@ jobs:
           ADMIN_PASSCODE: ${{ secrets.ADMIN_PASSCODE }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: python deploy.py
+        run: python ftp_deploy.py
