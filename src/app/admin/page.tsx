@@ -204,6 +204,33 @@ export default function AdminDashboard() {
     }
   }, [paymentRecordingBookingId, bookings]);
 
+  // Chat state
+  const [activeChatBookingId, setActiveChatBookingId] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMediaUrl, setChatMediaUrl] = useState("");
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+
+  useEffect(() => {
+    if (!activeChatBookingId) return;
+    
+    const fetchChat = async () => {
+      try {
+        const res = await fetch(`/api/chat?bookingId=${activeChatBookingId}&passcode=${encodeURIComponent(getCode())}`);
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setChatMessages(data.messages || []);
+        }
+      } catch (err) {
+        console.error("Error fetching chat:", err);
+      }
+    };
+
+    fetchChat(); // Instant load
+    const interval = setInterval(fetchChat, 3000);
+    return () => clearInterval(interval);
+  }, [activeChatBookingId]);
+
   // Settings
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -1407,6 +1434,24 @@ export default function AdminDashboard() {
                           <Link href={`/portal/invoice?id=${booking.id}&passcode=${encodeURIComponent(getCode())}`} target="_blank" style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.35rem 0.75rem", border: "1px solid rgba(212,175,55,0.25)", borderRadius: "0.375rem", color: "#D4AF37", fontSize: "0.72rem", textDecoration: "none", fontWeight: 600 }}>
                             <Eye size={12} />Invoice
                           </Link>
+                          <button
+                            onClick={() => setActiveChatBookingId(booking.id)}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.3rem",
+                              padding: "0.35rem 0.75rem",
+                              border: "1px solid rgba(16,185,129,0.25)",
+                              borderRadius: "0.375rem",
+                              color: "#10b981",
+                              background: "rgba(16,185,129,0.05)",
+                              fontSize: "0.72rem",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <Mail size={12} /> Chat
+                          </button>
                           {bookingDeleteConfirm === booking.id ? (
                             <>
                               <button onClick={() => handleDeleteBooking(booking.id)} style={{ padding: "0.35rem 0.6rem", borderRadius: "0.375rem", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}>Delete</button>
@@ -1879,6 +1924,251 @@ export default function AdminDashboard() {
                     {loading ? "Recording..." : "Record Payment"}
                   </button>
                 </div>
+              </form>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── CHAT DRAWER ─────────────────────────────────────────────────── */}
+      {activeChatBookingId && (() => {
+        const currentBooking = bookings.find(b => b.id === activeChatBookingId);
+        if (!currentBooking) return null;
+
+        const handleSendMessage = async (e: React.FormEvent) => {
+          e.preventDefault();
+          if (!chatInput.trim() && !chatMediaUrl) return;
+
+          const textToSend = chatInput;
+          const mediaToSend = chatMediaUrl;
+          setChatInput("");
+          setChatMediaUrl("");
+
+          try {
+            const res = await fetch("/api/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                bookingId: activeChatBookingId,
+                text: textToSend,
+                mediaUrl: mediaToSend,
+                passcode: getCode(),
+              }),
+            });
+            const data = await res.json();
+            if (res.ok && data.success && data.message) {
+              setChatMessages(prev => [...prev, data.message]);
+              // Scroll to bottom
+              setTimeout(() => {
+                const feed = document.getElementById("admin-chat-feed");
+                if (feed) feed.scrollTop = feed.scrollHeight;
+              }, 100);
+            }
+          } catch (err) {
+            console.error("Error sending message:", err);
+          }
+        };
+
+        const handleAttachImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+          const file = e.currentTarget.files?.[0];
+          if (!file) return;
+          setUploadingMedia(true);
+          const fd = new FormData();
+          fd.append("file", file);
+          fd.append("bookingId", activeChatBookingId);
+          fd.append("adminPasscode", getCode());
+
+          try {
+            const res = await fetch("/api/chat/upload", {
+              method: "POST",
+              body: fd,
+            });
+            const data = await res.json();
+            if (res.ok && data.success && data.mediaUrl) {
+              setChatMediaUrl(data.mediaUrl);
+            }
+          } catch (err) {
+            console.error("Error uploading chat file:", err);
+          } finally {
+            setUploadingMedia(false);
+          }
+        };
+
+        return (
+          <div style={{
+            position: "fixed",
+            top: 0, right: 0, bottom: 0,
+            width: "100%", maxWidth: "420px",
+            background: "#111111",
+            borderLeft: "1px solid rgba(212,175,55,0.3)",
+            boxShadow: "-10px 0 40px rgba(0,0,0,0.5)",
+            zIndex: 150,
+            display: "flex",
+            flexDirection: "column",
+            animation: "slideInChat 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          }}>
+            <style>{`
+              @keyframes slideInChat {
+                from { transform: translateX(100%); }
+                to { transform: translateX(0); }
+              }
+            `}</style>
+            
+            {/* Header */}
+            <div style={{
+              background: "linear-gradient(135deg, #161616 0%, #111111 100%)",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              padding: "1.25rem 1.5rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981" }} />
+                  <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>
+                    {currentBooking.customer.name}
+                  </h3>
+                </div>
+                <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", margin: "0.15rem 0 0" }}>
+                  Booking Ref: <strong style={{ color: "#D4AF37" }}>{activeChatBookingId}</strong>
+                </p>
+              </div>
+              <button
+                onClick={() => setActiveChatBookingId(null)}
+                style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", padding: "0.25rem" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Quick Context Bar */}
+            <div style={{
+              background: "rgba(212,175,55,0.05)",
+              borderBottom: "1px solid rgba(212,175,55,0.1)",
+              padding: "0.625rem 1.25rem",
+              fontSize: "0.75rem",
+              color: "rgba(255,255,255,0.6)",
+              display: "flex",
+              justifyContent: "space-between",
+            }}>
+              <span>📅 {currentBooking.event.date}</span>
+              <span style={{ color: "#D4AF37", fontWeight: 700 }}>💵 {fmt(currentBooking.estimatedTotal)}</span>
+            </div>
+
+            {/* Messages Feed */}
+            <div
+              id="admin-chat-feed"
+              style={{
+                flex: 1,
+                padding: "1.5rem",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+                background: "#0a0a0a",
+              }}
+            >
+              {chatMessages.length === 0 ? (
+                <div style={{ margin: "auto", textAlign: "center", padding: "2rem", color: "rgba(255,255,255,0.3)" }}>
+                  <p style={{ fontSize: "0.85rem", margin: 0 }}>No messages yet.</p>
+                  <p style={{ fontSize: "0.72rem", margin: "0.25rem 0 0" }}>Send a greeting to start communicating with the customer!</p>
+                </div>
+              ) : (
+                chatMessages.map((msg) => {
+                  const isAdminMsg = msg.senderRole === "admin";
+                  return (
+                    <div
+                      key={msg.id}
+                      style={{
+                        alignSelf: isAdminMsg ? "flex-end" : "flex-start",
+                        maxWidth: "80%",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: isAdminMsg ? "flex-end" : "flex-start",
+                      }}
+                    >
+                      <div style={{
+                        background: isAdminMsg ? "rgba(212,175,55,0.15)" : "#161616",
+                        border: `1px solid ${isAdminMsg ? "rgba(212,175,55,0.25)" : "rgba(255,255,255,0.05)"}`,
+                        borderRadius: isAdminMsg ? "1rem 1rem 0 1rem" : "1rem 1rem 1rem 0",
+                        padding: "0.75rem 1rem",
+                        color: "#ffffff",
+                        fontSize: "0.85rem",
+                        lineHeight: 1.4,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      }}>
+                        {msg.mediaUrl && (
+                          <div style={{ marginBottom: "0.5rem", borderRadius: "0.5rem", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                            <img src={msg.mediaUrl} alt="Chat attachment" style={{ maxWidth: "100%", maxHeight: "180px", display: "block" }} />
+                          </div>
+                        )}
+                        <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{msg.text}</p>
+                      </div>
+                      
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", marginTop: "0.25rem" }}>
+                        <span style={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.3)" }}>
+                          {new Date(msg.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        {isAdminMsg && (
+                          <span style={{ fontSize: "0.62rem", color: msg.status === "read" ? "#10b981" : "rgba(255,255,255,0.3)" }} title={msg.status}>
+                            {msg.status === "read" ? "✓✓" : "✓"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Input Footer */}
+            <div style={{
+              background: "#111111",
+              borderTop: "1px solid rgba(255,255,255,0.06)",
+              padding: "1rem 1.25rem",
+            }}>
+              {chatMediaUrl && (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.5rem", padding: "0.5rem", marginBottom: "0.75rem" }}>
+                  <img src={chatMediaUrl} alt="Preview" style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "0.25rem" }} />
+                  <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Image Attached</span>
+                  <button onClick={() => setChatMediaUrl("")} style={{ background: "transparent", border: "none", color: "#ef4444", fontSize: "0.75rem", cursor: "pointer" }}><X size={14} /></button>
+                </div>
+              )}
+
+              <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                <label style={{ display: "flex", padding: "0.5rem", borderRadius: "0.5rem", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+                  <ImageIcon size={16} />
+                  <input type="file" accept="image/*" onChange={handleAttachImage} style={{ display: "none" }} />
+                </label>
+
+                <input
+                  type="text"
+                  placeholder={uploadingMedia ? "Uploading image..." : "Type a message..."}
+                  disabled={uploadingMedia}
+                  value={chatInput}
+                  onChange={e => setChatInput(e.currentTarget.value)}
+                  style={{ ...inputStyle, flex: 1 }}
+                  onFocus={e => { e.currentTarget.style.borderColor = "#D4AF37"; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+                />
+
+                <button
+                  type="submit"
+                  disabled={(!chatInput.trim() && !chatMediaUrl) || uploadingMedia}
+                  style={{
+                    padding: "0.55rem 1rem",
+                    borderRadius: "0.5rem",
+                    background: (!chatInput.trim() && !chatMediaUrl) ? "rgba(255,255,255,0.06)" : "#D4AF37",
+                    color: (!chatInput.trim() && !chatMediaUrl) ? "rgba(255,255,255,0.2)" : "#000000",
+                    border: "none",
+                    fontWeight: 700,
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Send
+                </button>
               </form>
             </div>
           </div>

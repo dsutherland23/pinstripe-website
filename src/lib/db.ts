@@ -41,6 +41,17 @@ export interface Booking {
   payments?: Array<{ id: string; amount: number; method: string; timestamp: string }>;
 }
 
+export interface Message {
+  id: string;
+  bookingId: string;
+  senderId: string;
+  senderRole: "customer" | "admin";
+  text: string;
+  mediaUrl?: string;
+  timestamp: string;
+  status: "sent" | "delivered" | "read";
+}
+
 export interface User {
   email: string;
   passwordHash: string;
@@ -227,6 +238,20 @@ export async function initDb(): Promise<void> {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id            VARCHAR(64)  NOT NULL PRIMARY KEY,
+        booking_id    VARCHAR(64)  NOT NULL,
+        sender_id     VARCHAR(255) NOT NULL,
+        sender_role   ENUM('customer','admin') NOT NULL,
+        text          TEXT         NOT NULL,
+        media_url     VARCHAR(512),
+        timestamp     VARCHAR(64)  NOT NULL,
+        status        ENUM('sent','delivered','read') NOT NULL DEFAULT 'sent',
+        FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
     // Seed default data: unconditionally run INSERT IGNORE for mock items and categories
     for (const item of mockInventory) {
       await conn.query(
@@ -381,6 +406,7 @@ const fallbackStore = {
   settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true },
   bookings: [] as Booking[],
   users: [] as User[],
+  messages: [] as Message[],
 };
 
 // Resolve local JSON fallback path
@@ -397,6 +423,7 @@ try {
     if (parsed.settings) fallbackStore.settings = parsed.settings;
     if (parsed.bookings) fallbackStore.bookings = parsed.bookings;
     if (parsed.users) fallbackStore.users = parsed.users;
+    if (parsed.messages) fallbackStore.messages = parsed.messages;
     console.log("💾 Loaded fallback database from local JSON file.");
   }
 } catch (err) {
@@ -1103,3 +1130,108 @@ export async function updateUser(email: string, updates: Partial<User>): Promise
     return updateUser(email, updates);
   }
 }
+
+// ─── Chat Messages ─────────────────────────────────────────────────────────────
+
+type MessageRow = {
+  id: string;
+  booking_id: string;
+  sender_id: string;
+  sender_role: "customer" | "admin";
+  text: string;
+  media_url: string | null;
+  timestamp: string;
+  status: "sent" | "delivered" | "read";
+};
+
+function rowToMessage(r: MessageRow): Message {
+  return {
+    id: r.id,
+    bookingId: r.booking_id,
+    senderId: r.sender_id,
+    senderRole: r.sender_role,
+    text: r.text,
+    mediaUrl: r.media_url ?? undefined,
+    timestamp: r.timestamp,
+    status: r.status,
+  };
+}
+
+export async function getMessages(bookingId: string): Promise<Message[]> {
+  if (useFallback) {
+    return fallbackStore.messages.filter(m => m.bookingId === bookingId);
+  }
+  try {
+    await ensureInit();
+    const rows = await query<MessageRow>(
+      "SELECT * FROM messages WHERE booking_id = ? ORDER BY timestamp ASC",
+      [bookingId]
+    );
+    return rows.map(rowToMessage);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return getMessages(bookingId);
+  }
+}
+
+export async function addMessage(message: Message): Promise<Message> {
+  if (useFallback) {
+    fallbackStore.messages.push(message);
+    saveFallbackStore();
+    return message;
+  }
+  try {
+    await ensureInit();
+    await query(
+      `INSERT INTO messages (id, booking_id, sender_id, sender_role, text, media_url, timestamp, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        message.id,
+        message.bookingId,
+        message.senderId,
+        message.senderRole,
+        message.text,
+        message.mediaUrl ?? null,
+        message.timestamp,
+        message.status,
+      ]
+    );
+    return message;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return addMessage(message);
+  }
+}
+
+export async function markMessagesAsRead(
+  bookingId: string,
+  role: "customer" | "admin"
+): Promise<boolean> {
+  const targetRole = role === "admin" ? "customer" : "admin";
+  if (useFallback) {
+    let affected = false;
+    fallbackStore.messages.forEach(m => {
+      if (m.bookingId === bookingId && m.senderRole === targetRole && m.status !== "read") {
+        m.status = "read";
+        affected = true;
+      }
+    });
+    if (affected) saveFallbackStore();
+    return true;
+  }
+  try {
+    await ensureInit();
+    await query(
+      "UPDATE messages SET status = 'read' WHERE booking_id = ? AND sender_role = ?",
+      [bookingId, targetRole]
+    );
+    return true;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return markMessagesAsRead(bookingId, role);
+  }
+}
+
