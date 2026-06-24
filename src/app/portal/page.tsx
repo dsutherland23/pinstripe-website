@@ -37,6 +37,7 @@ export default function CustomerPortal() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [activeTab, setActiveTab] = useState<"bookings" | "profile">("bookings");
+  const [inventory, setInventory] = useState<any[]>([]);
 
   // --- Auth Form States ---
   const [authMode, setAuthMode] = useState<"login" | "signup" | "guest">("login");
@@ -78,6 +79,22 @@ export default function CustomerPortal() {
         localStorage.removeItem("pinstripe_portal_user");
       }
     }
+  }, []);
+
+  // Fetch inventory on mount to resolve rental item names
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const res = await fetch(`/api/inventory?t=${Date.now()}`);
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setInventory(data.items || []);
+        }
+      } catch (err) {
+        console.error("Failed to load inventory:", err);
+      }
+    };
+    fetchInventory();
   }, []);
 
   const loadUserBookings = async (userEmail: string) => {
@@ -526,6 +543,7 @@ export default function CustomerPortal() {
               statusIndex={getStatusIndex(guestBooking)} 
               badgeColors={getBookingBadgeColor(guestBooking)}
               payBadge={getPaymentBadgeColor(guestBooking)}
+              inventory={inventory}
             />
           </div>
         )}
@@ -603,6 +621,7 @@ export default function CustomerPortal() {
                         statusIndex={getStatusIndex(booking)}
                         badgeColors={getBookingBadgeColor(booking)}
                         payBadge={getPaymentBadgeColor(booking)}
+                        inventory={inventory}
                       />
                     ))
                   )}
@@ -825,9 +844,10 @@ interface BookingCardProps {
   badgeColors: { bg: string; text: string; border: string };
   payBadge: { bg: string; text: string; border: string };
   onPayClick: (b: Booking) => void;
+  inventory: any[];
 }
 
-function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick }: BookingCardProps) {
+function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, inventory }: BookingCardProps) {
   const deposit = booking.estimatedTotal * 0.3;
   const paid = booking.amountPaid || 0;
   const remaining = booking.estimatedTotal - paid;
@@ -951,12 +971,16 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick }
         <div>
           <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#D4AF37", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "0.5rem" }}>Rental Items ({booking.itemCount})</span>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", maxHeight: "100px", overflowY: "auto", paddingRight: "0.5rem" }}>
-            {Object.entries(booking.items).map(([itemId, qty]) => (
-              <div key={itemId} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", color: "rgba(255,255,255,0.65)" }}>
-                <span>Item ID #{itemId}</span>
-                <span style={{ color: "#ffffff", fontWeight: 700 }}>× {qty}</span>
-              </div>
-            ))}
+            {Object.entries(booking.items).map(([itemId, qty]) => {
+              const item = inventory.find((i) => i.id === itemId);
+              const title = item ? item.title : `Item ID #${itemId}`;
+              return (
+                <div key={itemId} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", color: "rgba(255,255,255,0.65)" }}>
+                  <span>{title}</span>
+                  <span style={{ color: "#ffffff", fontWeight: 700 }}>× {qty}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -967,11 +991,40 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick }
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.15rem", fontSize: "0.72rem", color: "rgba(255,255,255,0.4)" }}>
             <span>Deposit (30%): ${deposit.toFixed(2)}</span>
             <span>Paid: <strong style={{ color: paid > 0 ? "#10b981" : "inherit" }}>${paid.toFixed(2)}</strong></span>
-            {remaining > 0 && <span>Remaining Balance: ${remaining.toFixed(2)}</span>}
+            {remaining > 0 ? (
+              <span>Remaining Balance: ${remaining.toFixed(2)}</span>
+            ) : (
+              <span style={{ color: "#10b981", fontWeight: 800, fontSize: "0.8rem", marginTop: "0.15rem" }}>✓ Paid in Full</span>
+            )}
           </div>
         </div>
 
       </div>
+
+      {/* Transaction Ledger / Receipts */}
+      {booking.payments && booking.payments.length > 0 && (
+        <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#D4AF37", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "0.5rem" }}>
+            💳 Payment History & Receipts
+          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+            {booking.payments.map((p, idx) => (
+              <div key={p.id || idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", background: "rgba(255,255,255,0.02)", padding: "0.5rem 0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.04)" }}>
+                <div>
+                  <span style={{ color: "#ffffff", fontWeight: 600 }}>{p.method} Payment</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", marginLeft: "0.5rem" }}>
+                    ({new Date(p.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })})
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", fontFamily: "monospace" }}>ID: {p.id.length > 12 ? p.id.substring(0, 10) + "..." : p.id}</span>
+                  <span style={{ color: "#10b981", fontWeight: 700 }}>+${p.amount.toFixed(2)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {booking.notes && (
         <div style={{ marginTop: "1.25rem", padding: "0.75rem 1rem", borderLeft: "2px solid #D4AF37", background: "rgba(212,175,55,0.03)", borderRadius: "0 0.5rem 0.5rem 0", fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
