@@ -135,8 +135,8 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
             <div style={{ marginBottom: "1.25rem", display: "inline-flex" }}>
               <div
                 style={{
-                  width: "68px",
-                  height: "68px",
+                  width: "160px",
+                  height: "160px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

@@ -162,6 +162,8 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
     }
   };
 
+  const navLinkColor = (scrolled || !isHome) ? (isEvening ? "rgba(255,255,255,0.9)" : "#0f0f0f") : "rgba(255,255,255,0.9)";
+
   return (
     <>
       {/* ---- HEADER ---- */}
@@ -210,16 +212,39 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   width: (scrolled || !isHome) ? "64px" : "88px",
                   height: (scrolled || !isHome) ? "64px" : "88px",
                   transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                  position: "relative",
                 }}
               >
+                {/* White Logo (Default Top-Home State) */}
                 <img
                   src="/images/pinstripes-logo-new.png?v=20260623"
-                  alt="Pinstripes Party & Event Rentals"
+                  alt="Pinstripes Party & Event Rentals - White Logo"
                   style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
                     height: "100%",
                     width: "100%",
                     objectFit: "contain",
-                    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                    transition: "opacity 0.4s ease-in-out, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                    opacity: (scrolled || !isHome) ? 0 : 1,
+                    pointerEvents: (scrolled || !isHome) ? "none" : "auto",
+                  }}
+                />
+                {/* Black Logo (Scrolled or Inner Pages State) */}
+                <img
+                  src="/images/pinstripes-logo-black.png"
+                  alt="Pinstripes Party & Event Rentals - Black Logo"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    height: "100%",
+                    width: "100%",
+                    objectFit: "contain",
+                    transition: "opacity 0.4s ease-in-out, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                    opacity: (scrolled || !isHome) ? 1 : 0,
+                    pointerEvents: (scrolled || !isHome) ? "auto" : "none",
                   }}
                 />
               </div>
@@ -444,18 +469,14 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                     fontSize: "0.72rem",
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
-                    color: (scrolled || !isHome) ? (isEvening ? "rgba(255,255,255,0.9)" : "#0f0f0f") : "rgba(255,255,255,0.9)",
+                    color: navLinkColor,
                     textDecoration: "none",
                     transition: "color 0.2s",
                     padding: "0.25rem 0",
                     position: "relative",
                   }}
-                  onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#D4AF37")}
-                  onMouseLeave={(e) =>
-                    ((e.target as HTMLElement).style.color = scrolled
-                      ? "#0f0f0f"
-                      : "rgba(255,255,255,0.9)")
-                  }
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#D4AF37")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = navLinkColor)}
                 >
                   {l.label}
                 </a>
@@ -477,11 +498,13 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 fontFamily: "var(--font-heading)",
                 fontWeight: 700,
                 fontSize: "0.75rem",
-                color: scrolled ? "#0f0f0f" : "rgba(255,255,255,0.9)",
+                color: navLinkColor,
                 textDecoration: "none",
                 transition: "color 0.2s",
                 whiteSpace: "nowrap",
               }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#D4AF37")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = navLinkColor)}
             >
               <Phone size={14} color="#D4AF37" />
               (757) 749-3407
@@ -605,7 +628,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 }}
               >
                 <img
-                  src="/images/pinstripes-logo-new.png?v=20260623"
+                  src={isEvening ? "/images/pinstripes-logo-new.png?v=20260623" : "/images/pinstripes-logo-black.png"}
                   alt="Pinstripes Logo"
                   style={{
                     height: "100%",

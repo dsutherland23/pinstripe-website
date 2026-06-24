@@ -1,91 +1,4 @@
 {
-  "bookings": [
-    {
-      "id": "PSR-SEEDBOOK1",
-      "customer": {
-        "name": "John Doe",
-        "email": "john@example.com",
-        "phone": "(757) 555-0199"
-      },
-      "event": {
-        "type": "Wedding reception",
-        "date": "2026-06-07",
-        "location": "Backyard",
-        "guestCount": 80
-      },
-      "delivery": {
-        "address": "123 Ocean Front",
-        "city": "Virginia Beach",
-        "zipCode": "23451"
-      },
-      "items": {
-        "2": 50,
-        "5": 1
-      },
-      "itemCount": 51,
-      "estimatedTotal": 575,
-      "paymentMethod": "Pay in Person",
-      "notes": "Wedding reception booking.",
-      "submittedAt": "2026-06-02T02:04:17.974Z"
-    },
-    {
-      "id": "PSR-MPW12KLX",
-      "customer": {
-        "name": "John Doe",
-        "email": "johndoe@example.com",
-        "phone": "7575551234"
-      },
-      "event": {
-        "type": "Birthday Party",
-        "date": "2026-07-20",
-        "location": "Backyard",
-        "guestCount": 50
-      },
-      "delivery": {
-        "address": "123 Main St",
-        "city": "Norfolk",
-        "zipCode": "23502"
-      },
-      "items": {
-        "1": 1
-      },
-      "itemCount": 1,
-      "estimatedTotal": 350,
-      "paymentMethod": "Credit Card",
-      "notes": "Test quote request",
-      "submittedAt": "2026-06-02T02:38:05.781Z",
-      "status": "confirmed"
-    },
-    {
-      "id": "PSR-MPW14OVU",
-      "customer": {
-        "name": "Kadine Wright",
-        "email": "kwright@gmail.com",
-        "phone": "(757) 443-3233"
-      },
-      "event": {
-        "type": "Birthday Party",
-        "date": "2026-06-20",
-        "location": "Town Point Park",
-        "guestCount": 50
-      },
-      "delivery": {
-        "address": "200 Perry LN",
-        "city": "Norfolk",
-        "zipCode": "30291-3412"
-      },
-      "items": {
-        "1": 1,
-        "5": 1
-      },
-      "itemCount": 2,
-      "estimatedTotal": 800,
-      "paymentMethod": "Pay in Person",
-      "notes": "Need a clown",
-      "submittedAt": "2026-06-02T02:39:44.634Z",
-      "status": "confirmed"
-    }
-  ],
   "inventory": [
     {
       "id": "1",
@@ -217,11 +130,6 @@
       "stock": 5
     }
   ],
-  "settings": {
-    "tentPlannerEnabled": false,
-    "maintenanceMode": false,
-    "analyticsId": ""
-  },
   "categories": [
     {
       "id": "cat-1",
@@ -342,6 +250,130 @@
       "serviceArea": "Serving Norfolk, VA Beach, Chesapeake, Suffolk & surrounding."
     }
   },
+  "settings": {
+    "tentPlannerEnabled": false,
+    "maintenanceMode": false,
+    "analyticsId": ""
+  },
+  "bookings": [
+    {
+      "id": "PSR-SEEDBOOK1",
+      "customer": {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "phone": "(757) 555-0199"
+      },
+      "event": {
+        "type": "Wedding reception",
+        "date": "2026-06-07",
+        "location": "Backyard",
+        "guestCount": 80
+      },
+      "delivery": {
+        "address": "123 Ocean Front",
+        "city": "Virginia Beach",
+        "zipCode": "23451"
+      },
+      "items": {
+        "2": 50,
+        "5": 1
+      },
+      "itemCount": 51,
+      "estimatedTotal": 575,
+      "paymentMethod": "Pay in Person",
+      "notes": "Wedding reception booking.",
+      "submittedAt": "2026-06-02T02:04:17.974Z"
+    },
+    {
+      "id": "PSR-MPW12KLX",
+      "customer": {
+        "name": "John Doe",
+        "email": "johndoe@example.com",
+        "phone": "7575551234"
+      },
+      "event": {
+        "type": "Birthday Party",
+        "date": "2026-07-20",
+        "location": "Backyard",
+        "guestCount": 50
+      },
+      "delivery": {
+        "address": "123 Main St",
+        "city": "Norfolk",
+        "zipCode": "23502"
+      },
+      "items": {
+        "1": 1
+      },
+      "itemCount": 1,
+      "estimatedTotal": 350,
+      "paymentMethod": "Credit Card",
+      "notes": "Test quote request",
+      "submittedAt": "2026-06-02T02:38:05.781Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "PSR-MPW14OVU",
+      "customer": {
+        "name": "Kadine Wright",
+        "email": "kwright@gmail.com",
+        "phone": "(757) 443-3233"
+      },
+      "event": {
+        "type": "Birthday Party",
+        "date": "2026-06-20",
+        "location": "Town Point Park",
+        "guestCount": 50
+      },
+      "delivery": {
+        "address": "200 Perry LN",
+        "city": "Norfolk",
+        "zipCode": "30291-3412"
+      },
+      "items": {
+        "1": 1,
+        "5": 1
+      },
+      "itemCount": 2,
+      "estimatedTotal": 800,
+      "paymentMethod": "Pay in Person",
+      "notes": "Need a clown",
+      "submittedAt": "2026-06-02T02:39:44.634Z",
+      "status": "confirmed"
+    },
+    {
+      "id": "PSR-MPWZHLOB",
+      "customer": {
+        "name": "Daan Sutherland",
+        "email": "socialkon10@gmail.com",
+        "phone": "(876) 255-4848"
+      },
+      "event": {
+        "type": "Birthday Party",
+        "date": "2026-06-30",
+        "location": "town house drive",
+        "guestCount": 50
+      },
+      "delivery": {
+        "address": "10 Marine Drive",
+        "city": "Norfolk",
+        "zipCode": "30291-3412"
+      },
+      "items": {
+        "pkg_party": 1,
+        "addon_prints": 1
+      },
+      "itemCount": 2,
+      "estimatedTotal": 750,
+      "paymentMethod": "Pay Online Now",
+      "status": "delivered",
+      "notes": "[Selected Package]: Party (4 hours)\n[Selected Add-ons]: Unlimited Prints (2×6 or 4×6)",
+      "submittedAt": "2026-06-24T04:42:03.175Z",
+      "amountPaid": 0,
+      "paymentStatus": "unpaid",
+      "payments": []
+    }
+  ],
   "users": [
     {
       "email": "socialkon10@gmail.com",

@@ -2,6 +2,7 @@ import mysql from "mysql2/promise";
 import { mockInventory, RentalItem } from "@/data/mockInventory";
 import { config } from "dotenv";
 import path from "path";
+import fs from "fs";
 
 // Load environment variables in production since standalone Next.js does not load .env files automatically
 config({ path: path.resolve(process.cwd(), ".env.local") });
@@ -382,6 +383,37 @@ const fallbackStore = {
   users: [] as User[],
 };
 
+// Resolve local JSON fallback path
+const DB_JSON_PATH = path.resolve(process.cwd(), "src/data/db.json");
+
+// Eagerly load fallbackStore data from db.json if database is offline/fallback mode is active
+try {
+  if (fs.existsSync(DB_JSON_PATH)) {
+    const raw = fs.readFileSync(DB_JSON_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    if (parsed.inventory) fallbackStore.inventory = parsed.inventory;
+    if (parsed.categories) fallbackStore.categories = parsed.categories;
+    if (parsed.siteContent) fallbackStore.siteContent = parsed.siteContent;
+    if (parsed.settings) fallbackStore.settings = parsed.settings;
+    if (parsed.bookings) fallbackStore.bookings = parsed.bookings;
+    if (parsed.users) fallbackStore.users = parsed.users;
+    console.log("💾 Loaded fallback database from local JSON file.");
+  }
+} catch (err) {
+  console.error("⚠️ Failed to load local JSON fallback database:", err);
+}
+
+// Persist fallbackStore changes to db.json
+function saveFallbackStore() {
+  try {
+    const raw = JSON.stringify(fallbackStore, null, 2);
+    fs.writeFileSync(DB_JSON_PATH, raw, "utf8");
+    console.log("💾 Saved fallback database to local JSON file.");
+  } catch (err) {
+    console.error("⚠️ Failed to save local JSON fallback database:", err);
+  }
+}
+
 // ─── Inventory ────────────────────────────────────────────────────────────────
 
 type InventoryRow = {
@@ -420,6 +452,7 @@ export async function updateInventoryItem(id: string, updates: Partial<RentalIte
     const idx = fallbackStore.inventory.findIndex(item => item.id === id);
     if (idx === -1) return null;
     fallbackStore.inventory[idx] = { ...fallbackStore.inventory[idx], ...updates };
+    saveFallbackStore();
     return fallbackStore.inventory[idx];
   }
   try {
@@ -453,6 +486,7 @@ export async function updateInventoryItem(id: string, updates: Partial<RentalIte
 export async function addInventoryItem(item: RentalItem): Promise<RentalItem> {
   if (useFallback) {
     fallbackStore.inventory.push(item);
+    saveFallbackStore();
     return item;
   }
   try {
@@ -488,7 +522,9 @@ export async function deleteInventoryItem(id: string): Promise<boolean> {
   if (useFallback) {
     const before = fallbackStore.inventory.length;
     fallbackStore.inventory = fallbackStore.inventory.filter(item => item.id !== id);
-    return fallbackStore.inventory.length < before;
+    const affected = fallbackStore.inventory.length < before;
+    if (affected) saveFallbackStore();
+    return affected;
   }
   try {
     await ensureInit();
@@ -561,6 +597,7 @@ export async function getBookings(): Promise<Booking[]> {
 export async function addBooking(booking: Booking): Promise<Booking> {
   if (useFallback) {
     fallbackStore.bookings.push(booking);
+    saveFallbackStore();
     return booking;
   }
   try {
@@ -614,7 +651,9 @@ export async function deleteBooking(id: string): Promise<boolean> {
   if (useFallback) {
     const before = fallbackStore.bookings.length;
     fallbackStore.bookings = fallbackStore.bookings.filter(b => b.id !== id);
-    return fallbackStore.bookings.length < before;
+    const affected = fallbackStore.bookings.length < before;
+    if (affected) saveFallbackStore();
+    return affected;
   }
   try {
     await ensureInit();
@@ -637,6 +676,7 @@ export async function updateBookingStatus(
     const b = fallbackStore.bookings.find(x => x.id === id);
     if (!b) return false;
     b.status = status;
+    saveFallbackStore();
     return true;
   }
   try {
@@ -683,6 +723,7 @@ export async function updateBookingPayment(
       booking.paymentStatus = "deposit_paid";
       booking.status = "confirmed";
     }
+    saveFallbackStore();
     return true;
   }
   try {
@@ -847,6 +888,7 @@ export async function updateSettings(updates: {
 }): Promise<void> {
   if (useFallback) {
     fallbackStore.settings = { ...fallbackStore.settings, ...updates };
+    saveFallbackStore();
     return;
   }
   try {
@@ -958,6 +1000,7 @@ export async function getSiteContent(): Promise<SiteContent> {
 export async function updateSiteContent(updates: Partial<SiteContent>): Promise<void> {
   if (useFallback) {
     fallbackStore.siteContent = { ...fallbackStore.siteContent, ...updates };
+    saveFallbackStore();
     return;
   }
   try {
@@ -1002,6 +1045,7 @@ export async function getUsers(): Promise<User[]> {
 export async function addUser(user: User): Promise<User> {
   if (useFallback) {
     fallbackStore.users.push(user);
+    saveFallbackStore();
     return user;
   }
   try {
@@ -1031,6 +1075,7 @@ export async function updateUser(email: string, updates: Partial<User>): Promise
     const idx = fallbackStore.users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
     if (idx === -1) return null;
     fallbackStore.users[idx] = { ...fallbackStore.users[idx], ...updates };
+    saveFallbackStore();
     return fallbackStore.users[idx];
   }
   try {

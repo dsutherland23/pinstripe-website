@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBookings, deleteBooking, updateBookingStatus, addBooking, getInventory } from "@/lib/db";
+import { getBookings, deleteBooking, updateBookingStatus, addBooking, getInventory, updateBookingPayment } from "@/lib/db";
 import { isAdminAuthorized } from "@/lib/auth-security";
 
 export async function GET(req: NextRequest) {
@@ -31,6 +31,18 @@ export async function POST(req: NextRequest) {
       const updated = await updateBookingStatus(id, status);
       if (!updated) {
         return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "record-payment" && id && body.amount && body.method) {
+      const amountNum = parseFloat(body.amount);
+      if (isNaN(amountNum) || amountNum <= 0) {
+        return NextResponse.json({ error: "Invalid payment amount" }, { status: 400 });
+      }
+      const updated = await updateBookingPayment(id, amountNum, body.method, body.paymentId);
+      if (!updated) {
+        return NextResponse.json({ error: "Booking not found or update failed" }, { status: 404 });
       }
       return NextResponse.json({ success: true });
     }

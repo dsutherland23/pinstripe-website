@@ -146,11 +146,11 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
       desc: "Touchscreen open-air photo stations with instant SMS delivery, custom print layouts, backdrops, and fun wedding/birthday props." 
     },
     { 
-      title: "Retro Concession Machinery", 
+      title: "Concession Machinery", 
       id: "concession-equipment", 
       items: concessions, 
       icon: <Coffee size={18} />, 
-      desc: "Vintage cotton candy carts and theatre-style popcorn machines. Complete with supplies to bring sweet concession stand vibes to your event." 
+      desc: "Cotton candy carts and theatre-style popcorn machines. Complete with supplies to bring sweet concession stand vibes to your event." 
     },
   ];
 

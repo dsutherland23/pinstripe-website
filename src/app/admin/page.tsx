@@ -28,6 +28,9 @@ interface Booking {
   itemCount: number; estimatedTotal: number; paymentMethod: string;
   status?: "pending" | "confirmed" | "preparing" | "delivered" | "cancelled";
   notes?: string; submittedAt: string;
+  amountPaid?: number;
+  paymentStatus?: "unpaid" | "deposit_paid" | "fully_paid";
+  payments?: Array<{ id: string; amount: number; method: string; timestamp: string }>;
 }
 
 interface Category {
@@ -181,6 +184,25 @@ export default function AdminDashboard() {
     eventLocation: "Warehouse / Storage",
     notes: "Manual offline block/booking created from admin panel.",
   });
+
+  // Payment modal state
+  const [paymentRecordingBookingId, setPaymentRecordingBookingId] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [paymentReferenceId, setPaymentReferenceId] = useState("");
+
+  useEffect(() => {
+    if (paymentRecordingBookingId) {
+      const b = bookings.find(x => x.id === paymentRecordingBookingId);
+      if (b) {
+        const remaining = Math.max(0, b.estimatedTotal - (b.amountPaid || 0));
+        setPaymentAmount(remaining.toFixed(2));
+      }
+    } else {
+      setPaymentAmount("");
+      setPaymentReferenceId("");
+    }
+  }, [paymentRecordingBookingId, bookings]);
 
   // Settings
   const [savingSettings, setSavingSettings] = useState(false);
@@ -1408,10 +1430,109 @@ export default function AdminDashboard() {
                             {booking.delivery.address}<br />{booking.delivery.city}, VA {booking.delivery.zipCode}
                           </p>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", justifyContent: "center" }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", justifyContent: "center", gap: "0.25rem" }}>
                           <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>Total</p>
                           <p style={{ fontSize: "1.5rem", color: "#D4AF37", fontWeight: 900, margin: 0 }}>{fmt(booking.estimatedTotal)}</p>
+                          <div style={{ margin: "0.1rem 0" }}>
+                            <Badge
+                              label={
+                                booking.paymentStatus === "fully_paid" ? "Fully Paid" :
+                                booking.paymentStatus === "deposit_paid" ? "Deposit Paid" : "Unpaid"
+                              }
+                              color={
+                                booking.paymentStatus === "fully_paid" ? "green" :
+                                booking.paymentStatus === "deposit_paid" ? "blue" : "red"
+                              }
+                            />
+                          </div>
                           <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>{booking.paymentMethod}</p>
+                        </div>
+                      </div>
+
+                      {/* Transaction Ledger & Record Payment */}
+                      <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+                          <h4 style={{ fontSize: "0.8rem", color: "#D4AF37", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
+                            💳 Transaction Ledger
+                          </h4>
+                          <button
+                            onClick={() => setPaymentRecordingBookingId(booking.id)}
+                            style={{
+                              padding: "0.35rem 0.75rem",
+                              borderRadius: "0.375rem",
+                              background: "rgba(16,185,129,0.1)",
+                              border: "1px solid rgba(16,185,129,0.25)",
+                              color: "#10b981",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.background = "#10b981";
+                              e.currentTarget.style.color = "#000";
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.background = "rgba(16,185,129,0.1)";
+                              e.currentTarget.style.color = "#10b981";
+                            }}
+                          >
+                            Record Payment
+                          </button>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1.5rem" }}>
+                          {/* Ledger Table / List */}
+                          <div style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "0.5rem", padding: "0.75rem" }}>
+                            {(!booking.payments || booking.payments.length === 0) ? (
+                              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.78rem", margin: 0 }}>No payments recorded for this booking.</p>
+                            ) : (
+                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem" }}>
+                                <thead>
+                                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)", textAlign: "left" }}>
+                                    <th style={{ padding: "0.3rem 0" }}>Date</th>
+                                    <th style={{ padding: "0.3rem 0" }}>Method</th>
+                                    <th style={{ padding: "0.3rem 0" }}>ID</th>
+                                    <th style={{ padding: "0.3rem 0", textAlign: "right" }}>Amount</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {booking.payments.map((p, index) => (
+                                    <tr key={p.id || index} style={{ borderBottom: index < (booking.payments?.length || 0) - 1 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
+                                      <td style={{ padding: "0.4rem 0", color: "rgba(255,255,255,0.5)" }}>
+                                        {new Date(p.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                                      </td>
+                                      <td style={{ padding: "0.4rem 0", color: "#ffffff", fontWeight: 600 }}>{p.method}</td>
+                                      <td style={{ padding: "0.4rem 0", fontFamily: "monospace", color: "rgba(255,255,255,0.3)", fontSize: "0.68rem" }}>
+                                        {p.id.length > 10 ? p.id.substring(0, 8) + "..." : p.id}
+                                      </td>
+                                      <td style={{ padding: "0.4rem 0", textAlign: "right", color: "#10b981", fontWeight: 700 }}>
+                                        {fmt(p.amount)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                          </div>
+
+                          {/* Balance Summary */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", justifyContent: "center" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+                              <span style={{ color: "rgba(255,255,255,0.4)" }}>Estimated Total:</span>
+                              <span style={{ color: "#ffffff", fontWeight: 600 }}>{fmt(booking.estimatedTotal)}</span>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+                              <span style={{ color: "rgba(255,255,255,0.4)" }}>Amount Paid:</span>
+                              <span style={{ color: "#10b981", fontWeight: 700 }}>{fmt(booking.amountPaid || 0)}</span>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "0.4rem", marginTop: "0.2rem" }}>
+                              <span style={{ color: "#D4AF37", fontWeight: 700 }}>Outstanding Balance:</span>
+                              <span style={{ color: (booking.estimatedTotal - (booking.amountPaid || 0)) <= 0 ? "#10b981" : "#ef4444", fontWeight: 800 }}>
+                                {fmt(Math.max(0, booking.estimatedTotal - (booking.amountPaid || 0)))}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -1557,6 +1678,202 @@ export default function AdminDashboard() {
               </form>
             </div>
           )}
+
+      {/* ── RECORD PAYMENT MODAL ────────────────────────────────────────── */}
+      {paymentRecordingBookingId && (() => {
+        const currentBooking = bookings.find(b => b.id === paymentRecordingBookingId);
+        if (!currentBooking) return null;
+        
+        const outstanding = Math.max(0, currentBooking.estimatedTotal - (currentBooking.amountPaid || 0));
+        
+        const handleRecordPaymentSubmit = async (e: React.FormEvent) => {
+          e.preventDefault();
+          setLoading(true);
+          try {
+            const res = await fetch("/api/admin/bookings", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-admin-passcode": getCode(),
+              },
+              body: JSON.stringify({
+                action: "record-payment",
+                id: paymentRecordingBookingId,
+                amount: parseFloat(paymentAmount),
+                method: paymentMethod,
+                paymentId: paymentReferenceId || undefined,
+              }),
+            });
+            
+            const data = await res.json();
+            if (data.success) {
+              notify("Offline payment recorded successfully!");
+              setPaymentRecordingBookingId(null);
+              loadAll();
+            } else {
+              notify(data.error || "Failed to record payment.", "error");
+            }
+          } catch (err) {
+            notify("Network error. Please try again.", "error");
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        return (
+          <div style={{
+            position: "fixed",
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.75)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 200,
+            padding: "1.5rem",
+          }}>
+            <div style={{
+              background: "#111111",
+              border: "1px solid rgba(212,175,55,0.3)",
+              borderRadius: "1.25rem",
+              width: "100%",
+              maxWidth: "460px",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
+              overflow: "hidden",
+            }}>
+              <div style={{
+                background: "linear-gradient(135deg, #161616 0%, #111111 100%)",
+                borderBottom: "1px solid rgba(255,255,255,0.06)",
+                padding: "1.25rem 1.5rem",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
+              }}>
+                <div>
+                  <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>Record Offline Payment</h3>
+                  <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", margin: "0.2rem 0 0 0" }}>
+                    Booking Ref: <strong style={{ color: "#D4AF37" }}>{paymentRecordingBookingId}</strong>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setPaymentRecordingBookingId(null)}
+                  style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", padding: "0.25rem" }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleRecordPaymentSubmit} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                <div>
+                  <label style={labelStyle}>Customer Info</label>
+                  <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.625rem", padding: "0.75rem" }}>
+                    <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#ffffff", margin: 0 }}>{currentBooking.customer.name}</p>
+                    <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", margin: "0.15rem 0 0 0" }}>{currentBooking.customer.email} · {currentBooking.customer.phone}</p>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <div>
+                    <label style={labelStyle}>Estimated Total</label>
+                    <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#ffffff" }}>{fmt(currentBooking.estimatedTotal)}</div>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Outstanding Balance</label>
+                    <div style={{ fontSize: "1.1rem", fontWeight: 800, color: outstanding > 0 ? "#ef4444" : "#10b981" }}>{fmt(outstanding)}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Payment Amount ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    value={paymentAmount}
+                    onChange={e => setPaymentAmount(e.currentTarget.value)}
+                    style={{ ...inputStyle, fontSize: "1rem", fontWeight: 600 }}
+                    onFocus={e => { e.currentTarget.style.borderColor = "#D4AF37"; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Payment Method</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={e => setPaymentMethod(e.currentTarget.value)}
+                    style={inputStyle}
+                    required
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="Check">Check</option>
+                    <option value="Card (Offline Terminal)">Card (Offline Terminal)</option>
+                    <option value="Zelle">Zelle</option>
+                    <option value="Stripe (Manual Ledger)">Stripe (Manual Ledger)</option>
+                    <option value="Refund / Adjustment">Refund / Adjustment</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Transaction / Check / Ref # (Optional)</label>
+                  <input
+                    type="text"
+                    value={paymentReferenceId}
+                    onChange={e => setPaymentReferenceId(e.currentTarget.value)}
+                    placeholder="e.g. Check #1042, TXN-8273"
+                    style={inputStyle}
+                    onFocus={e => { e.currentTarget.style.borderColor = "#D4AF37"; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentRecordingBookingId(null)}
+                    style={{
+                      flex: 1,
+                      padding: "0.8rem",
+                      borderRadius: "0.625rem",
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      color: "#ffffff",
+                      fontWeight: 700,
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      textAlign: "center"
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      flex: 2,
+                      padding: "0.8rem",
+                      borderRadius: "0.625rem",
+                      background: "linear-gradient(135deg, #10b981, #34d399)",
+                      border: "none",
+                      color: "#000000",
+                      fontWeight: 800,
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem"
+                    }}
+                  >
+                    {loading ? "Recording..." : "Record Payment"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      })()}
 
         </main>
       </div>

@@ -15,6 +15,9 @@ interface Booking {
   paymentMethod: string;
   notes?: string;
   submittedAt: string;
+  amountPaid?: number;
+  paymentStatus?: "unpaid" | "deposit_paid" | "fully_paid";
+  payments?: Array<{ id: string; amount: number; method: string; timestamp: string }>;
 }
 
 interface RentalItem {
@@ -156,9 +159,28 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "2rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.03em" }}>INVOICE</div>
+              <div style={{ fontSize: "2rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.03em", textTransform: "uppercase" }}>
+                {booking.paymentStatus === "fully_paid" ? "PAID RECEIPT" : "INVOICE"}
+              </div>
               <div style={{ fontFamily: "monospace", fontSize: "1.1rem", color: "#D4AF37", fontWeight: 700, marginTop: "0.25rem" }}>{booking.id}</div>
               <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem", marginTop: "0.5rem" }}>Issued: {issueDate}</div>
+              
+              {/* Payment Status Stamp */}
+              <div style={{ marginTop: "0.625rem" }}>
+                {booking.paymentStatus === "fully_paid" ? (
+                  <span style={{ padding: "0.25rem 0.75rem", borderRadius: "9999px", background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", color: "#10b981", fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", display: "inline-block" }}>
+                    ✓ Fully Paid
+                  </span>
+                ) : booking.paymentStatus === "deposit_paid" ? (
+                  <span style={{ padding: "0.25rem 0.75rem", borderRadius: "9999px", background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)", color: "#f59e0b", fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", display: "inline-block" }}>
+                    ✓ Deposit Confirmed
+                  </span>
+                ) : (
+                  <span style={{ padding: "0.25rem 0.75rem", borderRadius: "9999px", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", display: "inline-block" }}>
+                    ✕ Unpaid (Deposit Pending)
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -232,13 +254,58 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
                 <span>Deposit Required (30%)</span>
                 <span>${depositEstimate.toFixed(2)}</span>
               </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", fontSize: "0.88rem", color: "#555", borderBottom: "1px dashed #e0e0e0" }}>
+                <span>Amount Paid</span>
+                <span style={{ color: "#10b981", fontWeight: 600 }}>-${(booking.amountPaid || 0).toFixed(2)}</span>
+              </div>
               <div style={{ display: "flex", justifyContent: "space-between", padding: "0.875rem 0", fontSize: "1.1rem", fontWeight: 900, color: "#0f0f0f", borderTop: "2px solid #0f0f0f", marginTop: "0.25rem" }}>
-                <span>Total Estimate</span>
-                <span style={{ color: "#b8860b" }}>${booking.estimatedTotal.toFixed(2)}</span>
+                <span>Remaining Balance</span>
+                <span style={{ color: (booking.estimatedTotal - (booking.amountPaid || 0)) <= 0 ? "#10b981" : "#b8860b" }}>
+                  ${Math.max(0, booking.estimatedTotal - (booking.amountPaid || 0)).toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Payment Ledger / Transaction History */}
+        {booking.payments && booking.payments.length > 0 && (
+          <div style={{ padding: "0 3rem 2rem" }}>
+            <div style={{ border: "1px solid #e0e0e0", borderRadius: "0.5rem", overflow: "hidden" }}>
+              <div style={{ background: "#fcfcfc", padding: "0.75rem 1.25rem", borderBottom: "1px solid #e0e0e0", fontSize: "0.72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888" }}>
+                💳 Transaction History (Receipt Ledger)
+              </div>
+              <div style={{ padding: "1rem 1.25rem" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #eeeeee", color: "#888" }}>
+                      <th style={{ padding: "0.4rem 0", textAlign: "left", fontWeight: 600 }}>Date</th>
+                      <th style={{ padding: "0.4rem 0", textAlign: "left", fontWeight: 600 }}>Payment Method</th>
+                      <th style={{ padding: "0.4rem 0", textAlign: "left", fontWeight: 600 }}>Transaction ID</th>
+                      <th style={{ padding: "0.4rem 0", textAlign: "right", fontWeight: 600 }}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {booking.payments.map((p, index) => (
+                      <tr key={p.id || index} style={{ borderBottom: index < booking.payments!.length - 1 ? "1px solid #f9f9f9" : "none" }}>
+                        <td style={{ padding: "0.5rem 0", color: "#555" }}>
+                          {new Date(p.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </td>
+                        <td style={{ padding: "0.5rem 0", color: "#1a1a1a", fontWeight: 500 }}>{p.method}</td>
+                        <td style={{ padding: "0.5rem 0", fontFamily: "monospace", color: "#888", fontSize: "0.75rem" }}>
+                          {p.id.startsWith("cs_") || p.id.startsWith("pi_") ? p.id.substring(0, 15) + "..." : p.id}
+                        </td>
+                        <td style={{ padding: "0.5rem 0", textAlign: "right", color: "#10b981", fontWeight: 700 }}>
+                          ${p.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Notes */}
         {booking.notes && (
