@@ -51,6 +51,26 @@ export async function POST(req: NextRequest) {
           zipCode: supabaseUser.user_metadata?.zipCode || "",
         };
 
+        // Sync user to local database so they exist for local updates/invoices
+        try {
+          const users = await getUsers();
+          const exists = users.some((u) => u.email.toLowerCase() === emailClean);
+          if (!exists) {
+            await addUser({
+              email: emailClean,
+              passwordHash: "supabase",
+              name: userWithoutPassword.name,
+              phone: userWithoutPassword.phone,
+              address: userWithoutPassword.address,
+              city: userWithoutPassword.city,
+              zipCode: userWithoutPassword.zipCode,
+            });
+            console.log(`Synced new Supabase user locally on signup: ${emailClean}`);
+          }
+        } catch (syncErr) {
+          console.error(`Failed to sync Supabase user locally on signup: ${emailClean}`, syncErr);
+        }
+
         return NextResponse.json({ success: true, user: userWithoutPassword });
       }
 
@@ -77,6 +97,26 @@ export async function POST(req: NextRequest) {
           city: supabaseUser.user_metadata?.city || "",
           zipCode: supabaseUser.user_metadata?.zipCode || "",
         };
+
+        // Sync user to local database so they exist for local updates/invoices
+        try {
+          const users = await getUsers();
+          const exists = users.some((u) => u.email.toLowerCase() === emailClean);
+          if (!exists) {
+            await addUser({
+              email: emailClean,
+              passwordHash: "supabase",
+              name: userWithoutPassword.name,
+              phone: userWithoutPassword.phone,
+              address: userWithoutPassword.address,
+              city: userWithoutPassword.city,
+              zipCode: userWithoutPassword.zipCode,
+            });
+            console.log(`Synced new Supabase user locally on login: ${emailClean}`);
+          }
+        } catch (syncErr) {
+          console.error(`Failed to sync Supabase user locally on login: ${emailClean}`, syncErr);
+        }
 
         return NextResponse.json({ success: true, user: userWithoutPassword });
       }
