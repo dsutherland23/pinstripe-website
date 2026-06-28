@@ -23,6 +23,7 @@ import {
   Coffee,
   User,
   Tent,
+  ShoppingBag,
 } from "lucide-react";
 
 const rentalSubItems = [
@@ -32,6 +33,7 @@ const rentalSubItems = [
   { label: "Inflatables",          href: "/inventory/inflatables",          categorySlug: "inflatables",          icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },
   { label: "Photo Booth",          href: "/inventory/photobooth",          categorySlug: "photobooth",          icon: <Camera size={15} />,   desc: "360° & open-air photo experiences" },
   { label: "Concession Equipment", href: "/inventory/concession-equipment", categorySlug: "concession-equipment", icon: <Coffee size={15} />,   desc: "Popcorn, cotton candy & more" },
+  { label: "Products",             href: "/inventory/products",             categorySlug: "products",             icon: <ShoppingBag size={15} />, desc: "Kits, stands & extra party supplies" },
 ];
 
 

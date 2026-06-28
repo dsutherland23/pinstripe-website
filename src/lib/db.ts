@@ -211,7 +211,9 @@ export async function initDb(): Promise<void> {
         maintenance_mode     TINYINT(1) NOT NULL DEFAULT 0,
         analytics_id         VARCHAR(128) NOT NULL DEFAULT '',
         pay_in_person_enabled TINYINT(1) NOT NULL DEFAULT 1,
-        gallery_enabled       TINYINT(1) NOT NULL DEFAULT 1
+        gallery_enabled       TINYINT(1) NOT NULL DEFAULT 1,
+        categories_enabled    TINYINT(1) NOT NULL DEFAULT 1,
+        featured_rentals_enabled TINYINT(1) NOT NULL DEFAULT 1
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
@@ -223,6 +225,18 @@ export async function initDb(): Promise<void> {
 
     try {
       await conn.query("ALTER TABLE settings ADD COLUMN gallery_enabled TINYINT(1) NOT NULL DEFAULT 1");
+    } catch (err) {
+      // Ignore if column already exists
+    }
+
+    try {
+      await conn.query("ALTER TABLE settings ADD COLUMN categories_enabled TINYINT(1) NOT NULL DEFAULT 1");
+    } catch (err) {
+      // Ignore if column already exists
+    }
+
+    try {
+      await conn.query("ALTER TABLE settings ADD COLUMN featured_rentals_enabled TINYINT(1) NOT NULL DEFAULT 1");
     } catch (err) {
       // Ignore if column already exists
     }
@@ -287,6 +301,7 @@ export async function initDb(): Promise<void> {
       { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
       { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
       { id: "cat-9", name: "Snow-cone Machines",    icon: "ice",     featured: false, order: 9 },
+      { id: "cat-10", name: "Products",             icon: "shopping-bag", featured: false, order: 10 },
     ];
     for (const cat of DEFAULT_CATEGORIES) {
       await conn.query(
@@ -336,7 +351,7 @@ export async function initDb(): Promise<void> {
     const [setCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM settings");
     if ((setCount as mysql.RowDataPacket[])[0].c === 0) {
       await conn.query(
-        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled, gallery_enabled) VALUES (1, 1, 0, '', 1, 1)"
+        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled, gallery_enabled, categories_enabled, featured_rentals_enabled) VALUES (1, 1, 0, '', 1, 1, 1, 1)"
       );
     }
   } finally {
@@ -402,9 +417,10 @@ const fallbackStore = {
     { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
     { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
     { id: "cat-9", name: "Snow-cone Machines",    icon: "ice",     featured: false, order: 9 },
+    { id: "cat-10", name: "Products",             icon: "shopping-bag", featured: false, order: 10 },
   ],
   siteContent: { ...DEFAULT_SITE_CONTENT },
-  settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true },
+  settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true },
   bookings: [] as Booking[],
   users: [] as User[],
   messages: [] as Message[],
@@ -902,6 +918,8 @@ type SettingsRow = {
   analytics_id: string;
   pay_in_person_enabled: number;
   gallery_enabled: number;
+  categories_enabled: number;
+  featured_rentals_enabled: number;
 };
 
 export async function getSettings(): Promise<{
@@ -910,18 +928,22 @@ export async function getSettings(): Promise<{
   analyticsId?: string;
   payInPersonEnabled?: boolean;
   galleryEnabled?: boolean;
+  categoriesEnabled?: boolean;
+  featuredRentalsEnabled?: boolean;
 }> {
   if (useFallback) return fallbackStore.settings;
   try {
     await ensureInit();
     const rows = await query<SettingsRow>("SELECT * FROM settings WHERE id = 1");
-    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true };
+    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true };
     return {
       tentPlannerEnabled: Boolean(rows[0].tent_planner_enabled),
       maintenanceMode: Boolean(rows[0].maintenance_mode),
       analyticsId: rows[0].analytics_id,
       payInPersonEnabled: Boolean(rows[0].pay_in_person_enabled ?? 1),
       galleryEnabled: Boolean(rows[0].gallery_enabled ?? 1),
+      categoriesEnabled: Boolean(rows[0].categories_enabled ?? 1),
+      featuredRentalsEnabled: Boolean(rows[0].featured_rentals_enabled ?? 1),
     };
   } catch (err) {
     console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
@@ -936,6 +958,8 @@ export async function updateSettings(updates: {
   analyticsId?: string;
   payInPersonEnabled?: boolean;
   galleryEnabled?: boolean;
+  categoriesEnabled?: boolean;
+  featuredRentalsEnabled?: boolean;
 }): Promise<void> {
   if (useFallback) {
     fallbackStore.settings = { ...fallbackStore.settings, ...updates };
@@ -965,6 +989,14 @@ export async function updateSettings(updates: {
     if (updates.galleryEnabled !== undefined) {
       setClauses.push("gallery_enabled = ?");
       values.push(updates.galleryEnabled ? 1 : 0);
+    }
+    if (updates.categoriesEnabled !== undefined) {
+      setClauses.push("categories_enabled = ?");
+      values.push(updates.categoriesEnabled ? 1 : 0);
+    }
+    if (updates.featuredRentalsEnabled !== undefined) {
+      setClauses.push("featured_rentals_enabled = ?");
+      values.push(updates.featuredRentalsEnabled ? 1 : 0);
     }
     if (setClauses.length === 0) return;
     values.push(1);

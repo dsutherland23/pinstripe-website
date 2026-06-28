@@ -230,6 +230,7 @@ export default function LocationClientPage({ cityKey, cityName }: LocationClient
         onOpenQuote={handleOpenQuote}
         onOpenAbout={handleOpenAbout}
         onOpenContact={handleOpenContact}
+        plannerEnabled={plannerEnabled}
       />
     </main>
   );

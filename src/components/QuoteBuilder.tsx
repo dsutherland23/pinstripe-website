@@ -618,7 +618,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       summaries.push(`${addon.kits} × ${kitName} ($${pricePerKit} each)`);
                     }
                     if (addon.stand) {
-                      summaries.push(`Vintage Stand ($25)`);
+                      summaries.push(`Equipment Stand ($25)`);
                     }
                     if (addon.extraHours > 0) {
                       summaries.push(`${addon.extraHours} × Additional Hour ($15/hr)`);
@@ -990,12 +990,21 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "-0.25rem", marginBottom: "0.5rem", fontFamily: "var(--font-body)" }}>{errors.selectedItems}</p>
                       )}
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem", maxHeight: "320px", overflowY: "auto" }}>
-                        {mockInventory.map((item) => {
-                          const qty = selected[item.id] || 0;
-                          const avail = availability[item.id];
-                          const isSoldOut = avail !== undefined && avail.available <= 0;
-                          
-                          return (
+                        {[...mockInventory]
+                          .sort((a, b) => {
+                            const aSelected = (selected[a.id] || 0) > 0;
+                            const bSelected = (selected[b.id] || 0) > 0;
+                            if (aSelected && !bSelected) return -1;
+                            if (!aSelected && bSelected) return 1;
+                            // Maintain original order if both are selected or both are unselected
+                            return Number(a.id) - Number(b.id);
+                          })
+                          .map((item) => {
+                            const qty = selected[item.id] || 0;
+                            const avail = availability[item.id];
+                            const isSoldOut = avail !== undefined && avail.available <= 0;
+                            
+                            return (
                             <div
                               key={item.id}
                               style={{
@@ -1156,7 +1165,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", cursor: "pointer" }}
                                     >
                                       <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: 650 }}>
-                                        Vintage Equipment Stand — <strong style={{ color: "#D4AF37" }}>$25</strong>
+                                        Equipment Stand — <strong style={{ color: "#D4AF37" }}>$25</strong>
                                       </span>
                                       <input
                                         type="checkbox"

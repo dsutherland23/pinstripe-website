@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
       analyticsId: body.analyticsId,
       payInPersonEnabled: body.payInPersonEnabled,
       galleryEnabled: body.galleryEnabled,
+      categoriesEnabled: body.categoriesEnabled,
+      featuredRentalsEnabled: body.featuredRentalsEnabled,
     });
     return NextResponse.json({ success: true });
   } catch (err) {

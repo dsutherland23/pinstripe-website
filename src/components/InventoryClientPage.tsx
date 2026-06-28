@@ -107,6 +107,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
   const inflatables = inventory.filter((item) => (item.category === "Bounce Houses" || item.category === "Water Slides") && matchesSearch(item));
   const photoBooths = inventory.filter((item) => item.category === "Photo Booths" && matchesSearch(item));
   const concessions = inventory.filter((item) => (item.category === "Cotton Candy Machines" || item.category === "Popcorn Machines" || item.category === "Snow-cone Machines") && matchesSearch(item));
+  const products = inventory.filter((item) => item.category === "Products" && matchesSearch(item));
 
   // Category listing configuration
   const rawSections = [
@@ -151,6 +152,13 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
       items: concessions, 
       icon: <Coffee size={18} />, 
       desc: "Cotton candy carts and theatre-style popcorn machines. Complete with supplies to bring sweet concession stand vibes to your event." 
+    },
+    { 
+      title: "Party Supplies & Add-ons", 
+      id: "products", 
+      items: products, 
+      icon: <ShoppingBag size={18} />, 
+      desc: "Individual party supplies, servings kits, and equipment stands to support your event." 
     },
   ];
 

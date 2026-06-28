@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Mail, Phone, MapPin, ShieldCheck } from "lucide-react";
+import { Mail, Phone, MapPin, ShieldCheck, ArrowUpRight } from "lucide-react";
 
 interface FooterProps {
   onOpenQuote: () => void;
@@ -54,8 +54,10 @@ const socials = [
 
 export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: FooterProps) {
   const [galleryEnabled, setGalleryEnabled] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     fetch("/api/settings")
       .then((res) => res.json())
       .then((data) => {
@@ -66,53 +68,86 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
       .catch(() => {});
   }, []);
 
+  const getLinkHref = (label: string) => {
+    if (label === "My Account") return "/portal";
+    if (label === "Rentals") return "/inventory";
+    if (mounted && typeof window !== "undefined" && window.location.pathname !== "/") {
+      if (label === "Home") return "/";
+      return `/#${label.toLowerCase()}`;
+    }
+    return `#${label.toLowerCase()}`;
+  };
+
   return (
-    <footer id="contact" style={{ background: "#0f0f0f", color: "rgba(255,255,255,0.55)", position: "relative", overflow: "hidden" }}>
+    <footer 
+      id="contact" 
+      style={{ 
+        background: "radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.05) 0%, #0A0A0B 70%, #070708 100%)", 
+        color: "rgba(255, 255, 255, 0.6)", 
+        position: "relative", 
+        overflow: "hidden",
+        borderTop: "1px solid rgba(212, 175, 55, 0.15)",
+        boxShadow: "0 -20px 40px rgba(0, 0, 0, 0.5)"
+      }}
+    >
+      {/* Ambient background glow spot */}
+      <div style={{ position: "absolute", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212, 175, 55, 0.04) 0%, transparent 70%)", top: "-10%", left: "10%", filter: "blur(50px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "absolute", width: "450px", height: "450px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 70%)", bottom: "-10%", right: "5%", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
+
       {/* ---- CTA BANNER ---- */}
       <div style={{ padding: "0 1.25rem", marginTop: "-3rem", position: "relative", zIndex: 10 }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div
             style={{
-              background: "linear-gradient(120deg, #D4AF37 0%, #f0cc60 50%, #D4AF37 100%)",
-              borderRadius: "1.75rem",
-              padding: "3rem 2.5rem",
+              background: "linear-gradient(135deg, #D4AF37 0%, #f3df93 50%, #D4AF37 100%)",
+              borderRadius: "1.5rem",
+              padding: "2.5rem 3rem",
               display: "flex",
               flexWrap: "wrap",
               alignItems: "center",
               justifyContent: "space-between",
               gap: "2rem",
-              boxShadow: "0 20px 60px rgba(212,175,55,0.35)",
+              boxShadow: "0 16px 48px rgba(212, 175, 55, 0.3)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
             }}
           >
-            <div style={{ flex: "1 1 300px" }}>
-              <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "clamp(1.25rem, 3vw, 1.75rem)", color: "#0f0f0f", lineHeight: 1.25, marginBottom: "0.5rem" }}>
+            <div style={{ flex: "1 1 450px" }}>
+              <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "clamp(1.3rem, 2.5vw, 1.8rem)", color: "#0f0f0f", lineHeight: 1.2, marginBottom: "0.5rem" }}>
                 Ready to Create an Unforgettable Event?
               </h3>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", color: "rgba(0,0,0,0.6)", lineHeight: 1.6 }}>
-                Get your personalised quote in under 2 minutes. No credit card required.
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.85rem", color: "rgba(15, 15, 15, 0.75)", fontWeight: 550, lineHeight: 1.5 }}>
+                Get your custom reservation quote in under 2 minutes. No upfront credit card required.
               </p>
             </div>
             <button
               onClick={onOpenQuote}
               style={{
                 background: "#0f0f0f",
-                color: "#D4AF37",
+                color: "#ffffff",
                 padding: "1rem 2.25rem",
-                borderRadius: "9999px",
+                borderRadius: "0.75rem",
                 border: "none",
                 fontFamily: "var(--font-heading)",
                 fontWeight: 800,
                 fontSize: "0.7rem",
-                letterSpacing: "0.14em",
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
                 cursor: "pointer",
-                transition: "all 0.2s",
+                transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                 whiteSpace: "nowrap",
-                boxShadow: "0 6px 24px rgba(0,0,0,0.25)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
                 flexShrink: 0,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+              onMouseEnter={(e) => { 
+                e.currentTarget.style.transform = "translateY(-3px)"; 
+                e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.45), 0 0 10px rgba(212,175,55,0.4)";
+                e.currentTarget.style.color = "#D4AF37";
+              }}
+              onMouseLeave={(e) => { 
+                e.currentTarget.style.transform = ""; 
+                e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)";
+                e.currentTarget.style.color = "#ffffff";
+              }}
             >
               Book & Reserve
             </button>
@@ -121,72 +156,72 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
       </div>
 
       {/* ---- MAIN FOOTER ---- */}
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "5rem 1.25rem 2.5rem" }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "5rem 1.25rem 2rem", position: "relative", zIndex: 1 }}>
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
             gap: "3rem",
-            marginBottom: "4rem",
+            marginBottom: "3.5rem",
           }}
         >
-          {/* Brand */}
+          {/* Column 1: Brand & Bio */}
           <div>
-            <div style={{ marginBottom: "1.25rem", display: "inline-flex" }}>
-              <div
+            <div style={{ marginBottom: "1rem", display: "inline-flex" }}>
+              <img
+                src="/images/pinstripes-logo-new.png?v=20260623"
+                alt="Pinstripes Party & Event Rentals Logo"
                 style={{
-                  width: "160px",
-                  height: "160px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  height: "56px",
+                  objectFit: "contain",
+                  filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))",
                 }}
-              >
-                <img
-                  src="/images/pinstripes-logo-new.png?v=20260623"
-                  alt="Pinstripes Party & Event Rentals"
-                  style={{
-                    height: "100%",
-                    width: "100%",
-                    objectFit: "contain",
-                  }}
-                />
-              </div>
+              />
             </div>
-            <p style={{ fontSize: "0.82rem", lineHeight: 1.7, marginBottom: "1.5rem" }}>
-              Premium event rentals for every occasion — from bounce houses and water slides to elegant wedding setups across America.
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginBottom: "1rem" }}>
+              <span style={{ fontFamily: "var(--font-heading)", fontSize: "1.1rem", fontWeight: 900, color: "#ffffff", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                Pinstripes
+              </span>
+              <span style={{ fontFamily: "var(--font-heading)", fontSize: "0.6rem", fontWeight: 700, color: "#D4AF37", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                Premium Event Concierge
+              </span>
+            </div>
+            <p style={{ fontSize: "0.8rem", lineHeight: 1.6, marginBottom: "1.5rem", color: "rgba(255,255,255,0.45)" }}>
+              Premium event rentals for every milestone — bounce houses, water slides, wedding setups, tents, tables, and concession machines. Delivering memory-making equipment across Hampton Roads.
             </p>
-            {/* Socials */}
-            <div style={{ display: "flex", gap: "0.625rem" }}>
+            {/* Social Links */}
+            <div style={{ display: "flex", gap: "0.75rem" }}>
               {socials.map((s) => (
                 <a
                   key={s.label}
                   href={s.href}
                   title={s.label}
                   style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "0.625rem",
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "0.5rem",
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.06)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "rgba(255,255,255,0.55)",
-                    transition: "all 0.2s",
+                    color: "rgba(255,255,255,0.45)",
+                    transition: "all 0.25s ease",
                     textDecoration: "none",
                   }}
                   onMouseEnter={(e) => {
                     const el = e.currentTarget;
-                    el.style.background = "rgba(212,175,55,0.15)";
-                    el.style.borderColor = "rgba(212,175,55,0.3)";
+                    el.style.background = "rgba(212,175,55,0.1)";
+                    el.style.borderColor = "rgba(212,175,55,0.35)";
                     el.style.color = "#D4AF37";
+                    el.style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
                     const el = e.currentTarget;
-                    el.style.background = "rgba(255,255,255,0.06)";
-                    el.style.borderColor = "rgba(255,255,255,0.08)";
-                    el.style.color = "rgba(255,255,255,0.55)";
+                    el.style.background = "rgba(255,255,255,0.03)";
+                    el.style.borderColor = "rgba(255,255,255,0.06)";
+                    el.style.color = "rgba(255,255,255,0.45)";
+                    el.style.transform = "";
                   }}
                 >
                   {s.svg}
@@ -195,18 +230,18 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Column 2: Navigation Links */}
           <div>
-            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.7rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.875rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              Quick Links
+            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+              Quick Navigation
             </h4>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem", padding: 0 }}>
               {["Home", "Rentals", "Gallery", "My Account", "About", "Contact"]
                 .filter((link) => link !== "Gallery" || galleryEnabled)
                 .map((link) => (
                   <li key={link}>
                     <a
-                      href={link === "My Account" ? "/portal" : `#${link.toLowerCase()}`}
+                      href={getLinkHref(link)}
                       onClick={(e) => {
                         if (link === "About") {
                           e.preventDefault();
@@ -216,63 +251,119 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                           onOpenContact();
                         }
                       }}
-                      style={{ fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "0.82rem", color: "rgba(255,255,255,0.55)", textDecoration: "none", transition: "color 0.2s" }}
-                      onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "#D4AF37"; }}
-                      onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
+                      style={{ 
+                        fontFamily: "var(--font-body)", 
+                        fontWeight: 650, 
+                        fontSize: "0.8rem", 
+                        color: "rgba(255,255,255,0.45)", 
+                        textDecoration: "none", 
+                        transition: "all 0.2s ease",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.25rem"
+                      }}
+                      onMouseEnter={(e) => { 
+                        e.currentTarget.style.color = "#D4AF37"; 
+                        e.currentTarget.style.transform = "translateX(4px)";
+                      }}
+                      onMouseLeave={(e) => { 
+                        e.currentTarget.style.color = "rgba(255,255,255,0.45)"; 
+                        e.currentTarget.style.transform = "";
+                      }}
                     >
-                      {link === "My Account" ? "My Account / Sign In" : link}
+                      {link === "My Account" ? "My Account / Portal" : link}
                     </a>
                   </li>
                 ))}
             </ul>
           </div>
 
-          {/* Service Areas */}
+          {/* Column 3: Service Areas */}
           <div>
-            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.7rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.875rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              Service Areas
+            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+              Hampton Roads Area
             </h4>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem" }}>
-              {locs.map((loc) => (
-                <a
-                  key={loc}
-                  href="#rentals"
-                  style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "0.78rem", color: "rgba(255,255,255,0.55)", textDecoration: "none", transition: "color 0.2s" }}
-                  onMouseEnter={(e) => { (e.currentTarget).style.color = "#D4AF37"; }}
-                  onMouseLeave={(e) => { (e.currentTarget).style.color = "rgba(255,255,255,0.55)"; }}
-                >
-                  <MapPin size={11} color="#D4AF37" />
-                  {loc}
-                </a>
-              ))}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem" }}>
+              {locs.map((loc) => {
+                const slug = loc.toLowerCase().replace(/\s+/g, "-");
+                return (
+                  <a
+                    key={loc}
+                    href={`/locations/${slug}`}
+                    style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      gap: "0.35rem", 
+                      fontFamily: "var(--font-body)", 
+                      fontWeight: 600, 
+                      fontSize: "0.78rem", 
+                      color: "rgba(255,255,255,0.45)", 
+                      textDecoration: "none", 
+                      transition: "all 0.2s ease" 
+                    }}
+                    onMouseEnter={(e) => { 
+                      e.currentTarget.style.color = "#D4AF37"; 
+                      e.currentTarget.style.transform = "translateX(3px)";
+                    }}
+                    onMouseLeave={(e) => { 
+                      e.currentTarget.style.color = "rgba(255,255,255,0.45)"; 
+                      e.currentTarget.style.transform = "";
+                    }}
+                  >
+                    <MapPin size={10} color="#D4AF37" style={{ flexShrink: 0 }} />
+                    {loc}
+                  </a>
+                );
+              })}
             </div>
           </div>
 
-          {/* Contact */}
+          {/* Column 4: Contact & Operations */}
           <div>
-            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.7rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.875rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              Contact Us
+            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+              Get In Touch
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               {[
-                { Icon: Phone, label: "Call / WhatsApp", value: "(757) 749-3407", href: "tel:17577493407" },
-                { Icon: Mail, label: "Email Support", value: "pinstripesrentals@gmail.com", href: "mailto:pinstripesrentals@gmail.com" },
+                { Icon: Phone, label: "Direct Phone Line", value: "(757) 749-3407", href: "tel:17577493407" },
+                { Icon: Mail, label: "Support Email", value: "pinstripesrentals@gmail.com", href: "mailto:pinstripesrentals@gmail.com" },
               ].map(({ Icon, label, value, href }) => (
-                <div key={label} style={{ display: "flex", gap: "0.75rem" }}>
-                  <div style={{ flexShrink: 0, marginTop: "2px" }}>
-                    <Icon size={15} color="#D4AF37" />
+                <div key={label} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+                  <div style={{ 
+                    flexShrink: 0, 
+                    width: "30px", 
+                    height: "30px", 
+                    borderRadius: "0.375rem", 
+                    background: "rgba(212,175,55,0.06)", 
+                    border: "1px solid rgba(212,175,55,0.15)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <Icon size={14} color="#D4AF37" />
                   </div>
                   <div>
-                    <div style={{ fontFamily: "var(--font-body)", fontSize: "0.65rem", color: "rgba(255,255,255,0.35)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
+                    <div style={{ fontFamily: "var(--font-body)", fontSize: "0.62rem", color: "rgba(255,255,255,0.35)", fontWeight: 650, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
                       {label}
                     </div>
                     <a
                       href={href}
-                      style={{ fontFamily: "var(--font-body)", fontSize: "0.82rem", fontWeight: 600, color: "#ffffff", textDecoration: "none", transition: "color 0.2s" }}
-                      onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "#D4AF37"; }}
-                      onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "#ffffff"; }}
+                      style={{ 
+                        fontFamily: "var(--font-body)", 
+                        fontSize: "0.8rem", 
+                        fontWeight: 650, 
+                        color: "#ffffff", 
+                        textDecoration: "none", 
+                        transition: "color 0.2s",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.25rem"
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "#D4AF37"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "#ffffff"; }}
                     >
                       {value}
+                      <ArrowUpRight size={10} style={{ opacity: 0.5 }} />
                     </a>
                   </div>
                 </div>
@@ -282,30 +373,30 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
         </div>
 
         {/* Bottom bar */}
-        <div style={{ paddingTop: "2rem", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+        <div style={{ paddingTop: "1.75rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
           <div>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.78rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.25rem" }}>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.25rem" }}>
               © 2026 Pinstripes Party &amp; Event Rentals. All rights reserved.
             </p>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "rgba(255,255,255,0.25)" }}>
-              Created by{" "}
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", color: "rgba(255,255,255,0.22)" }}>
+              Designed by{" "}
               <a
                 href="https://www.instagram.com/socialkon10_cre8tive/"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  color: "rgba(255,255,255,0.35)",
+                  color: "rgba(255,255,255,0.3)",
                   textDecoration: "none",
                   fontWeight: 600,
                   transition: "color 0.2s",
                 }}
-                onMouseEnter={(e) => { (e.target as HTMLElement).style.color = "#D4AF37"; }}
-                onMouseLeave={(e) => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.35)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#D4AF37"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; }}
               >
                 Socialkon10
               </a>
             </p>
-            {/* Legal links */}
+            {/* Legal Links */}
             <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem", flexWrap: "wrap" }}>
               {[
                 { label: "Privacy Policy", href: "/privacy-policy" },
@@ -317,23 +408,23 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                   href={link.href}
                   style={{
                     fontFamily: "var(--font-body)",
-                    fontSize: "0.72rem",
+                    fontSize: "0.7rem",
                     color: "rgba(255,255,255,0.3)",
                     textDecoration: "none",
                     fontWeight: 500,
                     transition: "color 0.2s",
                   }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#D4AF37"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#D4AF37"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; }}
                 >
                   {link.label}
                 </Link>
               ))}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: "9999px", padding: "0.35rem 0.875rem" }}>
-            <ShieldCheck size={14} color="#22c55e" />
-            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.62rem", color: "#22c55e", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.18)", borderRadius: "9999px", padding: "0.35rem 0.875rem" }}>
+            <ShieldCheck size={13} color="#22c55e" />
+            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.6rem", color: "#22c55e", letterSpacing: "0.06em", textTransform: "uppercase" }}>
               Licensed &amp; Insured
             </span>
           </div>

@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
     return config;
   },
   turbopack: {},
+  devIndicators: {
+    position: "top-right",
+  },
 };
 
 export default nextConfig;

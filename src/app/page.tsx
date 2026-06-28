@@ -42,6 +42,8 @@ export default function Home() {
   const [aboutContactTab, setAboutContactTab]   = useState<"about" | "contact">("about");
   const [plannerEnabled, setPlannerEnabled]     = useState(true);
   const [galleryEnabled, setGalleryEnabled]     = useState(true);
+  const [categoriesEnabled, setCategoriesEnabled] = useState(true);
+  const [featuredRentalsEnabled, setFeaturedRentalsEnabled] = useState(true);
 
   useEffect(() => {
     fetch(`/api/settings?t=${Date.now()}`)
@@ -53,6 +55,12 @@ export default function Home() {
           }
           if (typeof data.galleryEnabled === "boolean") {
             setGalleryEnabled(data.galleryEnabled);
+          }
+          if (typeof data.categoriesEnabled === "boolean") {
+            setCategoriesEnabled(data.categoriesEnabled);
+          }
+          if (typeof data.featuredRentalsEnabled === "boolean") {
+            setFeaturedRentalsEnabled(data.featuredRentalsEnabled);
           }
         }
       })
@@ -136,38 +144,44 @@ export default function Home() {
         categories={categories.map((c) => c.name)}
       />
 
-      <Categories
-        categories={categories}
-        activeCategory={activeCategory}
-        onSelectCategory={setActiveCategory}
-      />
-
-      <Reveal>
-        <FeaturedRentals
+      {categoriesEnabled && (
+        <Categories
+          categories={categories}
           activeCategory={activeCategory}
-          searchQuery={searchQuery}
-          searchDate={searchDate}
-          onSelectItem={setSelectedItem}
-          onOpenQuote={(item) => item ? handleOpenQuoteWithItem(item) : handleOpenQuote()}
+          onSelectCategory={setActiveCategory}
         />
-      </Reveal>
+      )}
 
-      <Reveal>
-        <div style={{ textAlign: "center", margin: "1rem 0 5rem" }}>
-          <a
-            href="/inventory"
-            className="btn-primary"
-            style={{
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem"
-            }}
-          >
-            Browse Full Catalog →
-          </a>
-        </div>
-      </Reveal>
+      {featuredRentalsEnabled && (
+        <>
+          <Reveal>
+            <FeaturedRentals
+              activeCategory={activeCategory}
+              searchQuery={searchQuery}
+              searchDate={searchDate}
+              onSelectItem={setSelectedItem}
+              onOpenQuote={(item) => item ? handleOpenQuoteWithItem(item) : handleOpenQuote()}
+            />
+          </Reveal>
+
+          <Reveal>
+            <div style={{ textAlign: "center", margin: "1rem 0 5rem" }}>
+              <a
+                href="/inventory"
+                className="btn-primary"
+                style={{
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem"
+                }}
+              >
+                Browse Full Catalog →
+              </a>
+            </div>
+          </Reveal>
+        </>
+      )}
 
       {plannerEnabled && (
         <Reveal>
@@ -213,6 +227,7 @@ export default function Home() {
         onOpenQuote={handleOpenQuote}
         onOpenAbout={handleOpenAbout}
         onOpenContact={handleOpenContact}
+        plannerEnabled={plannerEnabled}
       />
     </main>
   );

@@ -9,6 +9,7 @@ const CATEGORIES: Record<string, string> = {
   inflatables: "Inflatables",
   photobooth: "Photo Booth",
   "concession-equipment": "Concession Equipment",
+  products: "Products",
 };
 
 interface CategoryPageProps {
