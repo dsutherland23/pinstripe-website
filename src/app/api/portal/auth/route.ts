@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUsers, addUser, updateUser } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
@@ -12,6 +13,79 @@ export async function POST(req: NextRequest) {
     }
 
     const emailClean = email.trim().toLowerCase();
+
+    // Check if Supabase client is initialized
+    const hasSupabase = supabase !== null;
+
+    if (hasSupabase && supabase) {
+      if (action === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email: emailClean,
+          password: password,
+          options: {
+            data: {
+              name: name || emailClean.split("@")[0],
+              phone: phone || "",
+              address: address || "",
+              city: city || "",
+              zipCode: zipCode || "",
+            }
+          }
+        });
+
+        if (error) {
+          return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+
+        const supabaseUser = data.user;
+        if (!supabaseUser) {
+          return NextResponse.json({ error: "Failed to retrieve user registration info." }, { status: 500 });
+        }
+
+        const userWithoutPassword = {
+          email: supabaseUser.email || emailClean,
+          name: supabaseUser.user_metadata?.name || "",
+          phone: supabaseUser.user_metadata?.phone || "",
+          address: supabaseUser.user_metadata?.address || "",
+          city: supabaseUser.user_metadata?.city || "",
+          zipCode: supabaseUser.user_metadata?.zipCode || "",
+        };
+
+        return NextResponse.json({ success: true, user: userWithoutPassword });
+      }
+
+      if (action === "login") {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: emailClean,
+          password: password,
+        });
+
+        if (error) {
+          return NextResponse.json({ error: error.message }, { status: 401 });
+        }
+
+        const supabaseUser = data.user;
+        if (!supabaseUser) {
+          return NextResponse.json({ error: "User session unavailable." }, { status: 500 });
+        }
+
+        const userWithoutPassword = {
+          email: supabaseUser.email || emailClean,
+          name: supabaseUser.user_metadata?.name || "",
+          phone: supabaseUser.user_metadata?.phone || "",
+          address: supabaseUser.user_metadata?.address || "",
+          city: supabaseUser.user_metadata?.city || "",
+          zipCode: supabaseUser.user_metadata?.zipCode || "",
+        };
+
+        return NextResponse.json({ success: true, user: userWithoutPassword });
+      }
+
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    }
+
+    // Fallback: Local Database Auth (Bcrypt)
+    console.warn("Supabase keys are not set. Falling back to local database authentication.");
     const users = await getUsers();
 
     if (action === "signup") {
