@@ -32,9 +32,16 @@ def zip_project(zip_path):
     """
     print("Zipping standalone build output for Hostinger...")
     
+    added_files = set()
     exclude_from_zip = {'project.zip', 'deploy.py'}
     
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        
+        def add_file(file_path, archive_name):
+            if archive_name in added_files:
+                return
+            added_files.add(archive_name)
+            zipf.write(file_path, archive_name)
         
         # 1. Include .next/standalone/** -> maps to root of deployment
         standalone_dir = os.path.join('.next', 'standalone')
@@ -51,7 +58,7 @@ def zip_project(zip_path):
                 file_path = os.path.join(root, file)
                 # Strip the .next/standalone/ prefix so files land at the deployment root
                 archive_name = os.path.relpath(file_path, standalone_dir)
-                zipf.write(file_path, archive_name)
+                add_file(file_path, archive_name)
         
         # 2. Include .next/static/** -> must be at .next/static/ relative to deployment root
         static_dir = os.path.join('.next', 'static')
@@ -62,7 +69,7 @@ def zip_project(zip_path):
                     file_path = os.path.join(root, file)
                     # Archive as .next/static/...
                     archive_name = os.path.relpath(file_path, '.')
-                    zipf.write(file_path, archive_name)
+                    add_file(file_path, archive_name)
         
         # 3. Include public/** -> must be at public/ relative to deployment root
         public_dir = 'public'
@@ -71,7 +78,7 @@ def zip_project(zip_path):
                 for file in files:
                     file_path = os.path.join(root, file)
                     archive_name = os.path.relpath(file_path, '.')
-                    zipf.write(file_path, archive_name)
+                    add_file(file_path, archive_name)
         
         # 4. Include src/ (for db-init.ts), package files, tsconfig
         for extra_dir in ['src']:
@@ -83,17 +90,17 @@ def zip_project(zip_path):
                             continue
                         file_path = os.path.join(root, file)
                         archive_name = os.path.relpath(file_path, '.')
-                        zipf.write(file_path, archive_name)
+                        add_file(file_path, archive_name)
         
         for extra_file in ['package.json', 'package-lock.json', 'tsconfig.json', 'next.config.ts']:
             if os.path.isfile(extra_file):
-                zipf.write(extra_file, extra_file)
+                add_file(extra_file, extra_file)
         
         # 5. Include our server.js wrapper (load credentials from .env.secure)
         # The standalone build generates its own server.js - we rename it to server_original.js
         # and replace server.js with our wrapper that loads .env.secure first
         if os.path.isfile('server.js'):
-            zipf.write('server.js', 'server.js')
+            add_file('server.js', 'server.js')
 
     print("Zipping complete.")
 
