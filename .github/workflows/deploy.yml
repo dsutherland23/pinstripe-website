@@ -42,4 +42,6 @@ jobs:
           ADMIN_PASSCODE: ${{ secrets.ADMIN_PASSCODE }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: python ftp_deploy.py
+          NEXT_PUBLIC_SUPABASE_URL: "https://afnwoulobjcdtjkfrsnb.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmbndvdWxvYmpjZHRqa2Zyc25iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MTE5NjIsImV4cCI6MjA5ODE4Nzk2Mn0.EibF-jfvH03jJsy-zUoByX_8eoyOTyaeo08OmGh7jqs"
+        run: python deploy.py
