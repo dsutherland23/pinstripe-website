@@ -144,6 +144,7 @@ def main():
     admin_passcode = os.environ.get("ADMIN_PASSCODE")
     resend_api_key = os.environ.get("RESEND_API_KEY")
     stripe_secret_key = os.environ.get("STRIPE_SECRET_KEY")
+    stripe_webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
     supabase_url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
     supabase_anon_key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
     
@@ -258,6 +259,7 @@ def main():
         safe_passcode = (admin_passcode or '').replace('"', '\\"')
         safe_resend = (resend_api_key or '').replace('"', '\\"')
         safe_stripe = (stripe_secret_key or '').replace('"', '\\"')
+        safe_webhook = (stripe_webhook_secret or '').replace('"', '\\"')
         safe_supabase_url = (supabase_url or '').replace('"', '\\"')
         safe_supabase_key = (supabase_anon_key or '').replace('"', '\\"')
         
@@ -281,6 +283,7 @@ def main():
             f'PassengerEnvVar ADMIN_PASSCODE {safe_passcode}\n'
             f'PassengerEnvVar RESEND_API_KEY {safe_resend}\n'
             f'PassengerEnvVar STRIPE_SECRET_KEY {safe_stripe}\n'
+            f'PassengerEnvVar STRIPE_WEBHOOK_SECRET {safe_webhook}\n'
             f'PassengerEnvVar NEXT_PUBLIC_SUPABASE_URL "{safe_supabase_url}"\n'
             f'PassengerEnvVar NEXT_PUBLIC_SUPABASE_ANON_KEY "{safe_supabase_key}"\n'
             # Static file passthrough: web root is ~/ on Hostinger.
