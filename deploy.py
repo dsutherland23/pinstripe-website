@@ -197,7 +197,7 @@ def main():
 
         commands = [
             # Extract zip into the nodejs folder (standalone root lands here)
-            f"unzip -o project.zip -d {remote_base}/",
+            f"unzip -oq project.zip -d {remote_base}/",
             # Rename the standalone server.js to server_original.js so our wrapper can require it
             # (only if server.js exists and server_original.js doesn't already exist)
             f"[ ! -f {remote_base}/server_original.js ] && cp {remote_base}/server.js {remote_base}/server_original.js || true",
