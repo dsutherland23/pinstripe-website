@@ -327,7 +327,7 @@ echo "Touched restart.txt to reload Passenger.\\n";
         ip_url = f"http://212.85.28.186/deploy_helper.php"
         print(f"Retrying via Hostinger server IP: {ip_url} ...")
         try:
-            req = urllib.request.Request(ip_url, headers={'User-Agent': 'Mozilla/5.0'})
+            req = urllib.request.Request(ip_url, headers={'User-Agent': 'Mozilla/5.0', 'Host': 'pinstripesrentals.com'})
             with urllib.request.urlopen(req, context=ctx) as response:
                 html = response.read().decode('utf-8')
                 print("\nDEPLOYMENT RESULTS (IP):")
