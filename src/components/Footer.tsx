@@ -82,7 +82,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
     <footer 
       id="contact" 
       style={{ 
-        background: "radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.05) 0%, #0A0A0B 70%, #070708 100%)", 
+        background: "#0A0A0B", 
         color: "rgba(255, 255, 255, 0.6)", 
         position: "relative", 
         overflow: "hidden",
@@ -90,9 +90,6 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
         boxShadow: "0 -20px 40px rgba(0, 0, 0, 0.5)"
       }}
     >
-      {/* Ambient background glow spot */}
-      <div style={{ position: "absolute", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212, 175, 55, 0.04) 0%, transparent 70%)", top: "-10%", left: "10%", filter: "blur(50px)", pointerEvents: "none", zIndex: 0 }} />
-      <div style={{ position: "absolute", width: "450px", height: "450px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212, 175, 55, 0.03) 0%, transparent 70%)", bottom: "-10%", right: "5%", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
 
       {/* ---- CTA BANNER ---- */}
       <div style={{ padding: "0 1.25rem", marginTop: "-3rem", position: "relative", zIndex: 10 }}>
