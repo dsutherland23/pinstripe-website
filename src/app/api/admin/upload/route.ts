@@ -20,7 +20,10 @@ export async function POST(req: NextRequest) {
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const filename = `rental-${itemId}-${Date.now()}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "images", "uploads");
+    const isProduction = process.env.NODE_ENV === "production";
+    const uploadDir = isProduction
+      ? "/home/u887289907/domains/pinstripesrentals.com/public_html/images/uploads"
+      : path.join(process.cwd(), "public", "images", "uploads");
     await mkdir(uploadDir, { recursive: true });
 
     const buffer = Buffer.from(await file.arrayBuffer());
