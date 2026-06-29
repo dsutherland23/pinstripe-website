@@ -75,16 +75,70 @@ export async function POST(req: NextRequest) {
       }
 
       if (action === "login") {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        let authResult = await supabase.auth.signInWithPassword({
           email: emailClean,
           password: password,
         });
 
-        if (error) {
-          return NextResponse.json({ error: error.message }, { status: 401 });
+        // Auto-migration check: If Supabase login fails, check if they exist in the local database
+        // and if their password matches the local hash. If so, sign them up in Supabase on the fly.
+        if (authResult.error) {
+          try {
+            const users = await getUsers();
+            const localUser = users.find((u) => u.email.toLowerCase() === emailClean);
+            if (localUser) {
+              const isBcrypt = localUser.passwordHash.startsWith("$2a$") || 
+                               localUser.passwordHash.startsWith("$2b$") || 
+                               localUser.passwordHash.startsWith("$2y$");
+              let isMatch = false;
+
+              if (isBcrypt) {
+                isMatch = await bcrypt.compare(password, localUser.passwordHash);
+              } else {
+                const legacyHash = Buffer.from(password).toString("base64");
+                isMatch = localUser.passwordHash === legacyHash;
+              }
+
+              if (isMatch) {
+                console.log(`Auto-migrating local user to Supabase on login: ${emailClean}`);
+                const signUpResult = await supabase.auth.signUp({
+                  email: emailClean,
+                  password: password,
+                  options: {
+                    data: {
+                      name: localUser.name,
+                      phone: localUser.phone,
+                      address: localUser.address,
+                      city: localUser.city,
+                      zipCode: localUser.zipCode,
+                    }
+                  }
+                });
+
+                if (signUpResult.error) {
+                  console.error(`Failed to auto-migrate local user to Supabase: ${signUpResult.error.message}`);
+                } else if (signUpResult.data.user) {
+                  // Successfully signed up! Now sign in to get a valid session
+                  const signInResult = await supabase.auth.signInWithPassword({
+                    email: emailClean,
+                    password: password,
+                  });
+                  if (!signInResult.error && signInResult.data.user) {
+                    authResult = signInResult;
+                  }
+                }
+              }
+            }
+          } catch (migrateErr) {
+            console.error(`Error checking auto-migration for user: ${emailClean}`, migrateErr);
+          }
         }
 
-        const supabaseUser = data.user;
+        if (authResult.error) {
+          return NextResponse.json({ error: authResult.error.message }, { status: 401 });
+        }
+
+        const supabaseUser = authResult.data.user;
         if (!supabaseUser) {
           return NextResponse.json({ error: "User session unavailable." }, { status: 500 });
         }
@@ -126,6 +180,9 @@ export async function POST(req: NextRequest) {
 
     // Fallback: Local Database Auth (Bcrypt)
     console.warn("Supabase keys are not set. Falling back to local database authentication.");
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "Supabase authentication is required in production but keys are not configured." }, { status: 500 });
+    }
     const users = await getUsers();
 
     if (action === "signup") {

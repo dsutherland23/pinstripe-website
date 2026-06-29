@@ -99,6 +99,8 @@ def main():
     admin_passcode = os.environ.get("ADMIN_PASSCODE") or "01717381932"
     resend_api_key = os.environ.get("RESEND_API_KEY") or ""
     stripe_secret_key = os.environ.get("STRIPE_SECRET_KEY") or ""
+    supabase_url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or ""
+    supabase_anon_key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY") or ""
     
     local_zip = "project.zip"
     remote_base = "domains/pinstripesrentals.com/nodejs"
@@ -148,6 +150,8 @@ def main():
             f"ADMIN_PASSCODE={admin_passcode}\n"
             f"RESEND_API_KEY={resend_api_key}\n"
             f"STRIPE_SECRET_KEY={stripe_secret_key}\n"
+            f"NEXT_PUBLIC_SUPABASE_URL={supabase_url}\n"
+            f"NEXT_PUBLIC_SUPABASE_ANON_KEY={supabase_anon_key}\n"
         )
         env_bytes = secure_env_content.encode('utf-8')
         ftp.storbinary(f'STOR {remote_base}/.env.secure', io.BytesIO(env_bytes))
@@ -346,6 +350,8 @@ echo "Touched restart.txt to reload Passenger.\\n";
         safe_passcode = admin_passcode.replace('"', '\\"')
         safe_resend = resend_api_key.replace('"', '\\"')
         safe_stripe = stripe_secret_key.replace('"', '\\"')
+        safe_supabase_url = supabase_url.replace('"', '\\"')
+        safe_supabase_key = supabase_anon_key.replace('"', '\\"')
         
         htaccess_content = (
             'PassengerAppRoot /home/u887289907/domains/pinstripesrentals.com/nodejs\n'
@@ -367,6 +373,8 @@ echo "Touched restart.txt to reload Passenger.\\n";
             f'PassengerEnvVar ADMIN_PASSCODE {safe_passcode}\n'
             f'PassengerEnvVar RESEND_API_KEY {safe_resend}\n'
             f'PassengerEnvVar STRIPE_SECRET_KEY {safe_stripe}\n'
+            f'PassengerEnvVar NEXT_PUBLIC_SUPABASE_URL "{safe_supabase_url}"\n'
+            f'PassengerEnvVar NEXT_PUBLIC_SUPABASE_ANON_KEY "{safe_supabase_key}"\n'
             'RewriteRule ^\\.builds - [F,L]\n'
         )
         htaccess_bytes = htaccess_content.encode('utf-8')
