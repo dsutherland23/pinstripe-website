@@ -211,10 +211,7 @@ def main():
             # Copy public/ assets → web root so Apache serves them directly (no Passenger overhead)
             # Fixes 502 Bad Gateway errors on /images/* routes
             f"mkdir -p {web_root}/images && cp -r {remote_base}/public/* {web_root}/",
-            # Copy .next/static/ → web root _next/static/ so Apache serves JS chunks directly
-            # URL /_next/static/chunks/foo.js → disk: {web_root}/_next/static/chunks/foo.js
-            # Fixes 404 ChunkLoadErrors after a fresh deploy
-            f"rm -rf {web_root}/_next && mkdir -p {web_root}/_next/static && cp -r {remote_base}/.next/static/* {web_root}/_next/static/",
+            f"mkdir -p {web_root}/_next/static && cp -r {remote_base}/.next/static/* {web_root}/_next/static/",
             # Remove legacy PHP API folder in web root to prevent it from intercepting Next.js API requests
             f"rm -rf {web_root}/api",
             # Remove remote zip
