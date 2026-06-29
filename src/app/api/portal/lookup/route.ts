@@ -35,11 +35,14 @@ export async function GET(req: NextRequest) {
     const isAdmin = passcode === adminPasscode || req.headers.get("x-admin-passcode") === adminPasscode;
     const isCustomer = email && booking.customer?.email?.trim().toLowerCase() === email.trim().toLowerCase();
 
+    let isStripeVerified = false;
+
     // Stripe Checkout verification
     if (sessionId && stripe) {
       try {
         const session = await stripe.checkout.sessions.retrieve(sessionId);
         if (session.payment_status === "paid" && session.metadata?.bookingId === id) {
+          isStripeVerified = true;
           const amountInDollars = (session.amount_total || 0) / 100;
           
           // Prevent duplicate logs of the same session
@@ -58,7 +61,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    if (!isAdmin && !isCustomer) {
+    if (!isAdmin && !isCustomer && !isStripeVerified) {
       return NextResponse.json({ error: "Unauthorized access to this booking" }, { status: 401 });
     }
 

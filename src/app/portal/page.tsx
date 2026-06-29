@@ -75,6 +75,89 @@ export default function CustomerPortal() {
   const [chatMediaUrl, setChatMediaUrl] = useState("");
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
+  // --- Stripe Success Redirect States ---
+  const [stripeBooking, setStripeBooking] = useState<Booking | null>(null);
+  const [stripeSuccess, setStripeSuccess] = useState(false);
+  const [stripeSessionId, setStripeSessionId] = useState("");
+  const [stripePassword, setStripePassword] = useState("");
+  const [stripeSignupLoading, setStripeSignupLoading] = useState(false);
+
+  // Parse Stripe Success params on load
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const bookingId = params.get("bookingId");
+      const sessionId = params.get("session_id");
+      const success = params.get("success");
+
+      if (bookingId && sessionId && success === "true") {
+        setStripeSuccess(true);
+        setStripeSessionId(sessionId);
+        setLoading(true);
+        setErrorMsg("");
+
+        fetch(`/api/portal/lookup?id=${encodeURIComponent(bookingId)}&session_id=${encodeURIComponent(sessionId)}&t=${Date.now()}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.booking) {
+              setStripeBooking(data.booking);
+            } else {
+              setErrorMsg(data.error || "Failed to load booking details.");
+            }
+          })
+          .catch((err) => {
+            console.error("Error loading stripe booking:", err);
+            setErrorMsg("Network error loading booking details.");
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }
+    }
+  }, []);
+
+  const handleStripeRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripeBooking || !stripePassword) return;
+    setStripeSignupLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    try {
+      const payload = {
+        action: "signup",
+        email: stripeBooking.customer?.email,
+        password: stripePassword,
+        name: stripeBooking.customer?.name,
+        phone: stripeBooking.customer?.phone,
+        address: stripeBooking.delivery?.address || "",
+        city: stripeBooking.delivery?.city || "",
+        zipCode: stripeBooking.delivery?.zipCode || "",
+      };
+
+      const res = await fetch("/api/portal/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        localStorage.setItem("pinstripe_portal_user", JSON.stringify(data.user));
+        setCurrentUser(data.user);
+        setSuccessMsg("Account created and saved successfully!");
+        setStripeSuccess(false); // transition to dashboard
+        loadUserBookings(data.user.email);
+      } else {
+        setErrorMsg(data.error || "Failed to create account.");
+      }
+    } catch (err) {
+      setErrorMsg("Network error creating account.");
+    } finally {
+      setStripeSignupLoading(false);
+    }
+  };
+
   // Auto-restore session from localStorage
   useEffect(() => {
     const savedUser = localStorage.getItem("pinstripe_portal_user");
@@ -534,7 +617,84 @@ export default function CustomerPortal() {
         )}
 
         {/* ── NOT LOGGED IN VIEWS ────────────────────────────────────────── */}
-        {!currentUser && (
+        {!currentUser && stripeSuccess && (
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.1fr", gap: "2.5rem", alignItems: "start", background: "#111111", border: "1px solid rgba(212,175,55,0.25)", borderRadius: "1.25rem", padding: "2.5rem", boxShadow: "0 10px 40px rgba(0,0,0,0.5)", marginBottom: "3rem" }} className="responsive-grid-auth">
+            
+            {/* Left Column: Success Message & Booking details */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
+                <div style={{ display: "flex", padding: "0.5rem", borderRadius: "50%", background: "rgba(16,185,129,0.1)", color: "#10b981" }}>
+                  <CheckCircle2 size={24} />
+                </div>
+                <div>
+                  <h2 style={{ color: "#ffffff", fontSize: "1.3rem", fontWeight: 800, margin: 0 }}>Payment Successful!</h2>
+                  <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", margin: "0.15rem 0 0" }}>Your transaction has been processed securely.</p>
+                </div>
+              </div>
+
+              {stripeBooking ? (
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.875rem", padding: "1.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "0.75rem", marginBottom: "0.75rem" }}>
+                    <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>Booking Ref:</span>
+                    <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#ffffff", fontFamily: "monospace" }}>{stripeBooking.id}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "0.75rem", marginBottom: "0.75rem" }}>
+                    <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>Customer Name:</span>
+                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#ffffff" }}>{stripeBooking.customer?.name}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "0.75rem", marginBottom: "0.75rem" }}>
+                    <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>Event Date:</span>
+                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#ffffff" }}>{stripeBooking.event?.date}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "0.5rem" }}>
+                    <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)" }}>Amount Paid:</span>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#10b981" }}>${(stripeBooking.amountPaid || 0).toFixed(2)}</span>
+                  </div>
+                  {stripeBooking.paymentStatus && (
+                    <div style={{ marginTop: "0.75rem", display: "inline-flex", padding: "0.25rem 0.625rem", borderRadius: "0.25rem", background: stripeBooking.paymentStatus === "fully_paid" ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)", color: stripeBooking.paymentStatus === "fully_paid" ? "#10b981" : "#f59e0b", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      {stripeBooking.paymentStatus.replace("_", " ")}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>Loading details for booking reference...</p>
+              )}
+              
+              <button 
+                onClick={() => setStripeSuccess(false)}
+                style={{ background: "transparent", border: "none", color: "#D4AF37", fontSize: "0.75rem", cursor: "pointer", fontWeight: 700, marginTop: "1.25rem", padding: 0 }}
+              >
+                ← Back to Login / Search
+              </button>
+            </div>
+
+            {/* Right Column: Save Account Registration Form */}
+            <div style={{ background: "rgba(212,175,55,0.02)", border: "1px dashed rgba(212,175,55,0.2)", borderRadius: "1rem", padding: "2rem" }}>
+              <h3 style={{ color: "#ffffff", fontSize: "1.1rem", fontWeight: 800, margin: "0 0 0.5rem" }}>Save Your Account</h3>
+              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.78rem", margin: "0 0 1.25rem" }}>
+                Enter a password to securely claim this booking and track your order updates in real-time.
+              </p>
+
+              <form onSubmit={handleStripeRegister} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div>
+                  <label style={goldLabel}>Email Address</label>
+                  <input disabled type="email" value={stripeBooking?.customer?.email || ""} style={{ ...inputStyle, background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.05)", cursor: "not-allowed" }} />
+                </div>
+                <div>
+                  <label style={goldLabel}>Set Password</label>
+                  <input required type="password" placeholder="••••••••" value={stripePassword} onChange={e => setStripePassword(e.target.value)} style={inputStyle} />
+                </div>
+                <button type="submit" disabled={stripeSignupLoading || !stripeBooking} style={{ ...btnPrimary, marginTop: "0.5rem" }}>
+                  {stripeSignupLoading ? "Creating..." : <><UserPlus size={14} /> Save & Create Account</>}
+                </button>
+              </form>
+            </div>
+
+          </div>
+        )}
+
+        {/* ── NOT LOGGED IN VIEWS ────────────────────────────────────────── */}
+        {!currentUser && !stripeSuccess && (
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2.5rem", alignItems: "start" }} className="responsive-grid-auth">
             
             {/* Account Login / Signup Card */}
