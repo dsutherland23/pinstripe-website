@@ -213,7 +213,9 @@ export async function initDb(): Promise<void> {
         pay_in_person_enabled TINYINT(1) NOT NULL DEFAULT 1,
         gallery_enabled       TINYINT(1) NOT NULL DEFAULT 1,
         categories_enabled    TINYINT(1) NOT NULL DEFAULT 1,
-        featured_rentals_enabled TINYINT(1) NOT NULL DEFAULT 1
+        featured_rentals_enabled TINYINT(1) NOT NULL DEFAULT 1,
+        deposit_enabled       TINYINT(1) NOT NULL DEFAULT 1,
+        deposit_percentage    INT NOT NULL DEFAULT 50
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
@@ -237,6 +239,18 @@ export async function initDb(): Promise<void> {
 
     try {
       await conn.query("ALTER TABLE settings ADD COLUMN featured_rentals_enabled TINYINT(1) NOT NULL DEFAULT 1");
+    } catch (err) {
+      // Ignore if column already exists
+    }
+
+    try {
+      await conn.query("ALTER TABLE settings ADD COLUMN deposit_enabled TINYINT(1) NOT NULL DEFAULT 1");
+    } catch (err) {
+      // Ignore if column already exists
+    }
+
+    try {
+      await conn.query("ALTER TABLE settings ADD COLUMN deposit_percentage INT NOT NULL DEFAULT 50");
     } catch (err) {
       // Ignore if column already exists
     }
@@ -351,7 +365,7 @@ export async function initDb(): Promise<void> {
     const [setCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM settings");
     if ((setCount as mysql.RowDataPacket[])[0].c === 0) {
       await conn.query(
-        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled, gallery_enabled, categories_enabled, featured_rentals_enabled) VALUES (1, 1, 0, '', 1, 1, 1, 1)"
+        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled, gallery_enabled, categories_enabled, featured_rentals_enabled, deposit_enabled, deposit_percentage) VALUES (1, 1, 0, '', 1, 1, 1, 1, 1, 50)"
       );
     }
   } finally {
@@ -420,7 +434,7 @@ const fallbackStore = {
     { id: "cat-10", name: "Products",             icon: "shopping-bag", featured: false, order: 10 },
   ],
   siteContent: { ...DEFAULT_SITE_CONTENT },
-  settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true },
+  settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50 },
   bookings: [] as Booking[],
   users: [] as User[],
   messages: [] as Message[],
@@ -920,6 +934,8 @@ type SettingsRow = {
   gallery_enabled: number;
   categories_enabled: number;
   featured_rentals_enabled: number;
+  deposit_enabled: number;
+  deposit_percentage: number;
 };
 
 export async function getSettings(): Promise<{
@@ -930,12 +946,14 @@ export async function getSettings(): Promise<{
   galleryEnabled?: boolean;
   categoriesEnabled?: boolean;
   featuredRentalsEnabled?: boolean;
+  depositEnabled?: boolean;
+  depositPercentage?: number;
 }> {
   if (useFallback) return fallbackStore.settings;
   try {
     await ensureInit();
     const rows = await query<SettingsRow>("SELECT * FROM settings WHERE id = 1");
-    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true };
+    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50 };
     return {
       tentPlannerEnabled: Boolean(rows[0].tent_planner_enabled),
       maintenanceMode: Boolean(rows[0].maintenance_mode),
@@ -944,6 +962,8 @@ export async function getSettings(): Promise<{
       galleryEnabled: Boolean(rows[0].gallery_enabled ?? 1),
       categoriesEnabled: Boolean(rows[0].categories_enabled ?? 1),
       featuredRentalsEnabled: Boolean(rows[0].featured_rentals_enabled ?? 1),
+      depositEnabled: Boolean(rows[0].deposit_enabled ?? 1),
+      depositPercentage: Number(rows[0].deposit_percentage ?? 50),
     };
   } catch (err) {
     console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
@@ -960,6 +980,8 @@ export async function updateSettings(updates: {
   galleryEnabled?: boolean;
   categoriesEnabled?: boolean;
   featuredRentalsEnabled?: boolean;
+  depositEnabled?: boolean;
+  depositPercentage?: number;
 }): Promise<void> {
   if (useFallback) {
     fallbackStore.settings = { ...fallbackStore.settings, ...updates };
@@ -997,6 +1019,14 @@ export async function updateSettings(updates: {
     if (updates.featuredRentalsEnabled !== undefined) {
       setClauses.push("featured_rentals_enabled = ?");
       values.push(updates.featuredRentalsEnabled ? 1 : 0);
+    }
+    if (updates.depositEnabled !== undefined) {
+      setClauses.push("deposit_enabled = ?");
+      values.push(updates.depositEnabled ? 1 : 0);
+    }
+    if (updates.depositPercentage !== undefined) {
+      setClauses.push("deposit_percentage = ?");
+      values.push(updates.depositPercentage);
     }
     if (setClauses.length === 0) return;
     values.push(1);

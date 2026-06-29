@@ -62,6 +62,8 @@ export default function CustomerPortal() {
   const [customAmount, setCustomAmount] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [amountToPay, setAmountToPay] = useState<number>(0);
+  const [depositEnabled, setDepositEnabled] = useState(true);
+  const [depositPercentage, setDepositPercentage] = useState(50);
 
   // --- UI Notification States ---
   const [loading, setLoading] = useState(false);
@@ -188,7 +190,7 @@ export default function CustomerPortal() {
     }
   }, []);
 
-  // Fetch inventory on mount to resolve rental item names
+  // Fetch inventory and settings on mount
   useEffect(() => {
     const fetchInventory = async () => {
       try {
@@ -201,7 +203,23 @@ export default function CustomerPortal() {
         console.error("Failed to load inventory:", err);
       }
     };
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch(`/api/settings?t=${Date.now()}`);
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setDepositEnabled(data.depositEnabled !== false);
+          setDepositPercentage(data.depositPercentage ?? 50);
+          if (data.depositEnabled === false) {
+            setPaymentAmountOption("full");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      }
+    };
     fetchInventory();
+    fetchSettings();
   }, []);
 
   const loadUserBookings = async (userEmail: string) => {
@@ -344,12 +362,12 @@ export default function CustomerPortal() {
 
     let amount = 0;
     const total = payingBooking.estimatedTotal;
-    const deposit = total * 0.3;
+    const deposit = depositEnabled ? (total * (depositPercentage / 100)) : total;
     const paid = payingBooking.amountPaid || 0;
     const remaining = total - paid;
     const remainingDeposit = Math.max(0, deposit - paid);
 
-    if (paymentAmountOption === "deposit") {
+    if (paymentAmountOption === "deposit" && depositEnabled) {
       amount = remainingDeposit > 0 ? remainingDeposit : deposit;
     } else if (paymentAmountOption === "full") {
       amount = remaining;
@@ -827,6 +845,8 @@ export default function CustomerPortal() {
               badgeColors={getBookingBadgeColor(guestBooking)}
               payBadge={getPaymentBadgeColor(guestBooking)}
               inventory={inventory}
+              depositEnabled={depositEnabled}
+              depositPercentage={depositPercentage}
             />
           </div>
         )}
@@ -906,6 +926,8 @@ export default function CustomerPortal() {
                         badgeColors={getBookingBadgeColor(booking)}
                         payBadge={getPaymentBadgeColor(booking)}
                         inventory={inventory}
+                        depositEnabled={depositEnabled}
+                        depositPercentage={depositPercentage}
                       />
                     ))
                   )}
@@ -1285,23 +1307,25 @@ export default function CustomerPortal() {
                     {/* Select amount */}
                     <div>
                       <label style={goldLabel}>Select Payment Amount</label>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem" }}>
-                        <button 
-                          type="button" 
-                          onClick={() => setPaymentAmountOption("deposit")}
-                          style={{
-                            padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
-                            background: paymentAmountOption === "deposit" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
-                            border: paymentAmountOption === "deposit" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
-                            color: paymentAmountOption === "deposit" ? "#ffffff" : "rgba(255,255,255,0.5)"
-                          }}
-                        >
-                          30% Deposit Due<br />
-                          ${(payingBooking.estimatedTotal * 0.3 - (payingBooking.amountPaid || 0) > 0 
-                            ? payingBooking.estimatedTotal * 0.3 - (payingBooking.amountPaid || 0) 
-                            : payingBooking.estimatedTotal * 0.3
-                          ).toFixed(2)}
-                        </button>
+                      <div style={{ display: "grid", gridTemplateColumns: depositEnabled ? "1fr 1fr 1fr" : "1fr 1fr", gap: "0.5rem" }}>
+                        {depositEnabled && (
+                          <button 
+                            type="button" 
+                            onClick={() => setPaymentAmountOption("deposit")}
+                            style={{
+                              padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
+                              background: paymentAmountOption === "deposit" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
+                              border: paymentAmountOption === "deposit" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
+                              color: paymentAmountOption === "deposit" ? "#ffffff" : "rgba(255,255,255,0.5)"
+                            }}
+                          >
+                            {depositPercentage}% Deposit Due<br />
+                            ${(payingBooking.estimatedTotal * (depositPercentage / 100) - (payingBooking.amountPaid || 0) > 0 
+                              ? payingBooking.estimatedTotal * (depositPercentage / 100) - (payingBooking.amountPaid || 0) 
+                              : payingBooking.estimatedTotal * (depositPercentage / 100)
+                            ).toFixed(2)}
+                          </button>
+                        )}
                         <button 
                           type="button" 
                           onClick={() => setPaymentAmountOption("full")}
@@ -1375,10 +1399,12 @@ interface BookingCardProps {
   onPayClick: (b: Booking) => void;
   onChatClick: (b: Booking) => void;
   inventory: any[];
+  depositEnabled: boolean;
+  depositPercentage: number;
 }
 
-function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, onChatClick, inventory }: BookingCardProps) {
-  const deposit = booking.estimatedTotal * 0.3;
+function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, onChatClick, inventory, depositEnabled, depositPercentage }: BookingCardProps) {
+  const deposit = booking.estimatedTotal * (depositPercentage / 100);
   const paid = booking.amountPaid || 0;
   const remaining = booking.estimatedTotal - paid;
   
@@ -1530,7 +1556,9 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
           <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>Estimated Total</span>
           <span style={{ fontSize: "1.5rem", color: "#D4AF37", fontWeight: 900, margin: "0.15rem 0" }}>${booking.estimatedTotal.toFixed(2)}</span>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.15rem", fontSize: "0.72rem", color: "rgba(255,255,255,0.4)" }}>
-            <span>Deposit (30%): ${deposit.toFixed(2)}</span>
+            {depositEnabled && (
+              <span>Deposit ({depositPercentage}%): ${deposit.toFixed(2)}</span>
+            )}
             <span>Paid: <strong style={{ color: paid > 0 ? "#10b981" : "inherit" }}>${paid.toFixed(2)}</strong></span>
             {remaining > 0 ? (
               <span>Remaining Balance: ${remaining.toFixed(2)}</span>

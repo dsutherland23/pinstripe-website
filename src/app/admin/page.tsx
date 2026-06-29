@@ -146,7 +146,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings]     = useState<Booking[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [siteContent, setSiteContent] = useState<SiteContent | null>(null);
-  const [settings, setSettings]     = useState({ tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true });
+  const [settings, setSettings]     = useState({ tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50 });
 
   // UI state
   const [loading, setLoading]       = useState(false);
@@ -292,7 +292,7 @@ export default function AdminDashboard() {
       if (bkRes.ok)   { const d = await bkRes.json();      setBookings(d.bookings || []); }
       if (catRes.ok)  { const d = await catRes.json();     setCategories(d.categories || []); }
       if (contentRes.ok) { const d = await contentRes.json(); setSiteContent(d.content); setContentForm(d.content); }
-      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true, categoriesEnabled: d.categoriesEnabled ?? true, featuredRentalsEnabled: d.featuredRentalsEnabled ?? true }); }
+      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true, categoriesEnabled: d.categoriesEnabled ?? true, featuredRentalsEnabled: d.featuredRentalsEnabled ?? true, depositEnabled: d.depositEnabled ?? true, depositPercentage: d.depositPercentage ?? 50 }); }
     } catch { setErrorMsg("Network error loading data."); }
     finally { setLoading(false); }
   };
@@ -1744,6 +1744,7 @@ export default function AdminDashboard() {
                     { key: "galleryEnabled",     label: "Gallery / Instagram",  desc: "Show the Gallery / Instagram section on the homepage." },
                     { key: "maintenanceMode",    label: "Maintenance Mode",     desc: "Put the public site into maintenance — admins still have access." },
                     { key: "payInPersonEnabled", label: "Pay in Person Option", desc: "Allow users to choose Pay in Person (Cash / Check / Zelle) during booking." },
+                    { key: "depositEnabled",     label: "Collect Reservation Deposit", desc: "Require a deposit amount to confirm bookings online." },
                   ].map(toggle => (
                     <div key={toggle.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                       <div>
@@ -1756,6 +1757,33 @@ export default function AdminDashboard() {
                       />
                     </div>
                   ))}
+                </div>
+
+                {/* Deposit Configuration */}
+                <div style={cardStyle}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", marginBottom: "1.25rem" }}>Deposit Configuration</h3>
+                  <div>
+                    <label style={labelStyle}>Deposit Percentage (%)</label>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      max="100" 
+                      disabled={!settings.depositEnabled}
+                      value={settings.depositPercentage} 
+                      onChange={e => {
+                        const val = Math.min(100, Math.max(1, parseInt(e.target.value) || 1));
+                        setSettings(s => ({ ...s, depositPercentage: val }));
+                      }} 
+                      style={{
+                        ...inputStyle,
+                        opacity: settings.depositEnabled ? 1 : 0.5,
+                        cursor: settings.depositEnabled ? "text" : "not-allowed"
+                      }} 
+                    />
+                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem", marginTop: "0.35rem" }}>
+                      Configure the percentage of the estimated total required to confirm a booking (e.g. 50%). Only active when "Collect Reservation Deposit" is toggled on.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Analytics */}
