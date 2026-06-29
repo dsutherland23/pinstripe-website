@@ -145,6 +145,7 @@ def main():
     resend_api_key = os.environ.get("RESEND_API_KEY")
     stripe_secret_key = os.environ.get("STRIPE_SECRET_KEY")
     stripe_webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
+    stripe_pub_key = os.environ.get("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY")
     supabase_url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
     supabase_anon_key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
     
@@ -260,6 +261,7 @@ def main():
         safe_resend = (resend_api_key or '').replace('"', '\\"')
         safe_stripe = (stripe_secret_key or '').replace('"', '\\"')
         safe_webhook = (stripe_webhook_secret or '').replace('"', '\\"')
+        safe_pub = (stripe_pub_key or '').replace('"', '\\"')
         safe_supabase_url = (supabase_url or '').replace('"', '\\"')
         safe_supabase_key = (supabase_anon_key or '').replace('"', '\\"')
         
@@ -284,6 +286,7 @@ def main():
             f'PassengerEnvVar RESEND_API_KEY {safe_resend}\n'
             f'PassengerEnvVar STRIPE_SECRET_KEY {safe_stripe}\n'
             f'PassengerEnvVar STRIPE_WEBHOOK_SECRET {safe_webhook}\n'
+            f'PassengerEnvVar NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY {safe_pub}\n'
             f'PassengerEnvVar NEXT_PUBLIC_SUPABASE_URL "{safe_supabase_url}"\n'
             f'PassengerEnvVar NEXT_PUBLIC_SUPABASE_ANON_KEY "{safe_supabase_key}"\n'
             # Static file passthrough: web root is ~/ on Hostinger.
@@ -323,6 +326,7 @@ def main():
             f"RESEND_API_KEY={resend_api_key or ''}\n"
             f"STRIPE_SECRET_KEY={stripe_secret_key or ''}\n"
             f"STRIPE_WEBHOOK_SECRET={stripe_webhook_secret or ''}\n"
+            f"NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY={stripe_pub_key or ''}\n"
             f"NEXT_PUBLIC_SUPABASE_URL={supabase_url or ''}\n"
             f"NEXT_PUBLIC_SUPABASE_ANON_KEY={supabase_anon_key or ''}\n"
         )
