@@ -167,20 +167,20 @@ def main():
     # 2. Zip files (standalone-aware)
     zip_project(local_zip)
     
-    # 3. Upload via SFTP
-    print(f"Connecting to {host}:{port} via SFTP...")
+    # 3. Upload via FTP
+    print(f"Connecting to FTP {host}:21...")
     try:
-        transport = paramiko.Transport((host, port))
-        transport.connect(username=user, password=password)
-        sftp = paramiko.SFTPClient.from_transport(transport)
+        import ftplib
+        ftp = ftplib.FTP(host, timeout=30)
+        ftp.login(user, password)
         
-        print(f"Uploading {local_zip} to {remote_zip}...")
-        sftp.put(local_zip, remote_zip)
-        sftp.close()
-        transport.close()
+        print(f"Uploading {local_zip} via FTP...")
+        with open(local_zip, 'rb') as f:
+            ftp.storbinary(f'STOR {local_zip}', f)
+        ftp.quit()
         print("Upload complete.")
     except Exception as e:
-        print("SFTP Upload failed:", e)
+        print("FTP Upload failed:", e)
         if os.path.exists(local_zip):
             os.remove(local_zip)
         sys.exit(1)
@@ -294,14 +294,15 @@ def main():
             '</IfModule>\n'
         )
         
-        transport2 = paramiko.Transport((host, port))
-        transport2.connect(username=user, password=password)
-        sftp2 = paramiko.SFTPClient.from_transport(transport2)
+        # Write configuration files via FTP
+        import ftplib
+        import io
+        ftp2 = ftplib.FTP(host, timeout=30)
+        ftp2.login(user, password)
         
         # Write .htaccess to web root (domains/pinstripesrentals.com/public_html/.htaccess)
         htaccess_path = "domains/pinstripesrentals.com/public_html/.htaccess"
-        with sftp2.open(htaccess_path, 'w') as f:
-            f.write(htaccess_content)
+        ftp2.storbinary(f'STOR {htaccess_path}', io.BytesIO(htaccess_content.encode('utf-8')))
         
         # Write .env.secure (raw file - no shell interpretation, preserves all special chars)
         secure_env_content = (
@@ -317,11 +318,8 @@ def main():
             f"NEXT_PUBLIC_SUPABASE_URL={supabase_url or ''}\n"
             f"NEXT_PUBLIC_SUPABASE_ANON_KEY={supabase_anon_key or ''}\n"
         )
-        with sftp2.open(f"{remote_base}/.env.secure", 'w') as f:
-            f.write(secure_env_content)
-        
-        sftp2.close()
-        transport2.close()
+        ftp2.storbinary(f'STOR {remote_base}/.env.secure', io.BytesIO(secure_env_content.encode('utf-8')))
+        ftp2.quit()
         
         # Set restrictive permissions on .env.secure
         ssh3 = paramiko.SSHClient()
