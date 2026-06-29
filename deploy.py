@@ -322,6 +322,7 @@ def main():
             f"ADMIN_PASSCODE={admin_passcode or ''}\n"
             f"RESEND_API_KEY={resend_api_key or ''}\n"
             f"STRIPE_SECRET_KEY={stripe_secret_key or ''}\n"
+            f"STRIPE_WEBHOOK_SECRET={stripe_webhook_secret or ''}\n"
             f"NEXT_PUBLIC_SUPABASE_URL={supabase_url or ''}\n"
             f"NEXT_PUBLIC_SUPABASE_ANON_KEY={supabase_anon_key or ''}\n"
         )
