@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import StripePaymentForm from "@/components/StripePaymentForm";
 import { 
   Search, CheckCircle2, Clock, Truck, PackageCheck, FileText, 
   CalendarDays, MapPin, Users, CreditCard, User, LogOut, 
@@ -59,9 +60,8 @@ export default function CustomerPortal() {
   const [payingBooking, setPayingBooking] = useState<Booking | null>(null);
   const [paymentAmountOption, setPaymentAmountOption] = useState<"deposit" | "full" | "custom">("deposit");
   const [customAmount, setCustomAmount] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [amountToPay, setAmountToPay] = useState<number>(0);
 
   // --- UI Notification States ---
   const [loading, setLoading] = useState(false);
@@ -112,6 +112,22 @@ export default function CustomerPortal() {
           .finally(() => {
             setLoading(false);
           });
+      }
+    }
+  }, []);
+
+  // Parse Payment Element Success redirect params on load
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const bookingId = params.get("bookingId");
+      const paymentSuccess = params.get("payment_success");
+      const paymentAmount = params.get("payment_amount");
+
+      if (bookingId && paymentSuccess === "true") {
+        setSuccessMsg(`Payment of $${parseFloat(paymentAmount || "0").toFixed(2)} processed successfully!`);
+        // Clean up URL query parameters so refreshing doesn't show the success message again
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
   }, []);
@@ -354,30 +370,27 @@ export default function CustomerPortal() {
         body: JSON.stringify({
           bookingId: payingBooking.id,
           amount,
-          paymentMethod: "Credit Card",
-          cardDetails: {
-            number: cardNumber,
-            expiry: cardExpiry,
-            cvc: cardCvc,
-          },
         }),
       });
 
       const data = await res.json();
-      if (res.ok && data.success && data.booking) {
-        setSuccessMsg(`Payment of $${amount.toFixed(2)} processed successfully!`);
-        setPayingBooking(null);
-        // Clear card details
-        setCardNumber("");
-        setCardExpiry("");
-        setCardCvc("");
-        setCustomAmount("");
-
-        // Refresh bookings
-        if (currentUser) {
-          loadUserBookings(currentUser.email);
+      if (res.ok && data.success) {
+        if (data.simulated) {
+          // Simulation fallback mode
+          setSuccessMsg(`Simulated payment of $${amount.toFixed(2)} processed successfully!`);
+          setPayingBooking(null);
+          setCustomAmount("");
+          if (currentUser) {
+            loadUserBookings(currentUser.email);
+          } else {
+            setGuestBooking(data.booking);
+          }
+        } else if (data.clientSecret) {
+          // Store Stripe elements payment intent secret
+          setClientSecret(data.clientSecret);
+          setAmountToPay(amount);
         } else {
-          setGuestBooking(data.booking);
+          setErrorMsg("Could not initiate secure checkout session.");
         }
       } else {
         setErrorMsg(data.error || "Payment processing failed.");
@@ -1240,129 +1253,109 @@ export default function CustomerPortal() {
                   </div>
                 </div>
 
-                <form onSubmit={handlePaymentSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                  {/* Select amount */}
-                  <div>
-                    <label style={goldLabel}>Select Payment Amount</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem" }}>
-                      <button 
-                        type="button" 
-                        onClick={() => setPaymentAmountOption("deposit")}
-                        style={{
-                          padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
-                          background: paymentAmountOption === "deposit" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
-                          border: paymentAmountOption === "deposit" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
-                          color: paymentAmountOption === "deposit" ? "#ffffff" : "rgba(255,255,255,0.5)"
-                        }}
-                      >
-                        30% Deposit Due<br />
-                        ${(payingBooking.estimatedTotal * 0.3 - (payingBooking.amountPaid || 0) > 0 
-                          ? payingBooking.estimatedTotal * 0.3 - (payingBooking.amountPaid || 0) 
-                          : payingBooking.estimatedTotal * 0.3
-                        ).toFixed(2)}
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setPaymentAmountOption("full")}
-                        style={{
-                          padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
-                          background: paymentAmountOption === "full" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
-                          border: paymentAmountOption === "full" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
-                          color: paymentAmountOption === "full" ? "#ffffff" : "rgba(255,255,255,0.5)"
-                        }}
-                      >
-                        Full Balance<br />
-                        ${(payingBooking.estimatedTotal - (payingBooking.amountPaid || 0)).toFixed(2)}
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setPaymentAmountOption("custom")}
-                        style={{
-                          padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
-                          background: paymentAmountOption === "custom" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
-                          border: paymentAmountOption === "custom" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
-                          color: paymentAmountOption === "custom" ? "#ffffff" : "rgba(255,255,255,0.5)"
-                        }}
-                      >
-                        Custom Amount<br />
-                        &nbsp;
-                      </button>
-                    </div>
-                  </div>
-
-                  {paymentAmountOption === "custom" && (
+                {clientSecret ? (
+                  <StripePaymentForm
+                    clientSecret={clientSecret}
+                    amount={amountToPay}
+                    bookingId={payingBooking.id}
+                    onSuccess={() => {
+                      setSuccessMsg(`Payment of $${amountToPay.toFixed(2)} processed successfully!`);
+                      setPayingBooking(null);
+                      setClientSecret(null);
+                      setCustomAmount("");
+                      if (currentUser) {
+                        loadUserBookings(currentUser.email);
+                      } else {
+                        // Refresh guest booking
+                        fetch(`/api/portal/lookup?id=${encodeURIComponent(payingBooking.id)}&t=${Date.now()}`)
+                          .then((res) => res.json())
+                          .then((data) => {
+                            if (data.success && data.booking) {
+                              setGuestBooking(data.booking);
+                            }
+                          });
+                      }
+                    }}
+                    onCancel={() => {
+                      setClientSecret(null);
+                    }}
+                  />
+                ) : (
+                  <form onSubmit={handlePaymentSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                    {/* Select amount */}
                     <div>
-                      <label style={goldLabel}>Custom Payment Amount ($)</label>
-                      <input 
-                        required 
-                        type="number" 
-                        step="0.01"
-                        min="1"
-                        placeholder="50.00" 
-                        value={customAmount} 
-                        onChange={e => setCustomAmount(e.target.value)} 
-                        style={inputStyle} 
-                      />
+                      <label style={goldLabel}>Select Payment Amount</label>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem" }}>
+                        <button 
+                          type="button" 
+                          onClick={() => setPaymentAmountOption("deposit")}
+                          style={{
+                            padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
+                            background: paymentAmountOption === "deposit" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
+                            border: paymentAmountOption === "deposit" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
+                            color: paymentAmountOption === "deposit" ? "#ffffff" : "rgba(255,255,255,0.5)"
+                          }}
+                        >
+                          30% Deposit Due<br />
+                          ${(payingBooking.estimatedTotal * 0.3 - (payingBooking.amountPaid || 0) > 0 
+                            ? payingBooking.estimatedTotal * 0.3 - (payingBooking.amountPaid || 0) 
+                            : payingBooking.estimatedTotal * 0.3
+                          ).toFixed(2)}
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => setPaymentAmountOption("full")}
+                          style={{
+                            padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
+                            background: paymentAmountOption === "full" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
+                            border: paymentAmountOption === "full" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
+                            color: paymentAmountOption === "full" ? "#ffffff" : "rgba(255,255,255,0.5)"
+                          }}
+                        >
+                          Full Balance<br />
+                          ${(payingBooking.estimatedTotal - (payingBooking.amountPaid || 0)).toFixed(2)}
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => setPaymentAmountOption("custom")}
+                          style={{
+                            padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
+                            background: paymentAmountOption === "custom" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
+                            border: paymentAmountOption === "custom" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
+                            color: paymentAmountOption === "custom" ? "#ffffff" : "rgba(255,255,255,0.5)"
+                          }}
+                        >
+                          Custom Amount<br />
+                          &nbsp;
+                        </button>
+                      </div>
                     </div>
-                  )}
 
-                  {/* Card Info */}
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.85rem", color: "#ffffff" }}>
-                      <CreditCard size={15} color="#D4AF37" />
-                      <span style={{ fontSize: "0.78rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>Payment Details</span>
-                    </div>
-
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    {paymentAmountOption === "custom" && (
                       <div>
-                        <label style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", marginBottom: "0.25rem", display: "block" }}>Card Number</label>
+                        <label style={goldLabel}>Custom Payment Amount ($)</label>
                         <input 
                           required 
-                          type="text" 
-                          placeholder="4111 2222 3333 4444" 
-                          value={cardNumber} 
-                          onChange={e => setCardNumber(e.target.value.replace(/\s?/g, "").replace(/(\d{4})/g, "$1 ").trim())}
-                          maxLength={19}
+                          type="number" 
+                          step="0.01"
+                          min="1"
+                          placeholder="50.00" 
+                          value={customAmount} 
+                          onChange={e => setCustomAmount(e.target.value)} 
                           style={inputStyle} 
                         />
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-                        <div>
-                          <label style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", marginBottom: "0.25rem", display: "block" }}>Expiration Date</label>
-                          <input 
-                            required 
-                            type="text" 
-                            placeholder="MM/YY" 
-                            value={cardExpiry} 
-                            onChange={e => setCardExpiry(e.target.value)} 
-                            maxLength={5}
-                            style={inputStyle} 
-                          />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", marginBottom: "0.25rem", display: "block" }}>Security Code (CVC)</label>
-                          <input 
-                            required 
-                            type="password" 
-                            placeholder="123" 
-                            value={cardCvc} 
-                            onChange={e => setCardCvc(e.target.value)} 
-                            maxLength={4}
-                            style={inputStyle} 
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    )}
 
-                  <button type="submit" disabled={loading} style={{ ...btnPrimary, marginTop: "1rem" }}>
-                    {loading ? "Authorizing Card..." : <><CheckCircle2 size={15} /> Authorize Transaction</>}
-                  </button>
-                  <p style={{ margin: 0, fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem" }}>
-                    <Landmark size={11} /> 
-                    Payments are securely simulated using commercial Sandbox encryption.
-                  </p>
-                </form>
+                    <button type="submit" disabled={loading} style={{ ...btnPrimary, marginTop: "1rem" }}>
+                      {loading ? "Preparing Secure Payment..." : <><CreditCard size={15} /> Continue to Secure Payment</>}
+                    </button>
+                    <p style={{ margin: 0, fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem" }}>
+                      <Landmark size={11} /> 
+                      Payments are securely processed via Stripe encrypted gateway.
+                    </p>
+                  </form>
+                )}
               </div>
             </div>
           </div>
