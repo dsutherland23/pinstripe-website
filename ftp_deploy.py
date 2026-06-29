@@ -124,13 +124,8 @@ def main():
         ftp.login(user, password)
         print("FTP Login successful!")
         
-        # Rename existing .htaccess if any to temporarily disable Passenger (allows PHP to run)
-        try:
-            ftp.rename(f"{public_html}/.htaccess", f"{public_html}/.htaccess.bak")
-            print("Temporarily renamed existing .htaccess to .htaccess.bak to disable Passenger.")
-            has_htaccess_bak = True
-        except Exception:
-            print("No existing .htaccess found to rename (or rename failed).")
+        # We keep the existing .htaccess active so Passenger doesn't return a 503,
+        # and Apache will directly serve the PHP helper because of the static file rule.
 
         # Upload project.zip
         print(f"Uploading {local_zip}...")
