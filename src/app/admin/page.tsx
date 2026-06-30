@@ -32,6 +32,7 @@ interface Booking {
   paymentStatus?: "unpaid" | "deposit_paid" | "fully_paid";
   payments?: Array<{ id: string; amount: number; method: string; timestamp: string }>;
   hasUnreadMessages?: boolean;
+  discount?: number;
 }
 
 interface Category {
@@ -146,7 +147,18 @@ export default function AdminDashboard() {
   const [bookings, setBookings]     = useState<Booking[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [siteContent, setSiteContent] = useState<SiteContent | null>(null);
-  const [settings, setSettings]     = useState({ tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50 });
+  const [settings, setSettings]     = useState({ 
+    tentPlannerEnabled: true, 
+    maintenanceMode: false, 
+    analyticsId: "", 
+    payInPersonEnabled: true, 
+    galleryEnabled: true, 
+    categoriesEnabled: true, 
+    featuredRentalsEnabled: true, 
+    depositEnabled: true, 
+    depositPercentage: 50,
+    promoCodes: [] as Array<{ code: string; type: "percent" | "flat"; value: number }>
+  });
 
   // UI state
   const [loading, setLoading]       = useState(false);
@@ -184,6 +196,7 @@ export default function AdminDashboard() {
     eventType: "Offline Block",
     eventLocation: "Warehouse / Storage",
     notes: "Manual offline block/booking created from admin panel.",
+    discount: "0",
   });
 
   // Payment modal state
@@ -292,7 +305,7 @@ export default function AdminDashboard() {
       if (bkRes.ok)   { const d = await bkRes.json();      setBookings(d.bookings || []); }
       if (catRes.ok)  { const d = await catRes.json();     setCategories(d.categories || []); }
       if (contentRes.ok) { const d = await contentRes.json(); setSiteContent(d.content); setContentForm(d.content); }
-      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true, categoriesEnabled: d.categoriesEnabled ?? true, featuredRentalsEnabled: d.featuredRentalsEnabled ?? true, depositEnabled: d.depositEnabled ?? true, depositPercentage: d.depositPercentage ?? 50 }); }
+      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true, categoriesEnabled: d.categoriesEnabled ?? true, featuredRentalsEnabled: d.featuredRentalsEnabled ?? true, depositEnabled: d.depositEnabled ?? true, depositPercentage: d.depositPercentage ?? 50, promoCodes: d.promoCodes ?? [] }); }
     } catch { setErrorMsg("Network error loading data."); }
     finally { setLoading(false); }
   };
@@ -472,7 +485,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { itemId, quantity, date, customerName, customerEmail, customerPhone, eventType, eventLocation, notes } = bookingForm;
+      const { itemId, quantity, date, customerName, customerEmail, customerPhone, eventType, eventLocation, notes, discount } = bookingForm;
       const parsedQty = parseInt(quantity) || 1;
 
       const payload = {
@@ -495,6 +508,7 @@ export default function AdminDashboard() {
           paymentMethod: "Offline Block",
           status: "confirmed",
           notes,
+          discount: parseFloat(discount) || 0,
         }
       };
 
@@ -521,6 +535,7 @@ export default function AdminDashboard() {
           eventType: "Offline Block",
           eventLocation: "Warehouse / Storage",
           notes: "Manual offline block/booking created from admin panel.",
+          discount: "0",
         });
         loadAll();
       } else {
@@ -1360,6 +1375,19 @@ export default function AdminDashboard() {
                           style={inputStyle}
                         />
                       </div>
+
+                      <div>
+                        <label style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", fontWeight: 700, textTransform: "uppercase", display: "block", marginBottom: "0.35rem" }}>Discount ($)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={bookingForm.discount}
+                          onChange={e => setBookingForm({ ...bookingForm, discount: e.target.value })}
+                          style={inputStyle}
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -1530,7 +1558,11 @@ export default function AdminDashboard() {
                           </p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", justifyContent: "center", gap: "0.25rem" }}>
-                          <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>Total</p>
+                          <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+                            {booking.discount && booking.discount > 0 ? (
+                              <span>Subtotal: {fmt(booking.estimatedTotal + booking.discount)} (Discount: -{fmt(booking.discount)})</span>
+                            ) : "Total"}
+                          </p>
                           <p style={{ fontSize: "1.5rem", color: "#D4AF37", fontWeight: 900, margin: 0 }}>{fmt(booking.estimatedTotal)}</p>
                           <div style={{ margin: "0.1rem 0" }}>
                             <Badge
@@ -1796,6 +1828,69 @@ export default function AdminDashboard() {
                     <label style={labelStyle}>Google Analytics ID (G-XXXXXXXXXX)</label>
                     <input type="text" value={settings.analyticsId} onChange={e => setSettings(s => ({ ...s, analyticsId: e.target.value }))} placeholder="G-XXXXXXXXXX" style={inputStyle} />
                   </div>
+                </div>
+
+                {/* Promo Codes Configuration */}
+                <div style={cardStyle}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Active Promo Codes</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const code = prompt("Enter promo code name (e.g. SUMMER15):");
+                        if (!code) return;
+                        const formattedCode = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+                        if (!formattedCode) return;
+                        if (settings.promoCodes.some(c => c.code === formattedCode)) {
+                          alert("Promo code already exists!");
+                          return;
+                        }
+                        const valStr = prompt("Enter discount value (e.g. 15 for 15% off, or 25 for $25.00 off):");
+                        if (!valStr) return;
+                        const value = parseFloat(valStr);
+                        if (isNaN(value) || value <= 0) {
+                          alert("Invalid discount value.");
+                          return;
+                        }
+                        const type = confirm("Is this a percentage discount? (Click Cancel for flat dollar discount)") ? "percent" : "flat";
+                        setSettings(s => ({
+                          ...s,
+                          promoCodes: [...s.promoCodes, { code: formattedCode, type, value }]
+                        }));
+                      }}
+                      style={{ background: "transparent", border: "1px solid rgba(212,175,55,0.4)", borderRadius: "0.25rem", padding: "0.2rem 0.5rem", color: "#D4AF37", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                    >
+                      + Add Promo Code
+                    </button>
+                  </h3>
+                  {settings.promoCodes.length === 0 ? (
+                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.78rem" }}>No active promo codes defined.</p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      {settings.promoCodes.map((pc, idx) => (
+                        <div key={pc.code} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 0.75rem", borderRadius: "0.375rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                          <div>
+                            <span style={{ fontFamily: "monospace", fontWeight: 800, color: "#ffffff", fontSize: "0.85rem", marginRight: "0.5rem" }}>{pc.code}</span>
+                            <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)" }}>
+                              ({pc.type === "percent" ? `${pc.value}% off` : `$${pc.value} off`})
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSettings(s => ({
+                                ...s,
+                                promoCodes: s.promoCodes.filter((_, i) => i !== idx)
+                              }));
+                            }}
+                            style={{ background: "transparent", border: "none", color: "#ef4444", fontSize: "0.72rem", fontWeight: 600, cursor: "pointer", padding: 0 }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <button

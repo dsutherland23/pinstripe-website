@@ -48,21 +48,24 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "create" && body.booking) {
-      const { customer, event, delivery, items, notes } = body.booking;
+      const { customer, event, delivery, items, notes, discount: bodyDiscount } = body.booking;
 
       // Calculate itemCount and estimatedTotal dynamically
       const inventory = await getInventory();
       let itemCount = 0;
-      let estimatedTotal = 0;
+      let subtotal = 0;
 
       for (const [itemId, qty] of Object.entries(items || {})) {
         const item = inventory.find((i) => i.id === itemId);
         const quantity = Number(qty);
         if (item && quantity > 0) {
           itemCount += quantity;
-          estimatedTotal += item.price * quantity;
+          subtotal += item.price * quantity;
         }
       }
+
+      const discount = Number(bodyDiscount) || 0;
+      const estimatedTotal = Math.max(0, subtotal - discount);
 
       const newBooking = {
         id: body.booking.id || "PSR-MANUAL-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
@@ -85,6 +88,7 @@ export async function POST(req: NextRequest) {
         items: items || {},
         itemCount,
         estimatedTotal,
+        discount,
         paymentMethod: body.booking.paymentMethod || "Offline Block",
         status: body.booking.status || "confirmed",
         notes: notes || "Manual offline block/booking created from admin panel.",

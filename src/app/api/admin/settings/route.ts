@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       featuredRentalsEnabled: body.featuredRentalsEnabled,
       depositEnabled: body.depositEnabled,
       depositPercentage: body.depositPercentage,
+      promoCodes: body.promoCodes,
     });
     return NextResponse.json({ success: true });
   } catch (err) {

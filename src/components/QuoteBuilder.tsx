@@ -76,6 +76,26 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   const [eventLoc, setEventLoc] = useState("");
   const [guestCount, setGuestCount] = useState("50");
 
+  const [promoCodes, setPromoCodes] = useState<Array<{ code: string; type: "percent" | "flat"; value: number }>>([]);
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; type: "percent" | "flat"; value: number } | null>(null);
+  const [promoError, setPromoError] = useState("");
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        if (data.success && data.promoCodes) {
+          setPromoCodes(data.promoCodes);
+        }
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   // Fetch availability when date is changed
   useEffect(() => {
     if (!eventDate || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) return;
@@ -329,6 +349,11 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
         return sum + itemTotal;
       }, 0);
 
+  const discount = appliedPromo
+    ? (appliedPromo.type === "percent" ? total * (appliedPromo.value / 100) : appliedPromo.value)
+    : 0;
+  const netTotal = Math.max(0, total - discount);
+
   const steps = ["Event Info", "Select Rentals", "Your Details"];
 
   return (
@@ -521,7 +546,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                     ["Guests", guestCount],
                     ["Delivery Address", city === "Other" ? `${address}, ${customCity} ${zipCode} (Extended Area)` : `${address}, ${city} ${zipCode}`],
                     ["Payment Choice", paymentMethod],
-                    ["Estimated Total", `$${total.toFixed(2)}`],
+                    ...(appliedPromo ? [["Subtotal", `$${total.toFixed(2)}`], ["Discount", `-$${discount.toFixed(2)}`]] : []),
+                    ["Estimated Total", `$${netTotal.toFixed(2)}`],
                   ].map(([label, value]) => (
                     <div key={label} style={{ gridColumn: label === "Delivery Address" ? "span 2" : "auto" }}>
                       <div
@@ -654,7 +680,9 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       zipCode,
                       notes: finalNotes,
                       paymentMethod,
-                      estimatedTotal: total,
+                      estimatedTotal: netTotal,
+                      discount,
+                      promoCode: appliedPromo?.code,
                     }),
                   });
                   const json = await res.json();
@@ -1485,6 +1513,72 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       <strong>100% Free Rain-Check Guarantee:</strong> Hampton Roads weather predicts rain or high winds? Reschedule your rental date completely free of charge up to 24 hours prior!
                     </span>
                   </div>
+
+                  {/* Promo Code Entry */}
+                  <div style={{ marginTop: "0.75rem" }}>
+                    <label style={labelStyle}>Have a Promo Code?</label>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <input
+                        type="text"
+                        className="field"
+                        placeholder="ENTER CODE"
+                        value={promoCodeInput}
+                        onChange={(e) => {
+                          setPromoCodeInput(e.target.value.toUpperCase());
+                          setPromoError("");
+                        }}
+                        style={{ textTransform: "uppercase", width: "auto", flexGrow: 1 }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const code = promoCodeInput.trim().toUpperCase();
+                          if (!code) return;
+                          const found = promoCodes.find((c) => c.code === code);
+                          if (found) {
+                            setAppliedPromo(found);
+                            setPromoError("");
+                          } else {
+                            setPromoError("Invalid promo code.");
+                            setAppliedPromo(null);
+                          }
+                        }}
+                        style={{
+                          padding: "0 1.25rem",
+                          background: "var(--bg-secondary)",
+                          border: "1.5px solid var(--border-secondary)",
+                          borderRadius: "0.875rem",
+                          color: "var(--text-primary)",
+                          fontSize: "0.7rem",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          textTransform: "uppercase"
+                        }}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {promoError && (
+                      <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", margin: 0 }}>{promoError}</p>
+                    )}
+                    {appliedPromo && (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.35rem", padding: "0.35rem 0.5rem", borderRadius: "0.375rem", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                        <span style={{ fontSize: "0.72rem", color: "#22c55e", fontWeight: 700 }}>
+                          Code {appliedPromo.code} applied! ({appliedPromo.type === "percent" ? `${appliedPromo.value}% off` : `$${appliedPromo.value} off`})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAppliedPromo(null);
+                            setPromoCodeInput("");
+                          }}
+                          style={{ background: "transparent", border: "none", color: "#ef4444", fontSize: "0.72rem", cursor: "pointer", padding: 0, fontWeight: 600 }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
@@ -1501,10 +1595,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
               >
                 <div>
                   <div style={{ fontFamily: "var(--font-heading)", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)", opacity: 0.7 }}>
-                    Estimated Total
+                    {appliedPromo ? (
+                      <span>Subtotal: ${total.toFixed(2)} | Discount: -${discount.toFixed(2)}</span>
+                    ) : "Estimated Total"}
                   </div>
                   <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.5rem", color: "var(--text-primary)" }}>
-                    ${total.toFixed(2)}
+                    ${netTotal.toFixed(2)}
                   </div>
                 </div>
 

@@ -40,6 +40,7 @@ export interface Booking {
   paymentStatus?: "unpaid" | "deposit_paid" | "fully_paid";
   payments?: Array<{ id: string; amount: number; method: string; timestamp: string }>;
   hasUnreadMessages?: boolean;
+  discount?: number;
 }
 
 export interface Message {
@@ -183,9 +184,16 @@ export async function initDb(): Promise<void> {
         submitted_at     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
         amount_paid      DECIMAL(10,2) NOT NULL DEFAULT 0,
         payment_status   ENUM('unpaid','deposit_paid','fully_paid') NOT NULL DEFAULT 'unpaid',
-        payments         JSON
+        payments         JSON,
+        discount         DECIMAL(10,2) NOT NULL DEFAULT 0.00
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
+
+    try {
+      await conn.query("ALTER TABLE bookings ADD COLUMN discount DECIMAL(10,2) NOT NULL DEFAULT 0.00");
+    } catch (err) {
+      // Ignore if column already exists
+    }
 
     await conn.query(`
       CREATE TABLE IF NOT EXISTS categories (
@@ -215,7 +223,8 @@ export async function initDb(): Promise<void> {
         categories_enabled    TINYINT(1) NOT NULL DEFAULT 1,
         featured_rentals_enabled TINYINT(1) NOT NULL DEFAULT 1,
         deposit_enabled       TINYINT(1) NOT NULL DEFAULT 1,
-        deposit_percentage    INT NOT NULL DEFAULT 50
+        deposit_percentage    INT NOT NULL DEFAULT 50,
+        promo_codes           JSON
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
@@ -251,6 +260,12 @@ export async function initDb(): Promise<void> {
 
     try {
       await conn.query("ALTER TABLE settings ADD COLUMN deposit_percentage INT NOT NULL DEFAULT 50");
+    } catch (err) {
+      // Ignore if column already exists
+    }
+
+    try {
+      await conn.query("ALTER TABLE settings ADD COLUMN promo_codes JSON");
     } catch (err) {
       // Ignore if column already exists
     }
@@ -365,7 +380,7 @@ export async function initDb(): Promise<void> {
     const [setCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM settings");
     if ((setCount as mysql.RowDataPacket[])[0].c === 0) {
       await conn.query(
-        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled, gallery_enabled, categories_enabled, featured_rentals_enabled, deposit_enabled, deposit_percentage) VALUES (1, 1, 0, '', 1, 1, 1, 1, 1, 50)"
+        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled, gallery_enabled, categories_enabled, featured_rentals_enabled, deposit_enabled, deposit_percentage, promo_codes) VALUES (1, 1, 0, '', 1, 1, 1, 1, 1, 50, '[{\"code\":\"WELCOME10\",\"type\":\"percent\",\"value\":10},{\"code\":\"VIP50\",\"type\":\"percent\",\"value\":50},{\"code\":\"ONSITE20\",\"type\":\"percent\",\"value\":20}]')"
       );
     }
   } finally {
@@ -434,7 +449,22 @@ const fallbackStore = {
     { id: "cat-10", name: "Products",             icon: "shopping-bag", featured: false, order: 10 },
   ],
   siteContent: { ...DEFAULT_SITE_CONTENT },
-  settings: { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50 },
+  settings: { 
+    tentPlannerEnabled: true, 
+    maintenanceMode: false, 
+    analyticsId: "", 
+    payInPersonEnabled: true, 
+    galleryEnabled: true, 
+    categoriesEnabled: true, 
+    featuredRentalsEnabled: true, 
+    depositEnabled: true, 
+    depositPercentage: 50,
+    promoCodes: [
+      { code: "WELCOME10", type: "percent" as "percent" | "flat", value: 10 },
+      { code: "VIP50", type: "percent" as "percent" | "flat", value: 50 },
+      { code: "ONSITE20", type: "percent" as "percent" | "flat", value: 20 }
+    ]
+  },
   bookings: [] as Booking[],
   users: [] as User[],
   messages: [] as Message[],
@@ -604,6 +634,7 @@ type BookingRow = {
   status: Booking["status"]; notes: string | null; submitted_at: Date | string;
   amount_paid: number; payment_status: Booking["paymentStatus"];
   payments: Booking["payments"] | null;
+  discount: number;
 };
 
 function safeParseJson<T>(val: any, fallback: T): T {
@@ -636,6 +667,7 @@ function rowToBooking(r: BookingRow): Booking {
     amountPaid: Number(r.amount_paid),
     paymentStatus: r.payment_status,
     payments: safeParseJson(r.payments, null) ?? undefined,
+    discount: Number(r.discount ?? 0),
   };
 }
 
@@ -686,8 +718,8 @@ export async function addBooking(booking: Booking): Promise<Booking> {
     await query(
       `INSERT INTO bookings
         (id, customer, event_data, delivery, items, item_count, estimated_total,
-         payment_method, status, notes, submitted_at, amount_paid, payment_status, payments)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         payment_method, status, notes, submitted_at, amount_paid, payment_status, payments, discount)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         booking.id,
         JSON.stringify(booking.customer ?? null),
@@ -703,6 +735,7 @@ export async function addBooking(booking: Booking): Promise<Booking> {
         booking.amountPaid ?? 0,
         booking.paymentStatus ?? "unpaid",
         booking.payments ? JSON.stringify(booking.payments) : null,
+        booking.discount ?? 0,
       ]
     );
     return booking;
@@ -936,6 +969,7 @@ type SettingsRow = {
   featured_rentals_enabled: number;
   deposit_enabled: number;
   deposit_percentage: number;
+  promo_codes: any;
 };
 
 export async function getSettings(): Promise<{
@@ -948,12 +982,13 @@ export async function getSettings(): Promise<{
   featuredRentalsEnabled?: boolean;
   depositEnabled?: boolean;
   depositPercentage?: number;
+  promoCodes?: Array<{ code: string; type: "percent" | "flat"; value: number }>;
 }> {
   if (useFallback) return fallbackStore.settings;
   try {
     await ensureInit();
     const rows = await query<SettingsRow>("SELECT * FROM settings WHERE id = 1");
-    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50 };
+    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50, promoCodes: [] };
     return {
       tentPlannerEnabled: Boolean(rows[0].tent_planner_enabled),
       maintenanceMode: Boolean(rows[0].maintenance_mode),
@@ -964,6 +999,7 @@ export async function getSettings(): Promise<{
       featuredRentalsEnabled: Boolean(rows[0].featured_rentals_enabled ?? 1),
       depositEnabled: Boolean(rows[0].deposit_enabled ?? 1),
       depositPercentage: Number(rows[0].deposit_percentage ?? 50),
+      promoCodes: safeParseJson(rows[0].promo_codes, []),
     };
   } catch (err) {
     console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
@@ -982,6 +1018,7 @@ export async function updateSettings(updates: {
   featuredRentalsEnabled?: boolean;
   depositEnabled?: boolean;
   depositPercentage?: number;
+  promoCodes?: Array<{ code: string; type: "percent" | "flat"; value: number }>;
 }): Promise<void> {
   if (useFallback) {
     fallbackStore.settings = { ...fallbackStore.settings, ...updates };
@@ -1027,6 +1064,10 @@ export async function updateSettings(updates: {
     if (updates.depositPercentage !== undefined) {
       setClauses.push("deposit_percentage = ?");
       values.push(updates.depositPercentage);
+    }
+    if (updates.promoCodes !== undefined) {
+      setClauses.push("promo_codes = ?");
+      values.push(JSON.stringify(updates.promoCodes));
     }
     if (setClauses.length === 0) return;
     values.push(1);

@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       notes,
       paymentMethod,
       estimatedTotal,
+      discount,
     } = body;
 
     const deliveryCity = city === "Other" ? customCity : city;
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
       items: finalItems,
       itemCount,
       estimatedTotal: Number(estimatedTotal) || 0,
+      discount: Number(discount) || 0,
       paymentMethod: paymentMethod || "",
       status: "pending" as const,
       notes: notes || "",

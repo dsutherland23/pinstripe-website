@@ -18,6 +18,7 @@ interface Booking {
   amountPaid?: number;
   paymentStatus?: "unpaid" | "deposit_paid" | "fully_paid";
   payments?: Array<{ id: string; amount: number; method: string; timestamp: string }>;
+  discount?: number;
 }
 
 interface RentalItem {
@@ -248,8 +249,14 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
             <div style={{ width: "280px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", fontSize: "0.88rem", color: "#555", borderBottom: "1px dashed #e0e0e0" }}>
                 <span>Subtotal</span>
-                <span>${booking.estimatedTotal.toFixed(2)}</span>
+                <span>${(booking.estimatedTotal + (booking.discount || 0)).toFixed(2)}</span>
               </div>
+              {booking.discount && booking.discount > 0 ? (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", fontSize: "0.88rem", color: "#ef4444", borderBottom: "1px dashed #e0e0e0" }}>
+                  <span>Discount</span>
+                  <span>-${booking.discount.toFixed(2)}</span>
+                </div>
+              ) : null}
               <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", fontSize: "0.88rem", color: "#555", borderBottom: "1px dashed #e0e0e0" }}>
                 <span>Deposit Required (30%)</span>
                 <span>${depositEstimate.toFixed(2)}</span>

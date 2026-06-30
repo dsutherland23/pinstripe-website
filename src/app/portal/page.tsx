@@ -25,6 +25,7 @@ interface Booking {
   amountPaid?: number;
   paymentStatus?: "unpaid" | "deposit_paid" | "fully_paid";
   payments?: Array<{ id: string; amount: number; method: string; timestamp: string }>;
+  discount?: number;
 }
 
 const STATUS_STAGES = [
@@ -1261,6 +1262,18 @@ export default function CustomerPortal() {
               <div style={{ padding: "1.75rem" }}>
                 {/* Cost breakdown */}
                 <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "1.25rem", marginBottom: "1.5rem" }}>
+                  {payingBooking.discount && payingBooking.discount > 0 ? (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.5rem" }}>
+                        <span>Subtotal</span>
+                        <span style={{ color: "#ffffff", fontWeight: 600 }}>${(payingBooking.estimatedTotal + payingBooking.discount).toFixed(2)}</span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#ef4444", marginBottom: "0.5rem" }}>
+                        <span>Discount</span>
+                        <span style={{ fontWeight: 600 }}>-${payingBooking.discount.toFixed(2)}</span>
+                      </div>
+                    </>
+                  ) : null}
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", marginBottom: "0.5rem" }}>
                     <span>Estimated Total</span>
                     <span style={{ color: "#ffffff", fontWeight: 600 }}>${payingBooking.estimatedTotal.toFixed(2)}</span>
@@ -1553,7 +1566,18 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
 
         {/* Pricing Totals */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center", borderLeft: "1px solid rgba(255,255,255,0.05)", paddingLeft: "1.5rem" }} className="card-totals">
-          <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>Estimated Total</span>
+          {booking.discount && booking.discount > 0 ? (
+            <>
+              <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+                Subtotal: ${(booking.estimatedTotal + booking.discount).toFixed(2)}
+              </span>
+              <span style={{ fontSize: "0.65rem", color: "#ef4444", margin: 0 }}>
+                Discount: -${booking.discount.toFixed(2)}
+              </span>
+            </>
+          ) : (
+            <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>Estimated Total</span>
+          )}
           <span style={{ fontSize: "1.5rem", color: "#D4AF37", fontWeight: 900, margin: "0.15rem 0" }}>${booking.estimatedTotal.toFixed(2)}</span>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.15rem", fontSize: "0.72rem", color: "rgba(255,255,255,0.4)" }}>
             {depositEnabled && (
