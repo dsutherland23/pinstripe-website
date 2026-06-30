@@ -2174,14 +2174,9 @@ export default function AdminDashboard() {
             zIndex: 150,
             display: "flex",
             flexDirection: "column",
-            animation: "slideInChat 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-          }}>
-            <style>{`
-              @keyframes slideInChat {
-                from { transform: translateX(100%); }
-                to { transform: translateX(0); }
-              }
-            `}</style>
+          }}
+          className="animate-slide-in-chat"
+        >
             
             {/* Header */}
             <div style={{

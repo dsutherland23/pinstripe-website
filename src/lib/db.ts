@@ -895,7 +895,7 @@ export async function getUserBookings(email: string): Promise<Booking[]> {
   try {
     await ensureInit();
     const rows = await query<BookingRow>(
-      "SELECT * FROM bookings WHERE JSON_UNQUOTE(JSON_EXTRACT(customer, '$.email')) = ? ORDER BY submitted_at DESC",
+      "SELECT * FROM bookings WHERE LOWER(JSON_UNQUOTE(JSON_EXTRACT(customer, '$.email'))) = ? ORDER BY submitted_at DESC",
       [email.toLowerCase()]
     );
     return rows.map(rowToBooking);
