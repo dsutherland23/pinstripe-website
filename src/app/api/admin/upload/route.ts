@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     await writeFile(filePath, buffer);
 
     const imagePath = `/images/uploads/${filename}`;
-    updateInventoryItem(itemId, { image: imagePath });
+    await updateInventoryItem(itemId, { image: imagePath });
 
     return NextResponse.json({ success: true, imagePath });
   } catch (err) {

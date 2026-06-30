@@ -367,7 +367,10 @@ export default function AdminDashboard() {
       const d = await res.json();
       if (d.success) {
         notify("Image uploaded!");
-        if (editingItem?.id === itemId) setEditingItem({ ...editingItem, image: d.imagePath });
+        if (editingItem?.id === itemId) {
+          setEditingItem({ ...editingItem, image: d.imagePath });
+          setItemForm(f => ({ ...f, image: d.imagePath }));
+        }
         loadAll();
       } else notify(d.error || "Upload failed.", "error");
     } catch { notify("Network error.", "error"); }
