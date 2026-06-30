@@ -270,6 +270,12 @@ export async function initDb(): Promise<void> {
       // Ignore if column already exists
     }
 
+    try {
+      await conn.query("UPDATE settings SET promo_codes = '[{\"code\":\"WELCOME10\",\"type\":\"percent\",\"value\":10},{\"code\":\"VIP50\",\"type\":\"percent\",\"value\":50},{\"code\":\"ONSITE20\",\"type\":\"percent\",\"value\":20}]' WHERE promo_codes IS NULL");
+    } catch (err) {
+      // Ignore
+    }
+
     await conn.query(`
       CREATE TABLE IF NOT EXISTS users (
         email         VARCHAR(255) NOT NULL PRIMARY KEY,
