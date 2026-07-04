@@ -13,7 +13,8 @@
       "image": "/images/water-slide-1.png",
       "rating": 4.9,
       "reviews": 42,
-      "stock": 5
+      "stock": 5,
+      "deliveryFee": 0
     },
     {
       "id": "2",
@@ -98,7 +99,9 @@
       "capacity": "8 oz Kettle",
       "image": "/images/popcorn-machine.png",
       "rating": 4.8,
-      "reviews": 34
+      "reviews": 34,
+      "stock": 5,
+      "deliveryFee": 30
     },
     {
       "id": "8",
@@ -112,7 +115,9 @@
       "capacity": "Unlimited sharing",
       "image": "/images/photo-booth.png",
       "rating": 5,
-      "reviews": 53
+      "reviews": 53,
+      "stock": 5,
+      "deliveryFee": 0
     },
     {
       "id": "9",
