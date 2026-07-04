@@ -109,12 +109,19 @@ export function validateStep(
   }
 
   if (step === 3) {
-    for (const field of ["firstName", "lastName", "email", "phone", "address", "zipCode"]) {
+    const isPickup = values.deliveryMethod === "pickup";
+    const requiredFields = isPickup
+      ? ["firstName", "lastName", "email", "phone"]
+      : ["firstName", "lastName", "email", "phone", "address", "zipCode"];
+
+    for (const field of requiredFields) {
       const err = validateField(field, values[field] || "");
       if (err) errors[field] = err;
     }
-    const customCityErr = validateField("customCity", values.customCity || "", { city: values.city });
-    if (customCityErr) errors.customCity = customCityErr;
+    if (!isPickup) {
+      const customCityErr = validateField("customCity", values.customCity || "", { city: values.city });
+      if (customCityErr) errors.customCity = customCityErr;
+    }
   }
 
   return errors;

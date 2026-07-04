@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat, Inter } from "next/font/google";
 import "./globals.css";
+import { getSiteContent } from "@/lib/db";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -29,9 +30,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  let phone = "(757) 200-2600";
+  try {
+    const content = await getSiteContent();
+    if (content?.footer?.phone) {
+      phone = content.footer.phone;
+    }
+  } catch (e) {}
+
   const orgJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -41,7 +50,7 @@ export default function RootLayout({
     "logo": "https://pinstripesrentals.com/images/logo.jpg",
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "(757) 200-2600",
+      "telephone": phone,
       "contactType": "customer service",
       "areaServed": "US",
       "availableLanguage": "en"

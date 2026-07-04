@@ -53,6 +53,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   const [mobileRentalsOpen, setMobileRentalsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [galleryEnabled, setGalleryEnabled] = useState(true);
+  const [phone, setPhone] = useState("(757) 749-3407");
   const rentalsRef = useRef<HTMLDivElement>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -67,6 +68,16 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
       .then((data) => {
         if (data && typeof data.galleryEnabled === "boolean") {
           setGalleryEnabled(data.galleryEnabled);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch site content to get dynamic phone number
+    fetch("/api/content")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && data.content?.footer?.phone) {
+          setPhone(data.content.footer.phone);
         }
       })
       .catch(() => {});
@@ -492,7 +503,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
             style={{ alignItems: "center", gap: "1rem", flexShrink: 0 }}
           >
             <a
-              href="tel:17577493407"
+              href={`tel:${phone.replace(/\D/g, "")}`}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -509,7 +520,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
               onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = navLinkColor)}
             >
               <Phone size={14} color="#D4AF37" />
-              (757) 749-3407
+              {phone}
             </a>
             {/* Ambient Theme Toggler */}
             <button

@@ -38,6 +38,8 @@ export async function POST(req: NextRequest) {
       paymentMethod,
       estimatedTotal,
       discount,
+      deliveryMethod,
+      deliveryFee,
     } = body;
 
     const deliveryCity = city === "Other" ? customCity : city;
@@ -61,6 +63,8 @@ export async function POST(req: NextRequest) {
         address: address || "",
         city: deliveryCity || "",
         zipCode: zipCode || "",
+        method: deliveryMethod || "delivery",
+        fee: Number(deliveryFee) || 0,
       },
       items: finalItems,
       itemCount,

@@ -23,7 +23,13 @@ interface Booking {
   id: string;
   customer: { name: string; email: string; phone: string };
   event: { type: string; date: string; location: string; guestCount: number };
-  delivery: { address: string; city: string; zipCode: string };
+  delivery: {
+    address: string;
+    city: string;
+    zipCode: string;
+    method?: "delivery" | "pickup";
+    fee?: number;
+  };
   items: Record<string, number>;
   itemCount: number; estimatedTotal: number; paymentMethod: string;
   status?: "pending" | "confirmed" | "preparing" | "delivered" | "cancelled";
@@ -172,7 +178,7 @@ export default function AdminDashboard() {
   const [isCreating, setIsCreating]       = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [itemForm, setItemForm] = useState({
-    title: "", category: "Tents", price: "0", depositAmount: "0",
+    title: "", category: "Tents", price: "0", depositAmount: "0", deliveryFee: "0",
     stock: "5", description: "", dimensions: "", capacity: "",
     availability: true, image: "", rating: "4.8", reviews: "0",
   });
@@ -321,6 +327,7 @@ export default function AdminDashboard() {
     setItemForm({
       title: item.title, category: item.category,
       price: String(item.price), depositAmount: String(item.depositAmount),
+      deliveryFee: String((item as any).deliveryFee ?? 0),
       stock: String(item.stock ?? 5), description: item.description,
       dimensions: item.dimensions, capacity: item.capacity,
       availability: item.availability, image: item.image || "",
@@ -330,7 +337,7 @@ export default function AdminDashboard() {
 
   const startCreate = () => {
     setEditingItem(null); setIsCreating(true);
-    setItemForm({ title: "", category: categories[0]?.name || "Tents", price: "100", depositAmount: "30", stock: "5", description: "", dimensions: "10ft × 10ft", capacity: "Standard", availability: true, image: "", rating: "4.8", reviews: "0" });
+    setItemForm({ title: "", category: categories[0]?.name || "Tents", price: "100", depositAmount: "30", deliveryFee: "20", stock: "5", description: "", dimensions: "10ft × 10ft", capacity: "Standard", availability: true, image: "", rating: "4.8", reviews: "0" });
   };
 
   const handleSaveItem = async (e: React.FormEvent) => {
@@ -341,7 +348,7 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
         body: JSON.stringify({
           action: isCreating ? "create" : "update",
-          item: { id: editingItem?.id, ...itemForm, price: parseFloat(itemForm.price), depositAmount: parseFloat(itemForm.depositAmount), stock: parseInt(itemForm.stock), rating: parseFloat(itemForm.rating), reviews: parseInt(itemForm.reviews) },
+          item: { id: editingItem?.id, ...itemForm, price: parseFloat(itemForm.price), depositAmount: parseFloat(itemForm.depositAmount), deliveryFee: parseFloat(itemForm.deliveryFee), stock: parseInt(itemForm.stock), rating: parseFloat(itemForm.rating), reviews: parseInt(itemForm.reviews) },
         }),
       });
       const d = await res.json();
@@ -1046,19 +1053,23 @@ export default function AdminDashboard() {
                         </select>
                       </div>
                       <div>
-                        <label style={labelStyle}>Daily Price ($)</label>
-                        <input required type="number" step="0.01" value={itemForm.price} onChange={e => setItemForm(f => ({ ...f, price: e.target.value }))} style={inputStyle} />
+                        <label style={labelStyle}>Stock Qty</label>
+                        <input required type="number" value={itemForm.stock} onChange={e => setItemForm(f => ({ ...f, stock: e.target.value }))} style={inputStyle} />
                       </div>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem" }}>
+                      <div>
+                        <label style={labelStyle}>Daily Price ($)</label>
+                        <input required type="number" step="0.01" value={itemForm.price} onChange={e => setItemForm(f => ({ ...f, price: e.target.value }))} style={inputStyle} />
+                      </div>
                       <div>
                         <label style={labelStyle}>Deposit ($)</label>
                         <input type="number" step="0.01" value={itemForm.depositAmount} onChange={e => setItemForm(f => ({ ...f, depositAmount: e.target.value }))} style={inputStyle} />
                       </div>
                       <div>
-                        <label style={labelStyle}>Stock Qty</label>
-                        <input required type="number" value={itemForm.stock} onChange={e => setItemForm(f => ({ ...f, stock: e.target.value }))} style={inputStyle} />
+                        <label style={labelStyle}>Delivery Fee ($)</label>
+                        <input type="number" step="0.01" value={itemForm.deliveryFee} onChange={e => setItemForm(f => ({ ...f, deliveryFee: e.target.value }))} style={inputStyle} />
                       </div>
                     </div>
 
@@ -1552,16 +1563,24 @@ export default function AdminDashboard() {
                           <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8rem", margin: 0 }}>{booking.event.location}</p>
                         </div>
                         <div>
-                          <p style={{ fontSize: "0.68rem", color: "#D4AF37", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.35rem" }}>Delivery</p>
+                          <p style={{ fontSize: "0.68rem", color: "#D4AF37", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.35rem" }}>
+                            {booking.delivery.method === "pickup" ? "Fulfillment" : "Delivery"}
+                          </p>
                           <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.82rem", margin: 0, lineHeight: 1.5 }}>
-                            {booking.delivery.address}<br />{booking.delivery.city}, VA {booking.delivery.zipCode}
+                            {booking.delivery.method === "pickup" ? (
+                              <span>Customer Pick Up</span>
+                            ) : (
+                              <>
+                                {booking.delivery.address}<br />{booking.delivery.city}, VA {booking.delivery.zipCode}
+                              </>
+                            )}
                           </p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", justifyContent: "center", gap: "0.25rem" }}>
-                          <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
-                            {booking.discount && booking.discount > 0 ? (
-                              <span>Subtotal: {fmt(booking.estimatedTotal + booking.discount)} (Discount: -{fmt(booking.discount)})</span>
-                            ) : "Total"}
+                          <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", margin: 0, textAlign: "right" }}>
+                            Subtotal: {fmt(booking.estimatedTotal + (booking.discount || 0) - (booking.delivery.fee || 0))}
+                            {booking.delivery.method === "pickup" ? " (Pickup)" : ` (Delivery: +${fmt(booking.delivery.fee || 0)})`}
+                            {booking.discount && booking.discount > 0 ? ` (Discount: -${fmt(booking.discount)})` : ""}
                           </p>
                           <p style={{ fontSize: "1.5rem", color: "#D4AF37", fontWeight: 900, margin: 0 }}>{fmt(booking.estimatedTotal)}</p>
                           <div style={{ margin: "0.1rem 0" }}>

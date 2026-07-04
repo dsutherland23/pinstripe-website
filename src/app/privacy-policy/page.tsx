@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import LegalPageLayout from "@/components/LegalPageLayout";
+import { getSiteContent } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Pinstripes Party & Event Rentals",
@@ -20,7 +21,19 @@ const TOC = [
   { id: "contact", title: "Contact Us", level: 1 },
 ];
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  let phone = "(757) 200-2600";
+  let email = "pinstripesrentals@gmail.com";
+  let address = "Hampton Roads, Virginia";
+  try {
+    const content = await getSiteContent();
+    if (content?.footer) {
+      if (content.footer.phone) phone = content.footer.phone;
+      if (content.footer.email) email = content.footer.email;
+      if (content.footer.address) address = content.footer.address;
+    }
+  } catch (e) {}
+
   return (
     <LegalPageLayout
       title="Privacy Policy"
@@ -196,12 +209,12 @@ export default function PrivacyPolicyPage() {
         <p>
           <strong>Pinstripes Party &amp; Event Rentals</strong>
           <br />
-          Hampton Roads, Virginia
+          {address}
           <br />
           <strong>Email:</strong>{" "}
-          <a href="mailto:pinstripesrentals@gmail.com">pinstripesrentals@gmail.com</a>
+          <a href={`mailto:${email}`}>{email}</a>
           <br />
-          <strong>Phone:</strong> <a href="tel:+17572002600">(757) 200-2600</a>
+          <strong>Phone:</strong> <a href={`tel:${phone.replace(/\D/g, "")}`}>{phone}</a>
           <br />
           <strong>Service Area:</strong> Norfolk, Virginia Beach, Chesapeake, Portsmouth, Suffolk,
           Newport News, Hampton &amp; surrounding areas

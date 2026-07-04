@@ -8,7 +8,13 @@ interface Booking {
   id: string;
   customer: { name: string; email: string; phone: string };
   event: { type: string; date: string; location: string; guestCount: number };
-  delivery: { address: string; city: string; zipCode: string };
+  delivery: {
+    address: string;
+    city: string;
+    zipCode: string;
+    method?: "delivery" | "pickup";
+    fee?: number;
+  };
   items: Record<string, number>;
   itemCount: number;
   estimatedTotal: number;
@@ -41,12 +47,26 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
   const [inventory, setInventory] = useState<RentalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [businessPhone, setBusinessPhone] = useState("(757) 200-2600");
+  const [businessEmail, setBusinessEmail] = useState("pinstripesrentals@gmail.com");
+  const [businessAddress, setBusinessAddress] = useState("Norfolk, Virginia 23502");
 
   useEffect(() => {
     if (!id) return;
 
     const fetchData = async () => {
       try {
+        // Fetch site content for company details
+        fetch(`/api/content?t=${Date.now()}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.success && data.content?.footer) {
+              if (data.content.footer.phone) setBusinessPhone(data.content.footer.phone);
+              if (data.content.footer.email) setBusinessEmail(data.content.footer.email);
+              if (data.content.footer.address) setBusinessAddress(data.content.footer.address);
+            }
+          })
+          .catch(() => {});
         // Fetch inventory to resolve item details
         const invRes = await fetch(`/api/inventory?t=${Date.now()}`);
         const invData = await invRes.json();
@@ -127,16 +147,27 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
   });
 
   const depositEstimate = booking.estimatedTotal * 0.3;
+  const deliveryFee = (booking.delivery as any)?.fee || 0;
+  const rentalSubtotal = booking.estimatedTotal + (booking.discount || 0) - deliveryFee;
   const issueDate = new Date(booking.submittedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const eventDateFormatted = new Date(booking.event.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
   return (
     <>
       <style>{`
+        .logo-print { display: none !important; }
         @media print {
           .no-print { display: none !important; }
           body { background: #ffffff !important; color: #000000 !important; }
           .invoice-page { box-shadow: none !important; max-width: 100% !important; margin: 0 !important; }
+          .invoice-header { background: #ffffff !important; border-bottom: 2px solid #000000 !important; padding: 1.5rem 2rem !important; }
+          .invoice-header .header-brand-text { color: #000000 !important; }
+          .invoice-header .header-info-text { color: #333333 !important; }
+          .invoice-header .invoice-title { color: #000000 !important; }
+          .invoice-header .invoice-id { color: #000000 !important; }
+          .invoice-header .invoice-issued { color: #666666 !important; }
+          .logo-screen { display: none !important; }
+          .logo-print { display: block !important; }
         }
         @media screen {
           body { background: #f4f4f4; }
@@ -149,22 +180,36 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
 
       <div className="invoice-page" style={{ maxWidth: "780px", margin: "2rem auto", background: "#ffffff", boxShadow: "0 4px 32px rgba(0,0,0,0.12)", color: "#1a1a1a" }}>
         {/* Header */}
-        <div style={{ background: "#0f0f0f", padding: "2.5rem 3rem", borderBottom: "4px solid #D4AF37" }}>
+        <div className="invoice-header" style={{ background: "#0f0f0f", padding: "2.5rem 3rem", borderBottom: "4px solid #D4AF37" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1.5rem" }}>
-            <div>
-              <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "#D4AF37", marginBottom: "0.4rem" }}>Pinstripes Party &amp; Event Rentals</div>
-              <div style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.82rem", lineHeight: 1.8 }}>
-                Norfolk, Virginia 23502<br />
-                (757) 200-2600<br />
-                pinstripesrentals@gmail.com
+            <div style={{ display: "flex", gap: "1.25rem", alignItems: "center" }}>
+              <img
+                src="/images/pinstripes-logo-new.png?v=20260623"
+                alt="Pinstripes Logo"
+                className="logo-screen"
+                style={{ width: "64px", height: "64px", objectFit: "contain" }}
+              />
+              <img
+                src="/images/pinstripes-logo-black.png"
+                alt="Pinstripes Logo"
+                className="logo-print"
+                style={{ width: "64px", height: "64px", objectFit: "contain" }}
+              />
+              <div>
+                <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "#D4AF37", marginBottom: "0.4rem" }} className="header-brand-text">Pinstripes Party &amp; Event Rentals</div>
+                <div style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.82rem", lineHeight: 1.8 }} className="header-info-text">
+                  {businessAddress}<br />
+                  {businessPhone}<br />
+                  {businessEmail}
+                </div>
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "2rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.03em", textTransform: "uppercase" }}>
+              <div className="invoice-title" style={{ fontSize: "2rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.03em", textTransform: "uppercase" }}>
                 {booking.paymentStatus === "fully_paid" ? "PAID RECEIPT" : "INVOICE"}
               </div>
-              <div style={{ fontFamily: "monospace", fontSize: "1.1rem", color: "#D4AF37", fontWeight: 700, marginTop: "0.25rem" }}>{booking.id}</div>
-              <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem", marginTop: "0.5rem" }}>Issued: {issueDate}</div>
+              <div className="invoice-id" style={{ fontFamily: "monospace", fontSize: "1.1rem", color: "#D4AF37", fontWeight: 700, marginTop: "0.25rem" }}>{booking.id}</div>
+              <div className="invoice-issued" style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem", marginTop: "0.5rem" }}>Issued: {issueDate}</div>
               
               {/* Payment Status Stamp */}
               <div style={{ marginTop: "0.625rem" }}>
@@ -194,8 +239,14 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
             <div style={{ color: "#555", fontSize: "0.85rem", lineHeight: 1.7 }}>
               {booking.customer.email}<br />
               {booking.customer.phone}<br />
-              {booking.delivery.address}<br />
-              {booking.delivery.city}, VA {booking.delivery.zipCode}
+              {booking.delivery?.method === "pickup" ? (
+                <strong style={{ color: "#10b981" }}>Customer Pick Up (No Delivery)</strong>
+              ) : (
+                <>
+                  {booking.delivery.address}<br />
+                  {booking.delivery.city}, VA {booking.delivery.zipCode}
+                </>
+              )}
             </div>
           </div>
           <div>
@@ -248,9 +299,20 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1.5rem" }}>
             <div style={{ width: "280px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", fontSize: "0.88rem", color: "#555", borderBottom: "1px dashed #e0e0e0" }}>
-                <span>Subtotal</span>
-                <span>${(booking.estimatedTotal + (booking.discount || 0)).toFixed(2)}</span>
+                <span>Rental Subtotal</span>
+                <span>${rentalSubtotal.toFixed(2)}</span>
               </div>
+              {booking.delivery?.method === "pickup" ? (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", fontSize: "0.88rem", color: "#10b981", borderBottom: "1px dashed #e0e0e0" }}>
+                  <span>Fulfillment</span>
+                  <span style={{ fontWeight: 600 }}>Customer Pick Up</span>
+                </div>
+              ) : (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", fontSize: "0.88rem", color: "#555", borderBottom: "1px dashed #e0e0e0" }}>
+                  <span>Delivery Fee</span>
+                  <span>${deliveryFee.toFixed(2)}</span>
+                </div>
+              )}
               {booking.discount && booking.discount > 0 ? (
                 <div style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem 0", fontSize: "0.88rem", color: "#ef4444", borderBottom: "1px dashed #e0e0e0" }}>
                   <span>Discount</span>
@@ -352,7 +414,7 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
         {/* Footer */}
         <div style={{ background: "#0f0f0f", padding: "1.25rem 3rem", textAlign: "center" }}>
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>
-            Thank you for choosing Pinstripes Party &amp; Event Rentals — Norfolk, VA · (757) 200-2600 · pinstripesrentals@gmail.com
+            Thank you for choosing Pinstripes Party &amp; Event Rentals — {businessAddress.split(",")[0]} · {businessPhone} · {businessEmail}
           </p>
         </div>
       </div>

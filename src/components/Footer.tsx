@@ -55,6 +55,9 @@ const socials = [
 export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: FooterProps) {
   const [galleryEnabled, setGalleryEnabled] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [phone, setPhone] = useState("(757) 749-3407");
+  const [email, setEmail] = useState("pinstripesrentals@gmail.com");
+  const [address, setAddress] = useState("Hampton Roads, Virginia");
 
   useEffect(() => {
     setMounted(true);
@@ -63,6 +66,17 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
       .then((data) => {
         if (data && typeof data.galleryEnabled === "boolean") {
           setGalleryEnabled(data.galleryEnabled);
+        }
+      })
+      .catch(() => {});
+
+    fetch("/api/content")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && data.content?.footer) {
+          if (data.content.footer.phone) setPhone(data.content.footer.phone);
+          if (data.content.footer.email) setEmail(data.content.footer.email);
+          if (data.content.footer.address) setAddress(data.content.footer.address);
         }
       })
       .catch(() => {});
@@ -322,8 +336,8 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               {[
-                { Icon: Phone, label: "Direct Phone Line", value: "(757) 749-3407", href: "tel:17577493407" },
-                { Icon: Mail, label: "Support Email", value: "pinstripesrentals@gmail.com", href: "mailto:pinstripesrentals@gmail.com" },
+                { Icon: Phone, label: "Direct Phone Line", value: phone, href: `tel:${phone.replace(/\D/g, "")}` },
+                { Icon: Mail, label: "Support Email", value: email, href: `mailto:${email}` },
               ].map(({ Icon, label, value, href }) => (
                 <div key={label} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
                   <div style={{ 

@@ -84,6 +84,8 @@ export async function POST(req: NextRequest) {
           address: delivery?.address || "N/A",
           city: delivery?.city || "N/A",
           zipCode: delivery?.zipCode || "N/A",
+          method: delivery?.method || "delivery",
+          fee: Number(delivery?.fee) || 0,
         },
         items: items || {},
         itemCount,

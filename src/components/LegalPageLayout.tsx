@@ -27,6 +27,18 @@ export default function LegalPageLayout({
   const [activeId, setActiveId] = useState<string>("");
   const [tocOpen, setTocOpen] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [email, setEmail] = useState("pinstripesrentals@gmail.com");
+
+  useEffect(() => {
+    fetch("/api/content")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && data.content?.footer?.email) {
+          setEmail(data.content.footer.email);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const ids = tocItems.map((item) => item.id);
@@ -339,10 +351,10 @@ export default function LegalPageLayout({
         <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.75rem" }}>
           Questions about this policy? Contact us at{" "}
           <a
-            href="mailto:pinstripesrentals@gmail.com"
+            href={`mailto:${email}`}
             style={{ color: "#D4AF37", textDecoration: "none", fontWeight: 600 }}
           >
-            pinstripesrentals@gmail.com
+            {email}
           </a>
         </p>
         <div style={{ display: "flex", gap: "1.5rem", justifyContent: "center", flexWrap: "wrap" }}>

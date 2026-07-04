@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
         rating: parseFloat(item.rating) || 4.8,
         reviews: parseInt(item.reviews, 10) || 0,
         stock: parseInt(item.stock, 10) || 5,
+        deliveryFee: parseFloat(item.deliveryFee) || 0,
       };
       await addInventoryItem(newItem);
       return NextResponse.json({ success: true, item: newItem });
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
         rating: parseFloat(item.rating) || 4.8,
         reviews: parseInt(item.reviews, 10) || 0,
         stock: parseInt(item.stock, 10) || 5,
+        deliveryFee: parseFloat(item.deliveryFee) || 0,
       });
       if (!updated) return NextResponse.json({ error: "Item not found" }, { status: 404 });
       return NextResponse.json({ success: true, item: updated });

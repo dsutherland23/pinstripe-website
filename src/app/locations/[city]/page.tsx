@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import LocationClientPage from "@/components/LocationClientPage";
+import { getSiteContent } from "@/lib/db";
 
 // Map slugs to display names
 const CITIES: Record<string, string> = {
@@ -52,6 +53,18 @@ export default async function LocationPage({ params }: LocationPageProps) {
     notFound();
   }
 
+  let phone = "(757) 200-2600";
+  let email = "pinstripesrentals@gmail.com";
+  let address = "100 Gold Coast Parkway, Norfolk, VA 23502";
+  try {
+    const content = await getSiteContent();
+    if (content?.footer) {
+      if (content.footer.phone) phone = content.footer.phone;
+      if (content.footer.email) email = content.footer.email;
+      if (content.footer.address) address = content.footer.address;
+    }
+  } catch (e) {}
+
   // Structured JSON-LD Schema
   const jsonLd = {
     "@context": "https://schema.org",
@@ -59,11 +72,11 @@ export default async function LocationPage({ params }: LocationPageProps) {
     "name": `Pinstripes Party & Event Rentals - ${cityName}`,
     "description": `Premium party and event rental services in ${cityName}, VA. Rent clean, commercial-grade tents, tables, chairs, slides, and bounce houses.`,
     "url": `https://pinstripesrentals.com/locations/${slug}`,
-    "telephone": "(757) 200-2600",
-    "email": "pinstripesrentals@gmail.com",
+    "telephone": phone,
+    "email": email,
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "100 Gold Coast Parkway",
+      "streetAddress": address,
       "addressLocality": "Norfolk",
       "addressRegion": "VA",
       "postalCode": "23502",

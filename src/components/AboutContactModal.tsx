@@ -28,6 +28,21 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formSent, setFormSent] = useState(false);
 
+  const [contactPhone, setContactPhone] = useState("(757) 749-3407");
+  const [contactEmail, setContactEmail] = useState("pinstripesrentals@gmail.com");
+
+  useEffect(() => {
+    fetch("/api/content")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && data.content?.footer) {
+          if (data.content.footer.phone) setContactPhone(data.content.footer.phone);
+          if (data.content.footer.email) setContactEmail(data.content.footer.email);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       setActiveTab(defaultTab);
@@ -217,14 +232,14 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
                   {
                     Icon: Phone,
                     label: "Call / WhatsApp",
-                    value: "(757) 749-3407",
-                    href: "tel:17577493407"
+                    value: contactPhone,
+                    href: `tel:${contactPhone.replace(/\D/g, "")}`
                   },
                   {
                     Icon: Mail,
                     label: "Email Support",
-                    value: "pinstripesrentals@gmail.com",
-                    href: "mailto:pinstripesrentals@gmail.com"
+                    value: contactEmail,
+                    href: `mailto:${contactEmail}`
                   },
                   {
                     Icon: InstagramIcon,

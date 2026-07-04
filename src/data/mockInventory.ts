@@ -12,6 +12,7 @@ export interface RentalItem {
   rating: number;
   reviews: number;
   stock?: number;
+  deliveryFee?: number;
 }
 
 export const mockInventory: RentalItem[] = [
@@ -29,6 +30,7 @@ export const mockInventory: RentalItem[] = [
     image: "/images/water-slide-1.png",
     rating: 4.9,
     reviews: 42,
+    deliveryFee: 50,
   },
   {
     id: "2",
@@ -44,6 +46,7 @@ export const mockInventory: RentalItem[] = [
     image: "/images/folding-chair.png",
     rating: 4.8,
     reviews: 120,
+    deliveryFee: 0.5,
   },
   {
     id: "3",
@@ -59,6 +62,7 @@ export const mockInventory: RentalItem[] = [
     image: "/images/logo.jpg",
     rating: 4.9,
     reviews: 28,
+    deliveryFee: 20,
   },
   {
     id: "4",
@@ -74,6 +78,7 @@ export const mockInventory: RentalItem[] = [
     image: "/images/water-slide-2.png",
     rating: 4.7,
     reviews: 19,
+    deliveryFee: 50,
   },
   {
     id: "5",
@@ -89,6 +94,7 @@ export const mockInventory: RentalItem[] = [
     image: "/images/canopy-tent.png",
     rating: 4.9,
     reviews: 31,
+    deliveryFee: 50,
   },
   {
     id: "6",
@@ -104,6 +110,7 @@ export const mockInventory: RentalItem[] = [
     image: "/images/banquet-table.png",
     rating: 4.8,
     reviews: 75,
+    deliveryFee: 2,
   },
   {
     id: "7",
@@ -119,6 +126,7 @@ export const mockInventory: RentalItem[] = [
     image: "/images/popcorn-machine.png",
     rating: 4.8,
     reviews: 34,
+    deliveryFee: 20,
   },
   {
     id: "8",
@@ -134,6 +142,7 @@ export const mockInventory: RentalItem[] = [
     image: "/images/photo-booth.png",
     rating: 5,
     reviews: 53,
+    deliveryFee: 75,
   },
   {
     id: "9",
@@ -150,6 +159,7 @@ export const mockInventory: RentalItem[] = [
     rating: 4.8,
     reviews: 15,
     stock: 5,
+    deliveryFee: 20,
   },
   {
     id: "10",
@@ -164,7 +174,8 @@ export const mockInventory: RentalItem[] = [
     image: "/images/kids-cotton-candy.png",
     rating: 4.8,
     reviews: 12,
-    stock: 100
+    stock: 100,
+    deliveryFee: 0,
   },
   {
     id: "11",
@@ -179,7 +190,8 @@ export const mockInventory: RentalItem[] = [
     image: "/images/popcorn-machine.png",
     rating: 4.9,
     reviews: 18,
-    stock: 100
+    stock: 100,
+    deliveryFee: 0,
   },
   {
     id: "12",
@@ -194,7 +206,8 @@ export const mockInventory: RentalItem[] = [
     image: "/images/kids-snowcones.png",
     rating: 4.7,
     reviews: 9,
-    stock: 100
+    stock: 100,
+    deliveryFee: 0,
   },
   {
     id: "13",
@@ -209,7 +222,8 @@ export const mockInventory: RentalItem[] = [
     image: "/images/kids-concessions.png",
     rating: 4.8,
     reviews: 15,
-    stock: 10
+    stock: 10,
+    deliveryFee: 5,
   },
   {
     id: "14",
@@ -224,6 +238,7 @@ export const mockInventory: RentalItem[] = [
     image: "/images/logo.jpg",
     rating: 4.8,
     reviews: 5,
-    stock: 100
+    stock: 100,
+    deliveryFee: 0,
   }
 ];

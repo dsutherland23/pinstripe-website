@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { X, ArrowLeft, ArrowRight, Send, CheckCircle2, AlertCircle, Plus } from "lucide-react";
 import { mockInventory } from "@/data/mockInventory";
 import { useFormValidation, formatPhone } from "@/hooks/useFormValidation";
@@ -64,7 +64,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [quoteRef, setQuoteRef] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
-  const { errors, validateOnBlur, validateStepFields, clearAllErrors } = useFormValidation();
+  const { errors, validateOnBlur, validateStepFields, clearAllErrors, clearError } = useFormValidation();
 
   // Availability state
   const [availability, setAvailability] = useState<Record<string, { totalStock: number; rented: number; available: number }>>({});
@@ -153,6 +153,16 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Pay in Person");
   const [payInPersonEnabled, setPayInPersonEnabled] = useState(true);
+  const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
+
+  // Clear address errors when selecting pickup
+  useEffect(() => {
+    if (deliveryMethod === "pickup") {
+      clearError("address");
+      clearError("zipCode");
+      clearError("customCity");
+    }
+  }, [deliveryMethod, clearError]);
 
   // Fetch settings on mount
   useEffect(() => {
@@ -318,6 +328,33 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     }
   }, [selected, selectedItemFromInventory]);
 
+  const isPickupAllowed = useMemo(() => {
+    if (bookingMode === "package") return false;
+    return !Object.entries(selected).some(([id, qty]) => {
+      if (qty <= 0) return false;
+      const item = mockInventory.find((i) => i.id === id);
+      if (!item) return false;
+      const cat = item.category.toLowerCase();
+      return cat === "water slides" || cat === "bounce houses" || cat === "photo booths";
+    });
+  }, [bookingMode, selected]);
+
+  useEffect(() => {
+    if (!isPickupAllowed) {
+      setDeliveryMethod("delivery");
+    }
+  }, [isPickupAllowed]);
+
+  const deliveryFee = useMemo(() => {
+    if (deliveryMethod === "pickup") return 0;
+    if (bookingMode === "package") return 0;
+    return Object.entries(selected).reduce((sum, [id, qty]) => {
+      const item = mockInventory.find((i) => i.id === id);
+      const fee = (item as any)?.deliveryFee ?? 0;
+      return sum + (fee * qty);
+    }, 0);
+  }, [deliveryMethod, bookingMode, selected]);
+
   const selectedPkg = PHOTO_BOOTH_PACKAGES.find((p) => p.name === selectedPackageName);
   const packageBaseTotal = selectedPkg ? selectedPkg.price : 0;
   const extraHoursPrice = Math.max(0, packageHours - 4) * 65;
@@ -352,7 +389,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   const discount = appliedPromo
     ? (appliedPromo.type === "percent" ? total * (appliedPromo.value / 100) : appliedPromo.value)
     : 0;
-  const netTotal = Math.max(0, total - discount);
+  const netTotal = Math.max(0, total - discount) + deliveryFee;
 
   const steps = ["Event Info", "Select Rentals", "Your Details"];
 
@@ -544,12 +581,19 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                     ["Event Type", eventType],
                     ["Event Date", eventDate || "—"],
                     ["Guests", guestCount],
-                    ["Delivery Address", city === "Other" ? `${address}, ${customCity} ${zipCode} (Extended Area)` : `${address}, ${city} ${zipCode}`],
+                    ...(deliveryMethod === "pickup"
+                      ? [["Fulfillment", "Customer Pick Up"]]
+                      : [
+                          ["Fulfillment", "Standard Delivery"],
+                          ["Delivery Address", city === "Other" ? `${address}, ${customCity} ${zipCode} (Extended Area)` : `${address}, ${city} ${zipCode}`],
+                          ["Delivery Fee", `$${deliveryFee.toFixed(2)}`],
+                        ]),
                     ["Payment Choice", paymentMethod],
-                    ...(appliedPromo ? [["Subtotal", `$${total.toFixed(2)}`], ["Discount", `-$${discount.toFixed(2)}`]] : []),
+                    ["Subtotal", `$${total.toFixed(2)}`],
+                    ...(appliedPromo ? [["Discount", `-$${discount.toFixed(2)}`]] : []),
                     ["Estimated Total", `$${netTotal.toFixed(2)}`],
                   ].map(([label, value]) => (
-                    <div key={label} style={{ gridColumn: label === "Delivery Address" ? "span 2" : "auto" }}>
+                    <div key={label} style={{ gridColumn: (label === "Delivery Address" || label === "Fulfillment") ? "span 2" : "auto" }}>
                       <div
                         style={{
                           fontFamily: "var(--font-heading)",
@@ -674,15 +718,17 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       lastName,
                       email,
                       phone,
-                      address,
-                      city,
-                      customCity,
-                      zipCode,
+                      address: deliveryMethod === "pickup" ? "Customer Pick Up" : address,
+                      city: deliveryMethod === "pickup" ? "Customer Pick Up" : city,
+                      customCity: deliveryMethod === "pickup" ? "Customer Pick Up" : customCity,
+                      zipCode: deliveryMethod === "pickup" ? "N/A" : zipCode,
                       notes: finalNotes,
                       paymentMethod,
                       estimatedTotal: netTotal,
                       discount,
                       promoCode: appliedPromo?.code,
+                      deliveryMethod,
+                      deliveryFee,
                     }),
                   });
                   const json = await res.json();
@@ -1322,79 +1368,132 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       )}
                     </div>
                   </div>
-                  <div>
-                    <label style={labelStyle}>Delivery Street Address *</label>
-                    <input
-                      required
-                      type="text"
-                      className="field"
-                      placeholder="e.g. 123 Atlantic Ave"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      onBlur={(e) => validateOnBlur("address", e.target.value)}
-                      style={errors.address ? { borderColor: "#ef4444" } : {}}
-                    />
-                    {errors.address && (
-                      <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.address}</p>
+                  {/* Fulfillment Option Selector */}
+                  <div style={{ marginBottom: "1rem" }}>
+                    <label style={labelStyle}>Fulfillment Option</label>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                      <button
+                        type="button"
+                        onClick={() => setDeliveryMethod("delivery")}
+                        style={{
+                          padding: "0.75rem",
+                          borderRadius: "0.75rem",
+                          border: deliveryMethod === "delivery" ? "2px solid #D4AF37" : "1px solid var(--border-primary)",
+                          background: deliveryMethod === "delivery" ? "rgba(212,175,55,0.08)" : "transparent",
+                          color: deliveryMethod === "delivery" ? "#ffffff" : "var(--text-secondary)",
+                          fontWeight: 700,
+                          fontSize: "0.8rem",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        🚚 Standard Delivery
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!isPickupAllowed}
+                        onClick={() => setDeliveryMethod("pickup")}
+                        style={{
+                          padding: "0.75rem",
+                          borderRadius: "0.75rem",
+                          border: deliveryMethod === "pickup" ? "2px solid #D4AF37" : "1px solid var(--border-primary)",
+                          background: deliveryMethod === "pickup" ? "rgba(212,175,55,0.08)" : "transparent",
+                          color: deliveryMethod === "pickup" ? "#ffffff" : "var(--text-secondary)",
+                          fontWeight: 700,
+                          fontSize: "0.8rem",
+                          cursor: !isPickupAllowed ? "not-allowed" : "pointer",
+                          opacity: !isPickupAllowed ? 0.4 : 1,
+                          transition: "all 0.2s ease"
+                        }}
+                        title={!isPickupAllowed ? "Inflatables and Photo Booths must be delivered by our staff." : ""}
+                      >
+                        🏪 Customer Pick Up
+                      </button>
+                    </div>
+                    {!isPickupAllowed && (
+                      <p style={{ fontSize: "0.7rem", color: "#D4AF37", marginTop: "0.35rem", fontFamily: "var(--font-body)", lineHeight: 1.4 }}>
+                        ⚠️ Pick up is unavailable because your cart contains a photobooth or inflatable item (water slides, bounce houses). These must be delivered & set up by our team.
+                      </p>
                     )}
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
-                    <div>
-                      <label style={labelStyle}>City *</label>
-                      <select className="field" value={city} onChange={(e) => setCity(e.target.value)} style={{ appearance: "auto" }}>
-                        {["Norfolk", "Virginia Beach", "Chesapeake", "Portsmouth", "Suffolk", "Newport News", "Hampton", "Yorktown", "Williamsburg", "Other"].map((c) => (
-                          <option key={c} value={c}>
-                            {c === "Other" ? "Other (Coming Soon)" : c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Zip Code *</label>
-                      <input
-                        required
-                        type="text"
-                        className="field"
-                        placeholder="e.g. 23451"
-                        value={zipCode}
-                        onChange={(e) => setZipCode(e.target.value)}
-                        onBlur={(e) => validateOnBlur("zipCode", e.target.value)}
-                        style={errors.zipCode ? { borderColor: "#ef4444" } : {}}
-                      />
-                      {errors.zipCode && (
-                        <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.zipCode}</p>
-                      )}
-                    </div>
-                  </div>
-                  {city === "Other" && (
+
+                  {deliveryMethod === "delivery" && (
                     <>
                       <div>
-                        <label style={labelStyle}>Specify Custom City *</label>
+                        <label style={labelStyle}>Delivery Street Address *</label>
                         <input
                           required
                           type="text"
                           className="field"
-                          placeholder="e.g. Richmond"
-                          value={customCity}
-                          onChange={(e) => setCustomCity(e.target.value)}
+                          placeholder="e.g. 123 Atlantic Ave"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          onBlur={(e) => validateOnBlur("address", e.target.value)}
+                          style={errors.address ? { borderColor: "#ef4444" } : {}}
                         />
+                        {errors.address && (
+                          <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.address}</p>
+                        )}
                       </div>
-                      <div
-                        style={{
-                          background: "rgba(212,175,55,0.06)",
-                          border: "1px solid rgba(212,175,55,0.25)",
-                          borderRadius: "0.875rem",
-                          padding: "1.1rem",
-                          marginTop: "0.25rem",
-                        }}
-                      >
-                        <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#bda030", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.35rem" }}>
-                          📍 Service Area Notice: Coming Soon
-                        </span>
-                        <p style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                          Although your area is outside our standard coverage zone, <strong>we can frequently accommodate extended events</strong>! Submit your request, and our scheduling team will be notified. If we can accommodate your date at an adjusted price, we will reach out to you within 2 hours.
-                        </p>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
+                        <div>
+                          <label style={labelStyle}>City *</label>
+                          <select className="field" value={city} onChange={(e) => setCity(e.target.value)} style={{ appearance: "auto" }}>
+                            {["Norfolk", "Virginia Beach", "Chesapeake", "Portsmouth", "Suffolk", "Newport News", "Hampton", "Yorktown", "Williamsburg", "Other"].map((c) => (
+                              <option key={c} value={c}>
+                                {c === "Other" ? "Other (Coming Soon)" : c}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Zip Code *</label>
+                          <input
+                            required
+                            type="text"
+                            className="field"
+                            placeholder="e.g. 23451"
+                            value={zipCode}
+                            onChange={(e) => setZipCode(e.target.value)}
+                            onBlur={(e) => validateOnBlur("zipCode", e.target.value)}
+                            style={errors.zipCode ? { borderColor: "#ef4444" } : {}}
+                          />
+                          {errors.zipCode && (
+                            <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.zipCode}</p>
+                          )}
+                        </div>
                       </div>
+                      {city === "Other" && (
+                        <>
+                          <div>
+                            <label style={labelStyle}>Specify Custom City *</label>
+                            <input
+                              required
+                              type="text"
+                              className="field"
+                              placeholder="e.g. Richmond"
+                              value={customCity}
+                              onChange={(e) => setCustomCity(e.target.value)}
+                            />
+                          </div>
+                          <div
+                            style={{
+                              background: "rgba(212,175,55,0.06)",
+                              border: "1px solid rgba(212,175,55,0.25)",
+                              borderRadius: "0.875rem",
+                              padding: "1.1rem",
+                              marginTop: "0.25rem",
+                            }}
+                          >
+                            <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#bda030", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.35rem" }}>
+                              📍 Service Area Notice: Coming Soon
+                            </span>
+                            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                              Although your area is outside our standard coverage zone, <strong>we can frequently accommodate extended events</strong>! Submit your request, and our scheduling team will be notified. If we can accommodate your date at an adjusted price, we will reach out to you within 2 hours.
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                   <div>
@@ -1595,8 +1694,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
               >
                 <div>
                   <div style={{ fontFamily: "var(--font-heading)", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)", opacity: 0.7 }}>
-                    {appliedPromo ? (
-                      <span>Subtotal: ${total.toFixed(2)} | Discount: -${discount.toFixed(2)}</span>
+                    {appliedPromo || deliveryFee > 0 ? (
+                      <span>
+                        Subtotal: ${total.toFixed(2)}
+                        {appliedPromo && ` | Discount: -$${discount.toFixed(2)}`}
+                        {deliveryFee > 0 && ` | Delivery: +$${deliveryFee.toFixed(2)}`}
+                      </span>
                     ) : "Estimated Total"}
                   </div>
                   <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.5rem", color: "var(--text-primary)" }}>
@@ -1634,7 +1737,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                     <button
                       type="button"
                       onClick={() => {
-                        const vals = { eventDate, guestCount, eventLoc, city, customCity, firstName, lastName, email, phone, address, zipCode };
+                        const vals = { eventDate, guestCount, eventLoc, city, customCity, firstName, lastName, email, phone, address, zipCode, deliveryMethod };
                         const itemsCount = bookingMode === "package" ? 1 : Object.keys(selected).length;
                         const isValid = validateStepFields(step, vals, itemsCount);
                         if (isValid) setStep((s) => s + 1);

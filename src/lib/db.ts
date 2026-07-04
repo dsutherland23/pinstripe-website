@@ -28,6 +28,8 @@ export interface Booking {
     address: string;
     city: string;
     zipCode: string;
+    method?: "delivery" | "pickup";
+    fee?: number;
   };
   items: Record<string, number>;
   itemCount: number;
@@ -195,6 +197,12 @@ export async function initDb(): Promise<void> {
       // Ignore if column already exists
     }
 
+    try {
+      await conn.query("ALTER TABLE inventory ADD COLUMN delivery_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00");
+    } catch (err) {
+      // Ignore if column already exists
+    }
+
     await conn.query(`
       CREATE TABLE IF NOT EXISTS categories (
         id       VARCHAR(64)  NOT NULL PRIMARY KEY,
@@ -306,8 +314,8 @@ export async function initDb(): Promise<void> {
     for (const item of mockInventory) {
       await conn.query(
         `INSERT IGNORE INTO inventory
-          (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock, delivery_fee)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           item.id,
           item.title,
@@ -321,7 +329,8 @@ export async function initDb(): Promise<void> {
           item.image ?? "",
           item.rating ?? 5.0,
           item.reviews ?? 0,
-          item.stock ?? null
+          item.stock ?? null,
+          item.deliveryFee ?? 0
         ]
       );
     }
@@ -515,6 +524,7 @@ type InventoryRow = {
   price: number; deposit_amount: number; availability: number;
   dimensions: string; capacity: string; image: string;
   rating: number; reviews: number; stock: number | null;
+  delivery_fee: number;
 };
 
 function rowToItem(r: InventoryRow): RentalItem {
@@ -525,6 +535,7 @@ function rowToItem(r: InventoryRow): RentalItem {
     dimensions: r.dimensions, capacity: r.capacity, image: r.image,
     rating: Number(r.rating), reviews: r.reviews,
     ...(r.stock !== null ? { stock: r.stock } : {}),
+    deliveryFee: Number(r.delivery_fee ?? 0),
   };
 }
 
@@ -556,6 +567,7 @@ export async function updateInventoryItem(id: string, updates: Partial<RentalIte
       price: "price", depositAmount: "deposit_amount", availability: "availability",
       dimensions: "dimensions", capacity: "capacity", image: "image",
       rating: "rating", reviews: "reviews", stock: "stock",
+      deliveryFee: "delivery_fee",
     };
     const setClauses: string[] = [];
     const values: unknown[] = [];
@@ -586,8 +598,8 @@ export async function addInventoryItem(item: RentalItem): Promise<RentalItem> {
   try {
     await ensureInit();
     await query(
-      `INSERT INTO inventory (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO inventory (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock, delivery_fee)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         item.id,
         item.title,
@@ -601,7 +613,8 @@ export async function addInventoryItem(item: RentalItem): Promise<RentalItem> {
         item.image ?? "",
         item.rating ?? 5.0,
         item.reviews ?? 0,
-        item.stock ?? null
+        item.stock ?? null,
+        item.deliveryFee ?? 0
       ]
     );
     return item;

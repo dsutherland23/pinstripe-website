@@ -14,7 +14,13 @@ interface Booking {
   id: string;
   customer: { name: string; email: string; phone: string };
   event: { type: string; date: string; location: string; guestCount: number };
-  delivery: { address: string; city: string; zipCode: string };
+  delivery: {
+    address: string;
+    city: string;
+    zipCode: string;
+    method?: "delivery" | "pickup";
+    fee?: number;
+  };
   items: Record<string, number>;
   itemCount: number;
   estimatedTotal: number;
@@ -1536,7 +1542,11 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
             <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.82rem", alignItems: "flex-start" }}>
               <MapPin size={13} color="rgba(255,255,255,0.35)" style={{ marginTop: "3px" }} />
               <span style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.3 }}>
-                {booking.delivery.address}, {booking.delivery.city}, VA
+                {booking.delivery?.method === "pickup" ? (
+                  <strong style={{ color: "#10b981" }}>Customer Pick Up (No Delivery)</strong>
+                ) : (
+                  <>{booking.delivery.address}, {booking.delivery.city}, VA</>
+                )}
               </span>
             </div>
           </div>
@@ -1561,17 +1571,22 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
 
         {/* Pricing Totals */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center", borderLeft: "1px solid rgba(255,255,255,0.05)", paddingLeft: "1.5rem" }} className="card-totals">
-          {booking.discount && booking.discount > 0 ? (
-            <>
-              <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
-                Subtotal: ${(booking.estimatedTotal + booking.discount).toFixed(2)}
-              </span>
-              <span style={{ fontSize: "0.65rem", color: "#ef4444", margin: 0 }}>
-                Discount: -${booking.discount.toFixed(2)}
-              </span>
-            </>
+          <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+            Rental Subtotal: ${(booking.estimatedTotal + (booking.discount || 0) - (booking.delivery?.fee || 0)).toFixed(2)}
+          </span>
+          {booking.delivery?.method === "pickup" ? (
+            <span style={{ fontSize: "0.65rem", color: "#10b981", margin: 0 }}>
+              Fulfillment: Customer Pick Up
+            </span>
           ) : (
-            <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>Estimated Total</span>
+            <span style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+              Delivery Fee: +${(booking.delivery?.fee || 0).toFixed(2)}
+            </span>
+          )}
+          {booking.discount && booking.discount > 0 && (
+            <span style={{ fontSize: "0.65rem", color: "#ef4444", margin: 0 }}>
+              Discount: -${booking.discount.toFixed(2)}
+            </span>
           )}
           <span style={{ fontSize: "1.5rem", color: "#D4AF37", fontWeight: 900, margin: "0.15rem 0" }}>${booking.estimatedTotal.toFixed(2)}</span>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.15rem", fontSize: "0.72rem", color: "rgba(255,255,255,0.4)" }}>
