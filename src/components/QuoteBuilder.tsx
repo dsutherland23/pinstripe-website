@@ -54,9 +54,10 @@ interface QuoteBuilderProps {
   selectedPackageFromUI?: string | null;
   defaultDate?: string;
   defaultCity?: string;
+  initialPromoCode?: string | null;
 }
 
-export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventory, selectedPackageFromUI, defaultDate, defaultCity }: QuoteBuilderProps) {
+export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventory, selectedPackageFromUI, defaultDate, defaultCity, initialPromoCode }: QuoteBuilderProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [step, setStep] = useState(1);
   const [done, setDone] = useState(false);
@@ -256,6 +257,27 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     setQuoteRef(null);
     clearAllErrors();
   }, [selectedItemFromInventory, selectedPackageFromUI, isOpen, defaultDate, defaultCity, clearAllErrors]);
+
+  useEffect(() => {
+    if (isOpen && initialPromoCode) {
+      if (promoCodes.length > 0) {
+        const match = promoCodes.find((p) => p.code.toUpperCase() === initialPromoCode.toUpperCase());
+        if (match) {
+          setAppliedPromo(match);
+          setPromoCodeInput(match.code);
+          setPromoError("");
+        } else {
+          setPromoCodeInput(initialPromoCode);
+        }
+      } else {
+        setPromoCodeInput(initialPromoCode);
+      }
+    } else if (!isOpen) {
+      setAppliedPromo(null);
+      setPromoCodeInput("");
+      setPromoError("");
+    }
+  }, [isOpen, initialPromoCode, promoCodes]);
 
   useEffect(() => {
     const d = dialogRef.current;

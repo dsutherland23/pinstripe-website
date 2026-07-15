@@ -24,6 +24,7 @@ import {
   User,
   Tent,
   ShoppingBag,
+  Zap,
 } from "lucide-react";
 
 const rentalSubItems = [
@@ -33,7 +34,6 @@ const rentalSubItems = [
   { label: "Inflatables",          href: "/inventory/inflatables",          categorySlug: "inflatables",          icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },
   { label: "Photo Booth",          href: "/inventory/photobooth",          categorySlug: "photobooth",          icon: <Camera size={15} />,   desc: "360° & open-air photo experiences" },
   { label: "Concession Equipment", href: "/inventory/concession-equipment", categorySlug: "concession-equipment", icon: <Coffee size={15} />,   desc: "Popcorn, cotton candy & more" },
-  { label: "Products",             href: "/inventory/products",             categorySlug: "products",             icon: <ShoppingBag size={15} />, desc: "Kits, stands & extra party supplies" },
 ];
 
 
@@ -53,6 +53,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   const [mobileRentalsOpen, setMobileRentalsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [galleryEnabled, setGalleryEnabled] = useState(true);
+  const [specialsEnabled, setSpecialsEnabled] = useState(true);
   const [phone, setPhone] = useState("(757) 749-3407");
   const rentalsRef = useRef<HTMLDivElement>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -66,8 +67,13 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
     fetch("/api/settings")
       .then((res) => res.json())
       .then((data) => {
-        if (data && typeof data.galleryEnabled === "boolean") {
-          setGalleryEnabled(data.galleryEnabled);
+        if (data) {
+          if (typeof data.galleryEnabled === "boolean") {
+            setGalleryEnabled(data.galleryEnabled);
+          }
+          if (typeof data.specialsEnabled === "boolean") {
+            setSpecialsEnabled(data.specialsEnabled);
+          }
         }
       })
       .catch(() => {});
@@ -154,6 +160,8 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   const links = [
     { label: "Home",       href: getLinkHref("Home", "#home"),           desc: "Return to grand showcase" },
     { label: "Rentals",    href: getLinkHref("Rentals", "/inventory"),   desc: "Browse tents, tables & slides" },
+    { label: "Products",   href: "/inventory/products",                  desc: "Kits, stands & extra party supplies" },
+    ...(specialsEnabled ? [{ label: "Specials",   href: "/specials",                            desc: "Limited-time deals & packages" }] : []),
     ...(galleryEnabled ? [{ label: "Gallery",    href: getLinkHref("Gallery", "#gallery"),     desc: "Real celebration inspiration" }] : []),
     { label: "My Account", href: "/portal",                              desc: "Sign in, register or track orders" },
     { label: "About",      href: "#about",                               desc: "Our story & premium quality" },
@@ -167,6 +175,8 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
     switch (label) {
       case "Home":       return <Home size={size} />;
       case "Rentals":    return <Compass size={size} />;
+      case "Products":   return <ShoppingBag size={size} />;
+      case "Specials":   return <Zap size={size} />;
       case "Gallery":    return <ImageIcon size={size} />;
       case "My Account": return <User size={size} />;
       case "About":      return <Award size={size} />;

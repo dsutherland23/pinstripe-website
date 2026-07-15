@@ -164,7 +164,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
 
   const sectionsConfig = selectedCategorySlug
     ? rawSections.filter((s) => s.id === selectedCategorySlug)
-    : rawSections;
+    : rawSections.filter((s) => s.id !== "products");
 
   return (
     <main className="pb-18 lg:pb-0" style={{ fontFamily: "var(--font-body)", background: "var(--bg-primary)", color: "var(--text-primary)", minHeight: "100vh", position: "relative", overflowX: "hidden" }}>

@@ -74,6 +74,22 @@ export interface Category {
   order: number;
 }
 
+export interface SpecialItem {
+  id: string;
+  title: string;
+  description: string;
+  image?: string;
+  originalPrice: number;
+  specialPrice: number;
+  promoCode?: string;
+  itemId?: string;
+  endDate?: string;
+  badge?: string;
+  enabled: boolean;
+  featured: boolean;
+  order: number;
+}
+
 export interface SiteContent {
   hero: {
     badge: string;
@@ -232,7 +248,8 @@ export async function initDb(): Promise<void> {
         featured_rentals_enabled TINYINT(1) NOT NULL DEFAULT 1,
         deposit_enabled       TINYINT(1) NOT NULL DEFAULT 1,
         deposit_percentage    INT NOT NULL DEFAULT 50,
-        promo_codes           JSON
+        promo_codes           JSON,
+        specials_enabled      TINYINT(1) NOT NULL DEFAULT 1
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
@@ -279,6 +296,12 @@ export async function initDb(): Promise<void> {
     }
 
     try {
+      await conn.query("ALTER TABLE settings ADD COLUMN specials_enabled TINYINT(1) NOT NULL DEFAULT 1");
+    } catch (err) {
+      // Ignore if column already exists
+    }
+
+    try {
       await conn.query("UPDATE settings SET promo_codes = '[{\"code\":\"WELCOME10\",\"type\":\"percent\",\"value\":10},{\"code\":\"VIP50\",\"type\":\"percent\",\"value\":50},{\"code\":\"ONSITE20\",\"type\":\"percent\",\"value\":20}]' WHERE promo_codes IS NULL");
     } catch (err) {
       // Ignore
@@ -307,6 +330,24 @@ export async function initDb(): Promise<void> {
         timestamp     VARCHAR(64)  NOT NULL,
         status        ENUM('sent','delivered','read') NOT NULL DEFAULT 'sent',
         FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS specials (
+        id             VARCHAR(64)   NOT NULL PRIMARY KEY,
+        title          VARCHAR(255)  NOT NULL,
+        description    TEXT          NOT NULL,
+        image          VARCHAR(512),
+        original_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+        special_price  DECIMAL(10,2) NOT NULL DEFAULT 0,
+        promo_code     VARCHAR(64),
+        item_id        VARCHAR(64),
+        end_date       VARCHAR(64),
+        badge          VARCHAR(128),
+        enabled        TINYINT(1)    NOT NULL DEFAULT 1,
+        featured       TINYINT(1)    NOT NULL DEFAULT 0,
+        \`order\`        INT           NOT NULL DEFAULT 0
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
@@ -474,6 +515,7 @@ const fallbackStore = {
     featuredRentalsEnabled: true, 
     depositEnabled: true, 
     depositPercentage: 50,
+    specialsEnabled: true,
     promoCodes: [
       { code: "WELCOME10", type: "percent" as "percent" | "flat", value: 10 },
       { code: "VIP50", type: "percent" as "percent" | "flat", value: 50 },
@@ -483,6 +525,36 @@ const fallbackStore = {
   bookings: [] as Booking[],
   users: [] as User[],
   messages: [] as Message[],
+  specials: [
+    {
+      id: "spec-1",
+      title: "Weekend Inflatable Combo Deal",
+      description: "Book any Bounce House + Water Slide combo for the weekend and get 20% off plus free popcorn machine rental!",
+      image: "/images/inflatable-fun.png",
+      originalPrice: 380,
+      specialPrice: 299,
+      promoCode: "WEEKEND20",
+      endDate: "2026-08-31T23:59:59.000Z",
+      badge: "Best Seller",
+      enabled: true,
+      featured: true,
+      order: 1
+    },
+    {
+      id: "spec-2",
+      title: "Elite Wedding Tent Package",
+      description: "Includes a 20x40 High-Peak Tent, 6 round tables, 48 folding chairs, and beautiful warm white globe lighting setup.",
+      image: "/images/canopy-tent.png",
+      originalPrice: 750,
+      specialPrice: 599,
+      promoCode: "ONSITE20",
+      endDate: "2026-09-30T23:59:59.000Z",
+      badge: "Luxury Deal",
+      enabled: true,
+      featured: true,
+      order: 2
+    }
+  ] as SpecialItem[],
 };
 
 // Resolve local JSON fallback path
@@ -496,10 +568,11 @@ try {
     if (parsed.inventory) fallbackStore.inventory = parsed.inventory;
     if (parsed.categories) fallbackStore.categories = parsed.categories;
     if (parsed.siteContent) fallbackStore.siteContent = parsed.siteContent;
-    if (parsed.settings) fallbackStore.settings = parsed.settings;
+    if (parsed.settings) fallbackStore.settings = { ...fallbackStore.settings, ...parsed.settings };
     if (parsed.bookings) fallbackStore.bookings = parsed.bookings;
     if (parsed.users) fallbackStore.users = parsed.users;
     if (parsed.messages) fallbackStore.messages = parsed.messages;
+    if (parsed.specials) fallbackStore.specials = parsed.specials;
     console.log("💾 Loaded fallback database from local JSON file.");
   }
 } catch (err) {
@@ -989,6 +1062,7 @@ type SettingsRow = {
   deposit_enabled: number;
   deposit_percentage: number;
   promo_codes: any;
+  specials_enabled: number;
 };
 
 export async function getSettings(): Promise<{
@@ -1002,12 +1076,13 @@ export async function getSettings(): Promise<{
   depositEnabled?: boolean;
   depositPercentage?: number;
   promoCodes?: Array<{ code: string; type: "percent" | "flat"; value: number }>;
+  specialsEnabled?: boolean;
 }> {
   if (useFallback) return fallbackStore.settings;
   try {
     await ensureInit();
     const rows = await query<SettingsRow>("SELECT * FROM settings WHERE id = 1");
-    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50, promoCodes: [] };
+    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50, promoCodes: [], specialsEnabled: true };
     return {
       tentPlannerEnabled: Boolean(rows[0].tent_planner_enabled),
       maintenanceMode: Boolean(rows[0].maintenance_mode),
@@ -1019,6 +1094,7 @@ export async function getSettings(): Promise<{
       depositEnabled: Boolean(rows[0].deposit_enabled ?? 1),
       depositPercentage: Number(rows[0].deposit_percentage ?? 50),
       promoCodes: safeParseJson(rows[0].promo_codes, []),
+      specialsEnabled: Boolean(rows[0].specials_enabled ?? 1),
     };
   } catch (err) {
     console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
@@ -1038,6 +1114,7 @@ export async function updateSettings(updates: {
   depositEnabled?: boolean;
   depositPercentage?: number;
   promoCodes?: Array<{ code: string; type: "percent" | "flat"; value: number }>;
+  specialsEnabled?: boolean;
 }): Promise<void> {
   if (useFallback) {
     fallbackStore.settings = { ...fallbackStore.settings, ...updates };
@@ -1087,6 +1164,10 @@ export async function updateSettings(updates: {
     if (updates.promoCodes !== undefined) {
       setClauses.push("promo_codes = ?");
       values.push(JSON.stringify(updates.promoCodes));
+    }
+    if (updates.specialsEnabled !== undefined) {
+      setClauses.push("specials_enabled = ?");
+      values.push(updates.specialsEnabled ? 1 : 0);
     }
     if (setClauses.length === 0) return;
     values.push(1);
@@ -1378,6 +1459,158 @@ export async function markMessagesAsRead(
     console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
     useFallback = true;
     return markMessagesAsRead(bookingId, role);
+  }
+}
+
+// ─── Specials ──────────────────────────────────────────────────────────────────
+
+type SpecialRow = {
+  id: string;
+  title: string;
+  description: string;
+  image: string | null;
+  original_price: number;
+  special_price: number;
+  promo_code: string | null;
+  item_id: string | null;
+  end_date: string | null;
+  badge: string | null;
+  enabled: number;
+  featured: number;
+  order: number;
+};
+
+function rowToSpecial(r: SpecialRow): SpecialItem {
+  return {
+    id: r.id,
+    title: r.title,
+    description: r.description,
+    image: r.image ?? undefined,
+    originalPrice: Number(r.original_price),
+    specialPrice: Number(r.special_price),
+    promoCode: r.promo_code ?? undefined,
+    itemId: r.item_id ?? undefined,
+    endDate: r.end_date ?? undefined,
+    badge: r.badge ?? undefined,
+    enabled: Boolean(r.enabled),
+    featured: Boolean(r.featured),
+    order: r.order,
+  };
+}
+
+export async function getSpecials(): Promise<SpecialItem[]> {
+  if (useFallback) {
+    return [...fallbackStore.specials].sort((a, b) => a.order - b.order);
+  }
+  try {
+    await ensureInit();
+    const rows = await query<SpecialRow>("SELECT * FROM specials ORDER BY `order` ASC");
+    return rows.map(rowToSpecial);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return getSpecials();
+  }
+}
+
+export async function createSpecial(special: SpecialItem): Promise<SpecialItem> {
+  if (useFallback) {
+    fallbackStore.specials.push(special);
+    saveFallbackStore();
+    return special;
+  }
+  try {
+    await ensureInit();
+    await query(
+      `INSERT INTO specials (id, title, description, image, original_price, special_price, promo_code, item_id, end_date, badge, enabled, featured, \`order\`)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        special.id,
+        special.title,
+        special.description,
+        special.image ?? null,
+        special.originalPrice,
+        special.specialPrice,
+        special.promoCode ?? null,
+        special.itemId ?? null,
+        special.endDate ?? null,
+        special.badge ?? null,
+        special.enabled ? 1 : 0,
+        special.featured ? 1 : 0,
+        special.order,
+      ]
+    );
+    return special;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return createSpecial(special);
+  }
+}
+
+export async function updateSpecial(id: string, updates: Partial<SpecialItem>): Promise<SpecialItem> {
+  if (useFallback) {
+    const idx = fallbackStore.specials.findIndex(x => x.id === id);
+    if (idx !== -1) {
+      fallbackStore.specials[idx] = { ...fallbackStore.specials[idx], ...updates };
+      saveFallbackStore();
+      return fallbackStore.specials[idx];
+    }
+    throw new Error("Special not found");
+  }
+  try {
+    await ensureInit();
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    if (updates.title !== undefined) { setClauses.push("title = ?"); values.push(updates.title); }
+    if (updates.description !== undefined) { setClauses.push("description = ?"); values.push(updates.description); }
+    if (updates.image !== undefined) { setClauses.push("image = ?"); values.push(updates.image ?? null); }
+    if (updates.originalPrice !== undefined) { setClauses.push("original_price = ?"); values.push(updates.originalPrice); }
+    if (updates.specialPrice !== undefined) { setClauses.push("special_price = ?"); values.push(updates.specialPrice); }
+    if (updates.promoCode !== undefined) { setClauses.push("promo_code = ?"); values.push(updates.promoCode ?? null); }
+    if (updates.itemId !== undefined) { setClauses.push("item_id = ?"); values.push(updates.itemId ?? null); }
+    if (updates.endDate !== undefined) { setClauses.push("end_date = ?"); values.push(updates.endDate ?? null); }
+    if (updates.badge !== undefined) { setClauses.push("badge = ?"); values.push(updates.badge ?? null); }
+    if (updates.enabled !== undefined) { setClauses.push("enabled = ?"); values.push(updates.enabled ? 1 : 0); }
+    if (updates.featured !== undefined) { setClauses.push("featured = ?"); values.push(updates.featured ? 1 : 0); }
+    if (updates.order !== undefined) { setClauses.push("`order` = ?"); values.push(updates.order); }
+    
+    if (setClauses.length === 0) {
+      const rows = await query<SpecialRow>("SELECT * FROM specials WHERE id = ?", [id]);
+      if (!rows.length) throw new Error("Special not found");
+      return rowToSpecial(rows[0]);
+    }
+    
+    values.push(id);
+    await query(`UPDATE specials SET ${setClauses.join(", ")} WHERE id = ?`, values);
+    
+    const rows = await query<SpecialRow>("SELECT * FROM specials WHERE id = ?", [id]);
+    return rowToSpecial(rows[0]);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return updateSpecial(id, updates);
+  }
+}
+
+export async function deleteSpecial(id: string): Promise<boolean> {
+  if (useFallback) {
+    const before = fallbackStore.specials.length;
+    fallbackStore.specials = fallbackStore.specials.filter(x => x.id !== id);
+    const affected = fallbackStore.specials.length < before;
+    if (affected) saveFallbackStore();
+    return affected;
+  }
+  try {
+    await ensureInit();
+    const result = await query("DELETE FROM specials WHERE id = ?", [id]);
+    const r = result as any;
+    const affected = r.affectedRows !== undefined ? r.affectedRows > 0 : true;
+    return affected;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
+    useFallback = true;
+    return deleteSpecial(id);
   }
 }
 

@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       depositEnabled: body.depositEnabled,
       depositPercentage: body.depositPercentage,
       promoCodes: body.promoCodes,
+      specialsEnabled: body.specialsEnabled,
     });
     return NextResponse.json({ success: true });
   } catch (err) {

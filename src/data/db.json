@@ -342,9 +342,13 @@
     "maintenanceMode": false,
     "analyticsId": "",
     "payInPersonEnabled": false,
-    "galleryEnabled": true,
+    "galleryEnabled": false,
     "categoriesEnabled": false,
-    "featuredRentalsEnabled": false
+    "featuredRentalsEnabled": false,
+    "depositEnabled": true,
+    "depositPercentage": 50,
+    "promoCodes": [],
+    "specialsEnabled": true
   },
   "bookings": [
     {
@@ -495,6 +499,36 @@
       "mediaUrl": "/images/chats/chat-PSR-MPWZHLOB-1782279374999.jpeg",
       "timestamp": "2026-06-24T05:36:21.533Z",
       "status": "sent"
+    }
+  ],
+  "specials": [
+    {
+      "id": "spec-1",
+      "title": "Weekend Inflatable Combo Deal",
+      "description": "Book any Bounce House + Water Slide combo for the weekend and get 20% off plus free popcorn machine rental!",
+      "image": "/images/inflatable-fun.png",
+      "originalPrice": 380,
+      "specialPrice": 299,
+      "promoCode": "WEEKEND20",
+      "endDate": "2026-08-31T23:59:59.000Z",
+      "badge": "Best Seller",
+      "enabled": true,
+      "featured": true,
+      "order": 1
+    },
+    {
+      "id": "spec-2",
+      "title": "Elite Wedding Tent Package",
+      "description": "Includes a 20x40 High-Peak Tent, 6 round tables, 48 folding chairs, and beautiful warm white globe lighting setup.",
+      "image": "/images/canopy-tent.png",
+      "originalPrice": 750,
+      "specialPrice": 599,
+      "promoCode": "ONSITE20",
+      "endDate": "2026-09-30T23:59:59.000Z",
+      "badge": "Luxury Deal",
+      "enabled": true,
+      "featured": true,
+      "order": 2
     }
   ]
 }

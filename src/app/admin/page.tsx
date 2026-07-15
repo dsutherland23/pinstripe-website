@@ -8,7 +8,7 @@ import {
   X, Save, Star, Package, LayoutGrid, Palette, FileText, BarChart3,
   Phone, Mail, MapPin, Link2, Share2, Menu, Search, Filter,
   ArrowUp, ArrowDown, ToggleLeft, ToggleRight, Image as ImageIcon,
-  CheckCircle, XCircle, Clock, Zap, Download,
+  CheckCircle, XCircle, Clock, Zap, Download, Copy,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -127,7 +127,23 @@ function Badge({ label, color = "gold" }: { label: string; color?: "gold" | "gre
 }
 
 // ── Main Admin Component ───────────────────────────────────────────────────
-type TabId = "overview" | "inventory" | "categories" | "bookings" | "content" | "settings";
+interface SpecialItem {
+  id: string;
+  title: string;
+  description: string;
+  image?: string;
+  originalPrice: number;
+  specialPrice: number;
+  promoCode?: string;
+  itemId?: string;
+  endDate?: string;
+  badge?: string;
+  enabled: boolean;
+  featured: boolean;
+  order: number;
+}
+
+type TabId = "overview" | "inventory" | "categories" | "bookings" | "specials" | "content" | "settings";
 
 export default function AdminDashboard() {
   const [passcode, setPasscode]   = useState("");
@@ -163,7 +179,28 @@ export default function AdminDashboard() {
     featuredRentalsEnabled: true, 
     depositEnabled: true, 
     depositPercentage: 50,
+    specialsEnabled: true,
     promoCodes: [] as Array<{ code: string; type: "percent" | "flat"; value: number }>
+  });
+
+  // Specials state
+  const [specials, setSpecials] = useState<SpecialItem[]>([]);
+  const [editingSpecial, setEditingSpecial] = useState<SpecialItem | null>(null);
+  const [isCreatingSpecial, setIsCreatingSpecial] = useState(false);
+  const [specialDeleteConfirmId, setSpecialDeleteConfirmId] = useState<string | null>(null);
+  const [specialForm, setSpecialForm] = useState({
+    title: "",
+    description: "",
+    image: "",
+    originalPrice: "0",
+    specialPrice: "0",
+    promoCode: "",
+    itemId: "",
+    endDate: "",
+    badge: "",
+    enabled: true,
+    featured: false,
+    order: "0",
   });
 
   // UI state
@@ -300,18 +337,20 @@ export default function AdminDashboard() {
     const c = code || getCode();
     setLoading(true); setErrorMsg("");
     try {
-      const [invRes, bkRes, catRes, contentRes, settingsRes] = await Promise.all([
+      const [invRes, bkRes, catRes, contentRes, settingsRes, specialsRes] = await Promise.all([
         fetch(`/api/admin/inventory?t=${Date.now()}`, { headers: { "x-admin-passcode": c } }),
         fetch(`/api/admin/bookings?t=${Date.now()}`,  { headers: { "x-admin-passcode": c } }),
         fetch(`/api/admin/categories?t=${Date.now()}`,{ headers: { "x-admin-passcode": c } }),
         fetch(`/api/admin/content?t=${Date.now()}`,   { headers: { "x-admin-passcode": c } }),
         fetch(`/api/admin/settings?t=${Date.now()}`,  { headers: { "x-admin-passcode": c } }),
+        fetch(`/api/admin/specials?t=${Date.now()}`,  { headers: { "x-admin-passcode": c } }),
       ]);
       if (invRes.ok)  { const d = await invRes.json();     setInventory(d.items || []); }
       if (bkRes.ok)   { const d = await bkRes.json();      setBookings(d.bookings || []); }
       if (catRes.ok)  { const d = await catRes.json();     setCategories(d.categories || []); }
       if (contentRes.ok) { const d = await contentRes.json(); setSiteContent(d.content); setContentForm(d.content); }
-      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true, categoriesEnabled: d.categoriesEnabled ?? true, featuredRentalsEnabled: d.featuredRentalsEnabled ?? true, depositEnabled: d.depositEnabled ?? true, depositPercentage: d.depositPercentage ?? 50, promoCodes: d.promoCodes ?? [] }); }
+      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true, categoriesEnabled: d.categoriesEnabled ?? true, featuredRentalsEnabled: d.featuredRentalsEnabled ?? true, depositEnabled: d.depositEnabled ?? true, depositPercentage: d.depositPercentage ?? 50, promoCodes: d.promoCodes ?? [], specialsEnabled: d.specialsEnabled ?? true }); }
+      if (specialsRes.ok) { const d = await specialsRes.json(); setSpecials(d.items || []); }
     } catch { setErrorMsg("Network error loading data."); }
     finally { setLoading(false); }
   };
@@ -374,6 +413,170 @@ export default function AdminDashboard() {
       else notify(d.error || "Failed to delete.", "error");
     } catch { notify("Network error.", "error"); }
     finally { setLoading(false); setDeleteConfirmId(null); }
+  };
+
+  // ── Specials CRUD ─────────────────────────────────────────────────────────
+  const startEditSpecial = (spec: SpecialItem) => {
+    setEditingSpecial(spec); setIsCreatingSpecial(false);
+    setSpecialForm({
+      title: spec.title,
+      description: spec.description,
+      image: spec.image || "",
+      originalPrice: String(spec.originalPrice),
+      specialPrice: String(spec.specialPrice),
+      promoCode: spec.promoCode || "",
+      itemId: spec.itemId || "",
+      endDate: spec.endDate || "",
+      badge: spec.badge || "",
+      enabled: spec.enabled,
+      featured: spec.featured,
+      order: String(spec.order),
+    });
+  };
+
+  const startCreateSpecial = () => {
+    setEditingSpecial(null); setIsCreatingSpecial(true);
+    setSpecialForm({
+      title: "",
+      description: "",
+      image: "",
+      originalPrice: "100",
+      specialPrice: "80",
+      promoCode: "",
+      itemId: "",
+      endDate: "",
+      badge: "",
+      enabled: true,
+      featured: false,
+      order: String(specials.length + 1),
+    });
+  };
+
+  const handleSaveSpecial = async (e: React.FormEvent) => {
+    e.preventDefault(); setLoading(true);
+    try {
+      const res = await fetch("/api/admin/specials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+        body: JSON.stringify({
+          action: isCreatingSpecial ? "create" : "update",
+          item: {
+            id: editingSpecial?.id,
+            ...specialForm,
+            originalPrice: parseFloat(specialForm.originalPrice) || 0,
+            specialPrice: parseFloat(specialForm.specialPrice) || 0,
+            order: parseInt(specialForm.order, 10) || 0,
+          },
+        }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        notify(isCreatingSpecial ? "Special deal created!" : "Special deal updated!");
+        setEditingSpecial(null); setIsCreatingSpecial(false);
+        loadAll();
+      } else notify(d.error || "Failed to save special.", "error");
+    } catch { notify("Network error.", "error"); }
+    finally { setLoading(false); }
+  };
+
+  const handleDuplicateSpecial = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/specials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+        body: JSON.stringify({ action: "duplicate", item: { id } }),
+      });
+      const d = await res.json();
+      if (d.success) { notify("Special deal duplicated!"); loadAll(); }
+      else notify(d.error || "Failed to duplicate.", "error");
+    } catch { notify("Network error.", "error"); }
+    finally { setLoading(false); }
+  };
+
+  const handleDeleteSpecial = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/specials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+        body: JSON.stringify({ action: "delete", item: { id } }),
+      });
+      const d = await res.json();
+      if (d.success) { notify("Special deal deleted."); loadAll(); }
+      else notify(d.error || "Failed to delete.", "error");
+    } catch { notify("Network error.", "error"); }
+    finally { setLoading(false); setSpecialDeleteConfirmId(null); }
+  };
+
+  const handleToggleSpecialEnabled = async (spec: SpecialItem) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/specials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+        body: JSON.stringify({
+          action: "update",
+          item: { ...spec, enabled: !spec.enabled },
+        }),
+      });
+      const d = await res.json();
+      if (d.success) { notify(spec.enabled ? "Special disabled." : "Special enabled."); loadAll(); }
+      else notify(d.error || "Failed to toggle status.", "error");
+    } catch { notify("Network error.", "error"); }
+    finally { setLoading(false); }
+  };
+
+  const handleToggleSpecialFeatured = async (spec: SpecialItem) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/specials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+        body: JSON.stringify({
+          action: "update",
+          item: { ...spec, featured: !spec.featured },
+        }),
+      });
+      const d = await res.json();
+      if (d.success) { notify(spec.featured ? "Special unfeatured." : "Special featured."); loadAll(); }
+      else notify(d.error || "Failed to toggle featured.", "error");
+    } catch { notify("Network error.", "error"); }
+    finally { setLoading(false); }
+  };
+
+  const handleUploadSpecialImage = async (specId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("itemId", specId);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "x-admin-passcode": getCode() },
+        body: formData,
+      });
+      const d = await res.json();
+      if (d.success) {
+        notify("Image uploaded!");
+        if (editingSpecial) {
+          setSpecialForm(f => ({ ...f, image: d.url }));
+        } else {
+          // Inline edit quick upload
+          const spec = specials.find(s => s.id === specId);
+          if (spec) {
+            await fetch("/api/admin/specials", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+              body: JSON.stringify({ action: "update", item: { ...spec, image: d.url } }),
+            });
+          }
+        }
+        loadAll();
+      } else notify(d.error || "Failed to upload image.", "error");
+    } catch { notify("Network error.", "error"); }
+    finally { setLoading(false); }
   };
 
   const handleUploadImage = async (itemId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -647,6 +850,7 @@ export default function AdminDashboard() {
     { id: "overview",   label: "Overview",     icon: <BarChart3 size={18} /> },
     { id: "inventory",  label: "Inventory",    icon: <Package size={18} />,  badge: inventory.length },
     { id: "categories", label: "Categories",   icon: <Tag size={18} />,      badge: categories.length },
+    { id: "specials",   label: "Specials",     icon: <Zap size={18} />,      badge: specials.length },
     { id: "bookings",   label: "Bookings",     icon: <Calendar size={18} />, badge: pendingBookings > 0 ? pendingBookings : undefined },
     { id: "content",    label: "Site Content", icon: <Globe size={18} /> },
     { id: "settings",   label: "Settings",     icon: <Settings size={18} /> },
@@ -1796,6 +2000,7 @@ export default function AdminDashboard() {
                     { key: "featuredRentalsEnabled", label: "Top Rental Equipment Section", desc: "Show the 'Top Rental Equipment' cards section on the homepage." },
                     { key: "tentPlannerEnabled", label: "Tent Layout Simulator", desc: "Show the interactive tent planner widget on the homepage." },
                     { key: "galleryEnabled",     label: "Gallery / Instagram",  desc: "Show the Gallery / Instagram section on the homepage." },
+                    { key: "specialsEnabled",    label: "Specials / Offers Page", desc: "Enable the public Specials page showing active deals and seasonal discounts." },
                     { key: "maintenanceMode",    label: "Maintenance Mode",     desc: "Put the public site into maintenance — admins still have access." },
                     { key: "payInPersonEnabled", label: "Pay in Person Option", desc: "Allow users to choose Pay in Person (Cash / Check / Zelle) during booking." },
                     { key: "depositEnabled",     label: "Collect Reservation Deposit", desc: "Require a deposit amount to confirm bookings online." },
@@ -1919,6 +2124,315 @@ export default function AdminDashboard() {
                   <Save size={15} />{savingSettings ? "Saving…" : "Save All Settings"}
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* ── SPECIALS TAB ─────────────────────────────────────────────── */}
+          {activeTab === "specials" && (
+            <div style={{ display: "grid", gridTemplateColumns: (editingSpecial || isCreatingSpecial) && !isMobile ? "1fr 400px" : "1fr", gap: "1.5rem", alignItems: "flex-start" }}>
+              {/* Table / Card List */}
+              <div style={cardStyle}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
+                  <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#ffffff", margin: 0 }}>Special Deals ({specials.length})</h3>
+                  <button onClick={startCreateSpecial} style={{ padding: "0.55rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <Plus size={14} />Add Special Deal
+                  </button>
+                </div>
+
+                {/* Table / Card List wrapper */}
+                {isMobile ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    {specials.map((spec) => (
+                      <div key={spec.id} style={{ ...cardStyle, background: "rgba(255,255,255,0.02)", display: "flex", gap: "0.75rem", padding: "1rem" }}>
+                        <img src={spec.image || "/images/placeholder.png"} alt="" style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "0.5rem", background: "#1a1a1a", flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).src = "/images/placeholder.png"; }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontWeight: 700, color: "#ffffff", fontSize: "0.85rem", margin: "0 0 0.25rem 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{spec.title}</p>
+                          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.4rem", flexWrap: "wrap" }}>
+                            {spec.badge && <Badge label={spec.badge} color="gold" />}
+                            <Badge label={spec.enabled ? "Active" : "Off"} color={spec.enabled ? "green" : "red"} />
+                            {spec.featured && <Badge label="★ Featured" color="purple" />}
+                          </div>
+                          <p style={{ color: "#D4AF37", fontWeight: 800, fontSize: "0.85rem", margin: 0 }}>
+                            ${spec.specialPrice} <span style={{ textDecoration: "line-through", color: "rgba(255,255,255,0.4)", fontSize: "0.72rem", fontWeight: 400 }}>${spec.originalPrice}</span>
+                            {spec.promoCode && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", fontWeight: 400 }}> · Code: {spec.promoCode}</span>}
+                          </p>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", justifyContent: "center" }}>
+                          <div style={{ display: "flex", gap: "0.35rem" }}>
+                            <button onClick={() => startEditSpecial(spec)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#fff", padding: "0.45rem", borderRadius: "0.375rem", cursor: "pointer", display: "flex" }} title="Edit">
+                              <Edit size={14} />
+                            </button>
+                            <button onClick={() => handleDuplicateSpecial(spec.id)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#D4AF37", padding: "0.45rem", borderRadius: "0.375rem", cursor: "pointer", display: "flex" }} title="Duplicate">
+                              <Copy size={14} />
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => setSpecialDeleteConfirmId(spec.id)}
+                            style={{
+                              background: specialDeleteConfirmId === spec.id ? "#ef4444" : "rgba(239,68,68,0.08)",
+                              border: "none",
+                              color: specialDeleteConfirmId === spec.id ? "#fff" : "#ef4444",
+                              padding: "0.45rem",
+                              borderRadius: "0.375rem",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {specials.length === 0 && (
+                      <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>No special deals configured</div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                          {["Image", "Title & Badge", "Promo Code", "Old Price", "Special Price", "Status", "Actions"].map(h => (
+                            <th key={h} style={{ padding: "8px 10px", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)", fontWeight: 700, textAlign: h === "Old Price" || h === "Special Price" || h === "Actions" ? "right" : "left" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {specials.map((spec) => (
+                          <tr key={spec.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                            <td style={{ padding: "0.75rem 0" }}>
+                              <div style={{ width: "50px", height: "35px", borderRadius: "0.25rem", overflow: "hidden", background: "rgba(255,255,255,0.05)" }}>
+                                <img src={spec.image || "/images/placeholder.png"} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { (e.target as HTMLImageElement).src = "/images/placeholder.png"; }} />
+                              </div>
+                            </td>
+                            <td>
+                              <div style={{ fontWeight: 700, color: "#ffffff", fontSize: "0.85rem" }}>{spec.title}</div>
+                              {spec.badge && (
+                                <span style={{ display: "inline-block", background: "rgba(212,175,55,0.15)", color: "#D4AF37", fontSize: "0.6rem", fontWeight: 700, padding: "0.1rem 0.4rem", borderRadius: "0.25rem", marginTop: "0.2rem" }}>
+                                  {spec.badge}
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              {spec.promoCode ? (
+                                <code style={{ background: "rgba(255,255,255,0.05)", padding: "0.2rem 0.4rem", borderRadius: "0.25rem", fontSize: "0.75rem", color: "#D4AF37" }}>
+                                  {spec.promoCode}
+                                </code>
+                              ) : (
+                                <span style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.75rem" }}>None</span>
+                              )}
+                            </td>
+                            <td style={{ textAlign: "right", textDecoration: "line-through", color: "rgba(255,255,255,0.3)", fontSize: "0.8rem" }}>
+                              ${spec.originalPrice}
+                            </td>
+                            <td style={{ textAlign: "right", fontWeight: 700, color: "#D4AF37", fontSize: "0.85rem" }}>
+                              ${spec.specialPrice}
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", gap: "0.5rem" }}>
+                                <button
+                                  onClick={() => handleToggleSpecialEnabled(spec)}
+                                  style={{
+                                    background: spec.enabled ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
+                                    color: spec.enabled ? "#22c55e" : "#ef4444",
+                                    border: "none",
+                                    padding: "0.25rem 0.5rem",
+                                    borderRadius: "0.25rem",
+                                    fontSize: "0.7rem",
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {spec.enabled ? "Active" : "Disabled"}
+                                </button>
+                                <button
+                                  onClick={() => handleToggleSpecialFeatured(spec)}
+                                  style={{
+                                    background: spec.featured ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.05)",
+                                    color: spec.featured ? "#D4AF37" : "rgba(255,255,255,0.4)",
+                                    border: "none",
+                                    padding: "0.25rem 0.5rem",
+                                    borderRadius: "0.25rem",
+                                    fontSize: "0.7rem",
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {spec.featured ? "★ Featured" : "★ Standard"}
+                                </button>
+                              </div>
+                            </td>
+                            <td style={{ textAlign: "right" }}>
+                              <div style={{ display: "flex", gap: "0.35rem", justifyContent: "flex-end" }}>
+                                <button onClick={() => startEditSpecial(spec)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#fff", padding: "0.35rem", borderRadius: "0.25rem", cursor: "pointer" }} title="Edit"><Edit size={14} /></button>
+                                <button onClick={() => handleDuplicateSpecial(spec.id)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#D4AF37", padding: "0.35rem", borderRadius: "0.25rem", cursor: "pointer" }} title="Duplicate"><Copy size={14} /></button>
+                                <button
+                                  onClick={() => setSpecialDeleteConfirmId(spec.id)}
+                                  style={{
+                                    background: specialDeleteConfirmId === spec.id ? "#ef4444" : "rgba(239,68,68,0.15)",
+                                    border: "none",
+                                    color: specialDeleteConfirmId === spec.id ? "#fff" : "#ef4444",
+                                    padding: "0.35rem",
+                                    borderRadius: "0.25rem",
+                                    cursor: "pointer",
+                                  }}
+                                  title="Delete"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {specials.length === 0 && (
+                          <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: "0.85rem" }}>No special deals configured</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Editor Panel */}
+              {(editingSpecial || isCreatingSpecial) && (
+                <div style={{
+                  ...cardStyle,
+                  border: "1px solid rgba(212,175,55,0.25)",
+                  position: isMobile ? "static" : "sticky",
+                  top: isMobile ? undefined : "80px",
+                  maxHeight: isMobile ? undefined : "calc(100vh - 100px)",
+                  overflowY: isMobile ? undefined : "auto"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+                    <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>
+                      {isCreatingSpecial ? "Create Special" : `Edit #${editingSpecial?.id}`}
+                    </h3>
+                    <button onClick={() => { setEditingSpecial(null); setIsCreatingSpecial(false); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex" }}><X size={18} /></button>
+                  </div>
+
+                  <form onSubmit={handleSaveSpecial} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <div>
+                      <label style={labelStyle}>Title</label>
+                      <input required type="text" value={specialForm.title} onChange={e => setSpecialForm(f => ({ ...f, title: e.target.value }))} style={inputStyle} />
+                    </div>
+
+                    <div>
+                      <label style={labelStyle}>Description</label>
+                      <textarea required rows={3} value={specialForm.description} onChange={e => setSpecialForm(f => ({ ...f, description: e.target.value }))} style={{ ...inputStyle, resize: "vertical" }} />
+                    </div>
+
+                    {/* Image preview + upload */}
+                    <div>
+                      <label style={labelStyle}>Image Preview</label>
+                      <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", marginBottom: "0.5rem" }}>
+                        <div style={{ width: "60px", height: "45px", borderRadius: "0.25rem", overflow: "hidden", background: "rgba(255,255,255,0.05)" }}>
+                          <img src={specialForm.image || "/images/placeholder.png"} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { (e.target as HTMLImageElement).src = "/images/placeholder.png"; }} />
+                        </div>
+                        {editingSpecial && (
+                          <div style={{ flex: 1 }}>
+                            <input type="file" accept="image/*" onChange={(e) => handleUploadSpecialImage(editingSpecial.id, e)} style={{ display: "none" }} id="special-image-upload" />
+                            <label htmlFor="special-image-upload" style={{ display: "inline-block", background: "rgba(255,255,255,0.05)", color: "#fff", padding: "0.35rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", border: "1px solid rgba(255,255,255,0.1)" }}>
+                              Upload Image
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={labelStyle}>Image URL</label>
+                      <input type="text" placeholder="https://..." value={specialForm.image} onChange={e => setSpecialForm(f => ({ ...f, image: e.target.value }))} style={inputStyle} />
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                      <div>
+                        <label style={labelStyle}>Original Price ($)</label>
+                        <input required type="number" step="0.01" value={specialForm.originalPrice} onChange={e => setSpecialForm(f => ({ ...f, originalPrice: e.target.value }))} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Special Price ($)</label>
+                        <input required type="number" step="0.01" value={specialForm.specialPrice} onChange={e => setSpecialForm(f => ({ ...f, specialPrice: e.target.value }))} style={inputStyle} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                      <div>
+                        <label style={labelStyle}>Promo Code</label>
+                        <input type="text" placeholder="e.g. SPECIAL20" value={specialForm.promoCode} onChange={e => setSpecialForm(f => ({ ...f, promoCode: e.target.value }))} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Linked Item ID</label>
+                        <select value={specialForm.itemId} onChange={e => setSpecialForm(f => ({ ...f, itemId: e.target.value }))} style={inputStyle}>
+                          <option value="">-- None --</option>
+                          {inventory.map(item => (
+                            <option key={item.id} value={item.id}>{item.title} (${item.price})</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                      <div>
+                        <label style={labelStyle}>Ends On Date</label>
+                        <input type="datetime-local" value={specialForm.endDate ? specialForm.endDate.slice(0, 16) : ""} onChange={e => setSpecialForm(f => ({ ...f, endDate: e.target.value ? new Date(e.target.value).toISOString() : "" }))} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Badge Tag</label>
+                        <input type="text" placeholder="e.g. Best Seller" value={specialForm.badge} onChange={e => setSpecialForm(f => ({ ...f, badge: e.target.value }))} style={inputStyle} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                      <div>
+                        <label style={labelStyle}>Display Order</label>
+                        <input required type="number" value={specialForm.order} onChange={e => setSpecialForm(f => ({ ...f, order: e.target.value }))} style={inputStyle} />
+                      </div>
+                      <div style={{ display: "flex", gap: "1rem", alignItems: "flex-end", paddingBottom: "0.5rem" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
+                          <input type="checkbox" checked={specialForm.enabled} onChange={e => setSpecialForm(f => ({ ...f, enabled: e.target.checked }))} />
+                          Enabled
+                        </label>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
+                          <input type="checkbox" checked={specialForm.featured} onChange={e => setSpecialForm(f => ({ ...f, featured: e.target.checked }))} />
+                          Featured
+                        </label>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                      <button type="submit" style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                        Save Special
+                      </button>
+                      <button type="button" onClick={() => { setEditingSpecial(null); setIsCreatingSpecial(false); }} style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Delete Confirm Modal Dialog */}
+          {specialDeleteConfirmId && (
+            <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
+              <div style={{ ...cardStyle, maxWidth: "400px", border: "1px solid rgba(239,68,68,0.2)" }}>
+                <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#ef4444", marginTop: 0, marginBottom: "0.5rem" }}>Delete Special Deal?</h4>
+                <p style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.5, marginBottom: "1.25rem" }}>
+                  Are you sure you want to permanently delete this special deal? This action cannot be undone.
+                </p>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <button onClick={() => handleDeleteSpecial(specialDeleteConfirmId)} style={{ flex: 1, padding: "0.55rem", borderRadius: "0.375rem", background: "#ef4444", border: "none", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                    Yes, Delete
+                  </button>
+                  <button onClick={() => setSpecialDeleteConfirmId(null)} style={{ flex: 1, padding: "0.55rem", borderRadius: "0.375rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
