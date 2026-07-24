@@ -338,7 +338,33 @@
     }
   },
   "settings": {
-    "tentPlannerEnabled": null
+    "tentPlannerEnabled": null,
+    "maintenanceMode": false,
+    "analyticsId": "",
+    "payInPersonEnabled": true,
+    "galleryEnabled": true,
+    "categoriesEnabled": true,
+    "featuredRentalsEnabled": true,
+    "depositEnabled": true,
+    "depositPercentage": 50,
+    "specialsEnabled": true,
+    "promoCodes": [
+      {
+        "code": "WELCOME10",
+        "type": "percent",
+        "value": 10
+      },
+      {
+        "code": "VIP50",
+        "type": "percent",
+        "value": 50
+      },
+      {
+        "code": "ONSITE20",
+        "type": "percent",
+        "value": 20
+      }
+    ]
   },
   "bookings": [
     {
@@ -454,6 +480,40 @@
       "status": "delivered",
       "notes": "[Selected Package]: Party (4 hours)\n[Selected Add-ons]: Unlimited Prints (2×6 or 4×6)",
       "submittedAt": "2026-06-24T04:42:03.175Z",
+      "amountPaid": 0,
+      "paymentStatus": "unpaid",
+      "payments": []
+    },
+    {
+      "id": "PSR-MPWA68R3",
+      "customer": {
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "phone": "2145550199"
+      },
+      "event": {
+        "type": "Birthday Party",
+        "date": "2026-08-15",
+        "location": "Dallas, TX",
+        "guestCount": 50
+      },
+      "delivery": {
+        "address": "123 Main St",
+        "city": "Dallas",
+        "zipCode": "75201",
+        "method": "delivery",
+        "fee": 0
+      },
+      "items": {
+        "1": 2
+      },
+      "itemCount": 2,
+      "estimatedTotal": 150,
+      "discount": 0,
+      "paymentMethod": "Pay Cash / Card on Delivery",
+      "status": "pending",
+      "notes": "Test quote submission",
+      "submittedAt": "2026-07-24T15:22:57.537Z",
       "amountPaid": 0,
       "paymentStatus": "unpaid",
       "payments": []

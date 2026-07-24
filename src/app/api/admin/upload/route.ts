@@ -18,8 +18,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "file and itemId are required" }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const filename = `rental-${itemId}-${Date.now()}.${ext}`;
+    // 1. Validate file size (10MB max)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "File size exceeds 10MB limit" }, { status: 400 });
+    }
+
+    // 2. Validate file extension (whitelisted image types only)
+    const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "gif", "avif", "svg"]);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+      return NextResponse.json(
+        { error: "Invalid file type. Allowed extensions: jpg, jpeg, png, webp, gif, avif, svg" },
+        { status: 400 }
+      );
+    }
+
+    // 3. Sanitize itemId to prevent path traversal
+    const safeItemId = String(itemId).replace(/[^a-zA-Z0-9_-]/g, "");
+    if (!safeItemId) {
+      return NextResponse.json({ error: "Invalid itemId format" }, { status: 400 });
+    }
+
+    const filename = `rental-${safeItemId}-${Date.now()}.${ext}`;
     const isProduction = process.env.NODE_ENV === "production";
     const uploadDir = isProduction
       ? "/home/u887289907/domains/pinstripesrentals.com/public_html/images/uploads"
@@ -31,7 +52,7 @@ export async function POST(req: NextRequest) {
     await writeFile(filePath, buffer);
 
     const imagePath = `/images/uploads/${filename}`;
-    await updateInventoryItem(itemId, { image: imagePath });
+    await updateInventoryItem(safeItemId, { image: imagePath });
 
     return NextResponse.json({ success: true, imagePath });
   } catch (err) {

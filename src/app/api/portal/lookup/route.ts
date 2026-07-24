@@ -17,12 +17,15 @@ export async function GET(req: NextRequest) {
     const passcode = searchParams.get("passcode");
     const sessionId = searchParams.get("session_id");
 
+    const adminPasscode = getAdminPasscode();
+    const isAdmin = passcode === adminPasscode || req.headers.get("x-admin-passcode") === adminPasscode;
+
     if (!id) {
-      if (email) {
+      if (email && isAdmin) {
         const bookings = await getUserBookings(email);
         return NextResponse.json({ success: true, bookings });
       }
-      return NextResponse.json({ error: "Booking reference (id or ref) or email is required" }, { status: 400 });
+      return NextResponse.json({ error: "Booking reference (id or ref) is required" }, { status: 400 });
     }
 
     let booking = await getBookingById(id);
@@ -31,8 +34,6 @@ export async function GET(req: NextRequest) {
     }
 
     // Auth check: either correct admin passcode or matching customer email
-    const adminPasscode = getAdminPasscode();
-    const isAdmin = passcode === adminPasscode || req.headers.get("x-admin-passcode") === adminPasscode;
     const isCustomer = email && booking.customer?.email?.trim().toLowerCase() === email.trim().toLowerCase();
 
     let isStripeVerified = false;
