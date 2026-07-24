@@ -2094,12 +2094,17 @@ export default function AdminDashboard() {
                   <div><label style={labelStyle}>Subheadline</label><textarea rows={3} value={contentForm.hero.subheadline} onChange={e => setContentForm(f => f ? { ...f, hero: { ...f.hero, subheadline: e.target.value } } : f)} style={{ ...inputStyle, resize: "none" }} /></div>
                   <div>
                     <label style={labelStyle}>Trust Pillars</label>
-                    {contentForm.hero.trustPillars.map((pillar, i) => (
-                      <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                        <input type="text" placeholder="Value (e.g. 100%)" value={pillar.value} onChange={e => { const p = [...contentForm.hero.trustPillars]; p[i] = { ...p[i], value: e.target.value }; setContentForm(f => f ? { ...f, hero: { ...f.hero, trustPillars: p } } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
-                        <input type="text" placeholder="Label (e.g. Sanitised Equipment)" value={pillar.label} onChange={e => { const p = [...contentForm.hero.trustPillars]; p[i] = { ...p[i], label: e.target.value }; setContentForm(f => f ? { ...f, hero: { ...f.hero, trustPillars: p } } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
-                      </div>
-                    ))}
+                    {(() => {
+                      const pillars: Array<{ value: string; label: string }> = Array.isArray(contentForm.hero.trustPillars)
+                        ? contentForm.hero.trustPillars
+                        : Object.values(contentForm.hero.trustPillars || {});
+                      return pillars.map((pillar, i) => (
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                          <input type="text" placeholder="Value (e.g. 100%)" value={pillar.value} onChange={e => { const p = [...pillars]; p[i] = { ...p[i], value: e.target.value }; setContentForm(f => f ? { ...f, hero: { ...f.hero, trustPillars: p } } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
+                          <input type="text" placeholder="Label (e.g. Sanitised Equipment)" value={pillar.label} onChange={e => { const p = [...pillars]; p[i] = { ...p[i], label: e.target.value }; setContentForm(f => f ? { ...f, hero: { ...f.hero, trustPillars: p } } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
               </div>
@@ -2112,13 +2117,18 @@ export default function AdminDashboard() {
                     <Save size={13} />{savingSection === "stats" ? "Saving Stats…" : "Save Stats"}
                   </button>
                 </div>
-                {contentForm.stats.map((stat, i) => (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                    <input type="text" placeholder="Value" value={stat.value} onChange={e => { const s = [...contentForm.stats]; s[i] = { ...s[i], value: e.target.value }; setContentForm(f => f ? { ...f, stats: s } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
-                    <input type="text" placeholder="Label" value={stat.label} onChange={e => { const s = [...contentForm.stats]; s[i] = { ...s[i], label: e.target.value }; setContentForm(f => f ? { ...f, stats: s } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
-                    <input type="text" placeholder="Suffix" value={stat.suffix || ""} onChange={e => { const s = [...contentForm.stats]; s[i] = { ...s[i], suffix: e.target.value }; setContentForm(f => f ? { ...f, stats: s } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
-                  </div>
-                ))}
+                {(() => {
+                  const statsItems: Array<{ value: string; label: string; suffix?: string }> = Array.isArray(contentForm.stats)
+                    ? contentForm.stats
+                    : Object.values(contentForm.stats || {});
+                  return statsItems.map((stat, i) => (
+                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                      <input type="text" placeholder="Value" value={stat.value} onChange={e => { const s = [...statsItems]; s[i] = { ...s[i], value: e.target.value }; setContentForm(f => f ? { ...f, stats: s } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
+                      <input type="text" placeholder="Label" value={stat.label} onChange={e => { const s = [...statsItems]; s[i] = { ...s[i], label: e.target.value }; setContentForm(f => f ? { ...f, stats: s } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
+                      <input type="text" placeholder="Suffix" value={stat.suffix || ""} onChange={e => { const s = [...statsItems]; s[i] = { ...s[i], suffix: e.target.value }; setContentForm(f => f ? { ...f, stats: s } : f); }} style={{ ...inputStyle, fontSize: "0.82rem" }} />
+                    </div>
+                  ));
+                })()}
               </div>
 
               {/* Footer */}

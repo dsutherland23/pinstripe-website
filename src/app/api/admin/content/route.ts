@@ -24,7 +24,12 @@ export async function POST(req: NextRequest) {
     }
 
     const current = await getSiteContent();
-    const updated = { ...current, [section]: { ...(current as any)[section], ...data } };
+    const sectionData = Array.isArray(data)
+      ? data
+      : typeof (current as any)[section] === "object" && !Array.isArray((current as any)[section])
+      ? { ...(current as any)[section], ...data }
+      : data;
+    const updated = { ...current, [section]: sectionData };
     await updateSiteContent(updated);
 
     return NextResponse.json({ success: true });

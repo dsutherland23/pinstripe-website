@@ -1176,6 +1176,21 @@ export async function saveCategories(categories: Category[]): Promise<void> {
 
 // ─── Site Content ─────────────────────────────────────────────────────────────
 
+function normalizeSiteContent(content: SiteContent): SiteContent {
+  if (!content) return DEFAULT_SITE_CONTENT;
+  const copy = { ...content };
+  if (copy.stats && !Array.isArray(copy.stats)) {
+    copy.stats = Object.values(copy.stats);
+  }
+  if (copy.hero?.trustPillars && !Array.isArray(copy.hero.trustPillars)) {
+    copy.hero = {
+      ...copy.hero,
+      trustPillars: Object.values(copy.hero.trustPillars),
+    };
+  }
+  return copy;
+}
+
 export async function getSiteContent(): Promise<SiteContent> {
   try {
     await ensureInit();
@@ -1183,10 +1198,11 @@ export async function getSiteContent(): Promise<SiteContent> {
       "SELECT * FROM site_content WHERE id = 1"
     );
     if (!rows.length) return DEFAULT_SITE_CONTENT;
-    return safeParseJson<SiteContent>(rows[0].content, DEFAULT_SITE_CONTENT);
+    const parsed = safeParseJson<SiteContent>(rows[0].content, DEFAULT_SITE_CONTENT);
+    return normalizeSiteContent(parsed);
   } catch (err) {
     console.warn("⚠️ Database unavailable for getSiteContent. Using in-memory fallback for this request.", err);
-    return fallbackStore.siteContent;
+    return normalizeSiteContent(fallbackStore.siteContent);
   }
 }
 
