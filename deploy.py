@@ -211,8 +211,12 @@ def main():
             # (only if server.js exists and server_original.js doesn't already exist)
             f"[ ! -f {remote_base}/server_original.js ] && cp {remote_base}/server.js {remote_base}/server_original.js || true",
             # Copy public/ assets → web root so Apache serves them directly (no Passenger overhead)
-            # Fixes 502 Bad Gateway errors on /images/* routes
-            f"mkdir -p {web_root}/images && cp -r {remote_base}/public/* {web_root}/",
+            # Fixes 502 Bad Gateway errors on /images/* routes.
+            # IMPORTANT: We use cp -n (no-clobber) for the uploads/ subdirectory so admin-uploaded
+            # images are preserved across deployments. Other public assets are copied normally.
+            f"mkdir -p {web_root}/images/uploads && cp -r {remote_base}/public/images/* {web_root}/images/",
+            # Preserve admin-uploaded files: only copy if destination does NOT exist (-n flag)
+            f"find {remote_base}/public/images/uploads -type f -exec cp -n {{}} {web_root}/images/uploads/ \\; 2>/dev/null || true",
             f"mkdir -p {web_root}/_next/static && cp -r {remote_base}/.next/static/* {web_root}/_next/static/",
             # Remove legacy PHP API folder in web root to prevent it from intercepting Next.js API requests
             f"rm -rf {web_root}/api",

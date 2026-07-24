@@ -454,9 +454,13 @@ async function ensureInit() {
   }
 }
 
-// ─── Resilient In-Memory Fallback Store ──────────────────────────────────────
+// ─── Per-call DB helper ──────────────────────────────────────────────────────
+// IMPORTANT: There is NO permanent useFallback flag.
+// Each database function catches errors independently and falls back for that
+// single call only. The database is retried on every subsequent request.
+// This prevents a single transient error from permanently disabling writes.
 
-let useFallback = false;
+// ─── Resilient In-Memory Fallback Store ──────────────────────────────────────
 
 const DEFAULT_SITE_CONTENT: SiteContent = {
   hero: {
@@ -613,26 +617,17 @@ function rowToItem(r: InventoryRow): RentalItem {
 }
 
 export async function getInventory(): Promise<RentalItem[]> {
-  if (useFallback) return fallbackStore.inventory;
   try {
     await ensureInit();
     const rows = await query<InventoryRow>("SELECT * FROM inventory ORDER BY CAST(id AS UNSIGNED)");
     return rows.map(rowToItem);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory inventory store.", err);
-    useFallback = true;
+    console.warn("⚠️ Database unavailable for getInventory. Using in-memory fallback for this request.", err);
     return fallbackStore.inventory;
   }
 }
 
 export async function updateInventoryItem(id: string, updates: Partial<RentalItem>): Promise<RentalItem | null> {
-  if (useFallback) {
-    const idx = fallbackStore.inventory.findIndex(item => item.id === id);
-    if (idx === -1) return null;
-    fallbackStore.inventory[idx] = { ...fallbackStore.inventory[idx], ...updates };
-    saveFallbackStore();
-    return fallbackStore.inventory[idx];
-  }
   try {
     await ensureInit();
     const fieldMap: Record<string, string> = {
@@ -656,18 +651,16 @@ export async function updateInventoryItem(id: string, updates: Partial<RentalIte
     const rows = await query<InventoryRow>("SELECT * FROM inventory WHERE id = ?", [id]);
     return rows.length ? rowToItem(rows[0]) : null;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return updateInventoryItem(id, updates);
+    console.warn("⚠️ Database unavailable for updateInventoryItem. Using in-memory fallback for this request.", err);
+    const idx = fallbackStore.inventory.findIndex(item => item.id === id);
+    if (idx === -1) return null;
+    fallbackStore.inventory[idx] = { ...fallbackStore.inventory[idx], ...updates };
+    saveFallbackStore();
+    return fallbackStore.inventory[idx];
   }
 }
 
 export async function addInventoryItem(item: RentalItem): Promise<RentalItem> {
-  if (useFallback) {
-    fallbackStore.inventory.push(item);
-    saveFallbackStore();
-    return item;
-  }
   try {
     await ensureInit();
     await query(
@@ -692,28 +685,25 @@ export async function addInventoryItem(item: RentalItem): Promise<RentalItem> {
     );
     return item;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return addInventoryItem(item);
+    console.warn("⚠️ Database unavailable for addInventoryItem. Using in-memory fallback for this request.", err);
+    fallbackStore.inventory.push(item);
+    saveFallbackStore();
+    return item;
   }
 }
 
 export async function deleteInventoryItem(id: string): Promise<boolean> {
-  if (useFallback) {
-    const before = fallbackStore.inventory.length;
-    fallbackStore.inventory = fallbackStore.inventory.filter(item => item.id !== id);
-    const affected = fallbackStore.inventory.length < before;
-    if (affected) saveFallbackStore();
-    return affected;
-  }
   try {
     await ensureInit();
     const [result] = await getPool().execute<mysql.ResultSetHeader>("DELETE FROM inventory WHERE id = ?", [id]);
     return result.affectedRows > 0;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return deleteInventoryItem(id);
+    console.warn("⚠️ Database unavailable for deleteInventoryItem. Using in-memory fallback for this request.", err);
+    const before = fallbackStore.inventory.length;
+    fallbackStore.inventory = fallbackStore.inventory.filter(item => item.id !== id);
+    const affected = fallbackStore.inventory.length < before;
+    if (affected) saveFallbackStore();
+    return affected;
   }
 }
 
@@ -764,14 +754,6 @@ function rowToBooking(r: BookingRow): Booking {
 }
 
 export async function getBookings(): Promise<Booking[]> {
-  if (useFallback) {
-    return fallbackStore.bookings.map(b => {
-      const hasUnread = fallbackStore.messages.some(
-        m => m.bookingId === b.id && m.senderRole === "customer" && m.status !== "read"
-      );
-      return { ...b, hasUnreadMessages: hasUnread };
-    });
-  }
   try {
     await ensureInit();
     const rows = await query<BookingRow>("SELECT * FROM bookings ORDER BY submitted_at DESC");
@@ -788,8 +770,7 @@ export async function getBookings(): Promise<Booking[]> {
       hasUnreadMessages: unreadBookingIds.has(b.id)
     }));
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
+    console.warn("⚠️ Database unavailable for getBookings. Using in-memory fallback for this request.", err);
     return fallbackStore.bookings.map(b => {
       const hasUnread = fallbackStore.messages.some(
         m => m.bookingId === b.id && m.senderRole === "customer" && m.status !== "read"
@@ -800,11 +781,6 @@ export async function getBookings(): Promise<Booking[]> {
 }
 
 export async function addBooking(booking: Booking): Promise<Booking> {
-  if (useFallback) {
-    fallbackStore.bookings.push(booking);
-    saveFallbackStore();
-    return booking;
-  }
   try {
     await ensureInit();
     await query(
@@ -832,35 +808,25 @@ export async function addBooking(booking: Booking): Promise<Booking> {
     );
     return booking;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return addBooking(booking);
+    console.warn("⚠️ Database unavailable for addBooking. Using in-memory fallback for this request.", err);
+    fallbackStore.bookings.push(booking);
+    saveFallbackStore();
+    return booking;
   }
 }
 
 export async function getBookingById(id: string): Promise<Booking | null> {
-  if (useFallback) {
-    return fallbackStore.bookings.find(b => b.id === id) || null;
-  }
   try {
     await ensureInit();
     const rows = await query<BookingRow>("SELECT * FROM bookings WHERE id = ?", [id]);
     return rows.length ? rowToBooking(rows[0]) : null;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return getBookingById(id);
+    console.warn("⚠️ Database unavailable for getBookingById. Using in-memory fallback for this request.", err);
+    return fallbackStore.bookings.find(b => b.id === id) || null;
   }
 }
 
 export async function deleteBooking(id: string): Promise<boolean> {
-  if (useFallback) {
-    const before = fallbackStore.bookings.length;
-    fallbackStore.bookings = fallbackStore.bookings.filter(b => b.id !== id);
-    const affected = fallbackStore.bookings.length < before;
-    if (affected) saveFallbackStore();
-    return affected;
-  }
   try {
     await ensureInit();
     const [result] = await getPool().execute<mysql.ResultSetHeader>(
@@ -868,9 +834,12 @@ export async function deleteBooking(id: string): Promise<boolean> {
     );
     return result.affectedRows > 0;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return deleteBooking(id);
+    console.warn("⚠️ Database unavailable for deleteBooking. Using in-memory fallback for this request.", err);
+    const before = fallbackStore.bookings.length;
+    fallbackStore.bookings = fallbackStore.bookings.filter(b => b.id !== id);
+    const affected = fallbackStore.bookings.length < before;
+    if (affected) saveFallbackStore();
+    return affected;
   }
 }
 
@@ -878,13 +847,6 @@ export async function updateBookingStatus(
   id: string,
   status: "pending" | "confirmed" | "cancelled"
 ): Promise<boolean> {
-  if (useFallback) {
-    const b = fallbackStore.bookings.find(x => x.id === id);
-    if (!b) return false;
-    b.status = status;
-    saveFallbackStore();
-    return true;
-  }
   try {
     await ensureInit();
     const [result] = await getPool().execute<mysql.ResultSetHeader>(
@@ -892,9 +854,12 @@ export async function updateBookingStatus(
     );
     return result.affectedRows > 0;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return updateBookingStatus(id, status);
+    console.warn("⚠️ Database unavailable for updateBookingStatus. Using in-memory fallback for this request.", err);
+    const b = fallbackStore.bookings.find(x => x.id === id);
+    if (!b) return false;
+    b.status = status;
+    saveFallbackStore();
+    return true;
   }
 }
 
@@ -904,34 +869,6 @@ export async function updateBookingPayment(
   method: string,
   paymentId?: string
 ): Promise<boolean> {
-  if (useFallback) {
-    const booking = fallbackStore.bookings.find(x => x.id === id);
-    if (!booking) return false;
-
-    const currentPaid = booking.amountPaid ?? 0;
-    const newPaid = currentPaid + amount;
-
-    const payments = booking.payments ?? [];
-    payments.push({
-      id: paymentId || "PAY-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
-      amount,
-      method,
-      timestamp: new Date().toISOString(),
-    });
-
-    booking.payments = payments;
-    booking.amountPaid = newPaid;
-
-    if (newPaid >= booking.estimatedTotal) {
-      booking.paymentStatus = "fully_paid";
-      booking.status = "confirmed";
-    } else if (newPaid > 0) {
-      booking.paymentStatus = "deposit_paid";
-      booking.status = "confirmed";
-    }
-    saveFallbackStore();
-    return true;
-  }
   try {
     await ensureInit();
     const rows = await query<BookingRow>("SELECT * FROM bookings WHERE id = ?", [id]);
@@ -965,19 +902,37 @@ export async function updateBookingPayment(
     );
     return true;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return updateBookingPayment(id, amount, method, paymentId);
+    console.warn("⚠️ Database unavailable for updateBookingPayment. Using in-memory fallback for this request.", err);
+    const booking = fallbackStore.bookings.find(x => x.id === id);
+    if (!booking) return false;
+
+    const currentPaid = booking.amountPaid ?? 0;
+    const newPaid = currentPaid + amount;
+
+    const payments = booking.payments ?? [];
+    payments.push({
+      id: paymentId || "PAY-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      amount,
+      method,
+      timestamp: new Date().toISOString(),
+    });
+
+    booking.payments = payments;
+    booking.amountPaid = newPaid;
+
+    if (newPaid >= booking.estimatedTotal) {
+      booking.paymentStatus = "fully_paid";
+      booking.status = "confirmed";
+    } else if (newPaid > 0) {
+      booking.paymentStatus = "deposit_paid";
+      booking.status = "confirmed";
+    }
+    saveFallbackStore();
+    return true;
   }
 }
 
 export async function getUserBookings(email: string): Promise<Booking[]> {
-  if (useFallback) {
-    return fallbackStore.bookings.filter(b => {
-      const emailVal = b.customer?.email || (b as any).email;
-      return emailVal && emailVal.toLowerCase() === email.toLowerCase();
-    });
-  }
   try {
     await ensureInit();
     const rows = await query<BookingRow>(
@@ -986,9 +941,11 @@ export async function getUserBookings(email: string): Promise<Booking[]> {
     );
     return rows.map(rowToBooking);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return getUserBookings(email);
+    console.warn("⚠️ Database unavailable for getUserBookings. Using in-memory fallback for this request.", err);
+    return fallbackStore.bookings.filter(b => {
+      const emailVal = b.customer?.email || (b as any).email;
+      return emailVal && emailVal.toLowerCase() === email.toLowerCase();
+    });
   }
 }
 
@@ -998,25 +955,6 @@ export async function getItemAvailability(
   itemId: string,
   date: string
 ): Promise<{ totalStock: number; rented: number; available: number }> {
-  if (useFallback) {
-    const item = fallbackStore.inventory.find(i => i.id === itemId);
-    if (!item) return { totalStock: 0, rented: 0, available: 0 };
-
-    let totalStock = 5;
-    if (item.category === "Chairs") totalStock = 500;
-    else if (item.category === "Tables") totalStock = 50;
-    else if (item.category === "Tents") totalStock = 8;
-    else if (item.category === "Bounce Houses" || item.category === "Water Slides") totalStock = 3;
-    if (item.stock !== null && item.stock !== undefined) totalStock = item.stock;
-
-    let rented = 0;
-    for (const b of fallbackStore.bookings) {
-      if (JSON.stringify(b.event.date) === JSON.stringify(date) && b.items[itemId]) {
-        rented += Number(b.items[itemId]);
-      }
-    }
-    return { totalStock, rented, available: Math.max(0, totalStock - rented) };
-  }
   try {
     await ensureInit();
     const items = await query<InventoryRow>("SELECT * FROM inventory WHERE id = ?", [itemId]);
@@ -1042,9 +980,24 @@ export async function getItemAvailability(
     const rented = Number(booked[0]?.total ?? 0);
     return { totalStock, rented, available: Math.max(0, totalStock - rented) };
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return getItemAvailability(itemId, date);
+    console.warn("⚠️ Database unavailable for getItemAvailability. Using in-memory fallback for this request.", err);
+    const item = fallbackStore.inventory.find(i => i.id === itemId);
+    if (!item) return { totalStock: 0, rented: 0, available: 0 };
+
+    let totalStock = 5;
+    if (item.category === "Chairs") totalStock = 500;
+    else if (item.category === "Tables") totalStock = 50;
+    else if (item.category === "Tents") totalStock = 8;
+    else if (item.category === "Bounce Houses" || item.category === "Water Slides") totalStock = 3;
+    if (item.stock !== null && item.stock !== undefined) totalStock = item.stock;
+
+    let rented = 0;
+    for (const b of fallbackStore.bookings) {
+      if (JSON.stringify(b.event.date) === JSON.stringify(date) && b.items[itemId]) {
+        rented += Number(b.items[itemId]);
+      }
+    }
+    return { totalStock, rented, available: Math.max(0, totalStock - rented) };
   }
 }
 
@@ -1078,7 +1031,6 @@ export async function getSettings(): Promise<{
   promoCodes?: Array<{ code: string; type: "percent" | "flat"; value: number }>;
   specialsEnabled?: boolean;
 }> {
-  if (useFallback) return fallbackStore.settings;
   try {
     await ensureInit();
     const rows = await query<SettingsRow>("SELECT * FROM settings WHERE id = 1");
@@ -1097,8 +1049,7 @@ export async function getSettings(): Promise<{
       specialsEnabled: Boolean(rows[0].specials_enabled ?? 1),
     };
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
+    console.warn("⚠️ Database unavailable for getSettings. Using in-memory fallback for this request.", err);
     return fallbackStore.settings;
   }
 }
@@ -1116,11 +1067,6 @@ export async function updateSettings(updates: {
   promoCodes?: Array<{ code: string; type: "percent" | "flat"; value: number }>;
   specialsEnabled?: boolean;
 }): Promise<void> {
-  if (useFallback) {
-    fallbackStore.settings = { ...fallbackStore.settings, ...updates };
-    saveFallbackStore();
-    return;
-  }
   try {
     await ensureInit();
     const setClauses: string[] = [];
@@ -1173,9 +1119,9 @@ export async function updateSettings(updates: {
     values.push(1);
     await query(`UPDATE settings SET ${setClauses.join(", ")} WHERE id = ?`, values);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return updateSettings(updates);
+    console.warn("⚠️ Database unavailable for updateSettings. Using in-memory fallback for this request.", err);
+    fallbackStore.settings = { ...fallbackStore.settings, ...updates };
+    saveFallbackStore();
   }
 }
 
@@ -1190,23 +1136,17 @@ function rowToCategory(r: CategoryRow): Category {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  if (useFallback) return fallbackStore.categories;
   try {
     await ensureInit();
     const rows = await query<CategoryRow>("SELECT * FROM categories ORDER BY `order` ASC");
     return rows.map(rowToCategory);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
+    console.warn("⚠️ Database unavailable for getCategories. Using in-memory fallback for this request.", err);
     return fallbackStore.categories;
   }
 }
 
 export async function saveCategories(categories: Category[]): Promise<void> {
-  if (useFallback) {
-    fallbackStore.categories = [...categories];
-    return;
-  }
   try {
     await ensureInit();
     const conn = await getPool().getConnection();
@@ -1227,16 +1167,16 @@ export async function saveCategories(categories: Category[]): Promise<void> {
       conn.release();
     }
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return saveCategories(categories);
+    // BUG FIX: Previously missing saveFallbackStore() call — changes were lost on next restart
+    console.warn("⚠️ Database unavailable for saveCategories. Using in-memory fallback for this request.", err);
+    fallbackStore.categories = [...categories];
+    saveFallbackStore();
   }
 }
 
 // ─── Site Content ─────────────────────────────────────────────────────────────
 
 export async function getSiteContent(): Promise<SiteContent> {
-  if (useFallback) return fallbackStore.siteContent;
   try {
     await ensureInit();
     const rows = await query<{ id: number; content: any }>(
@@ -1245,27 +1185,21 @@ export async function getSiteContent(): Promise<SiteContent> {
     if (!rows.length) return DEFAULT_SITE_CONTENT;
     return safeParseJson<SiteContent>(rows[0].content, DEFAULT_SITE_CONTENT);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
+    console.warn("⚠️ Database unavailable for getSiteContent. Using in-memory fallback for this request.", err);
     return fallbackStore.siteContent;
   }
 }
 
 export async function updateSiteContent(updates: Partial<SiteContent>): Promise<void> {
-  if (useFallback) {
-    fallbackStore.siteContent = { ...fallbackStore.siteContent, ...updates };
-    saveFallbackStore();
-    return;
-  }
   try {
     await ensureInit();
     const current = await getSiteContent();
     const merged = { ...current, ...updates };
     await query("UPDATE site_content SET content = ? WHERE id = 1", [JSON.stringify(merged)]);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return updateSiteContent(updates);
+    console.warn("⚠️ Database unavailable for updateSiteContent. Using in-memory fallback for this request.", err);
+    fallbackStore.siteContent = { ...fallbackStore.siteContent, ...updates };
+    saveFallbackStore();
   }
 }
 
@@ -1284,24 +1218,17 @@ function rowToUser(r: UserRow): User {
 }
 
 export async function getUsers(): Promise<User[]> {
-  if (useFallback) return fallbackStore.users;
   try {
     await ensureInit();
     const rows = await query<UserRow>("SELECT * FROM users");
     return rows.map(rowToUser);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
+    console.warn("⚠️ Database unavailable for getUsers. Using in-memory fallback for this request.", err);
     return fallbackStore.users;
   }
 }
 
 export async function addUser(user: User): Promise<User> {
-  if (useFallback) {
-    fallbackStore.users.push(user);
-    saveFallbackStore();
-    return user;
-  }
   try {
     await ensureInit();
     await query(
@@ -1318,20 +1245,14 @@ export async function addUser(user: User): Promise<User> {
     );
     return user;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return addUser(user);
+    console.warn("⚠️ Database unavailable for addUser. Using in-memory fallback for this request.", err);
+    fallbackStore.users.push(user);
+    saveFallbackStore();
+    return user;
   }
 }
 
 export async function updateUser(email: string, updates: Partial<User>): Promise<User | null> {
-  if (useFallback) {
-    const idx = fallbackStore.users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
-    if (idx === -1) return null;
-    fallbackStore.users[idx] = { ...fallbackStore.users[idx], ...updates };
-    saveFallbackStore();
-    return fallbackStore.users[idx];
-  }
   try {
     await ensureInit();
     const fieldMap: Record<string, string> = {
@@ -1352,9 +1273,12 @@ export async function updateUser(email: string, updates: Partial<User>): Promise
     const rows = await query<UserRow>("SELECT * FROM users WHERE LOWER(email) = ?", [email.toLowerCase()]);
     return rows.length ? rowToUser(rows[0]) : null;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return updateUser(email, updates);
+    console.warn("⚠️ Database unavailable for updateUser. Using in-memory fallback for this request.", err);
+    const idx = fallbackStore.users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+    if (idx === -1) return null;
+    fallbackStore.users[idx] = { ...fallbackStore.users[idx], ...updates };
+    saveFallbackStore();
+    return fallbackStore.users[idx];
   }
 }
 
@@ -1385,9 +1309,6 @@ function rowToMessage(r: MessageRow): Message {
 }
 
 export async function getMessages(bookingId: string): Promise<Message[]> {
-  if (useFallback) {
-    return fallbackStore.messages.filter(m => m.bookingId === bookingId);
-  }
   try {
     await ensureInit();
     const rows = await query<MessageRow>(
@@ -1396,18 +1317,12 @@ export async function getMessages(bookingId: string): Promise<Message[]> {
     );
     return rows.map(rowToMessage);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return getMessages(bookingId);
+    console.warn("⚠️ Database unavailable for getMessages. Using in-memory fallback for this request.", err);
+    return fallbackStore.messages.filter(m => m.bookingId === bookingId);
   }
 }
 
 export async function addMessage(message: Message): Promise<Message> {
-  if (useFallback) {
-    fallbackStore.messages.push(message);
-    saveFallbackStore();
-    return message;
-  }
   try {
     await ensureInit();
     await query(
@@ -1426,9 +1341,10 @@ export async function addMessage(message: Message): Promise<Message> {
     );
     return message;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return addMessage(message);
+    console.warn("⚠️ Database unavailable for addMessage. Using in-memory fallback for this request.", err);
+    fallbackStore.messages.push(message);
+    saveFallbackStore();
+    return message;
   }
 }
 
@@ -1437,7 +1353,15 @@ export async function markMessagesAsRead(
   role: "customer" | "admin"
 ): Promise<boolean> {
   const targetRole = role === "admin" ? "customer" : "admin";
-  if (useFallback) {
+  try {
+    await ensureInit();
+    await query(
+      "UPDATE messages SET status = 'read' WHERE booking_id = ? AND sender_role = ?",
+      [bookingId, targetRole]
+    );
+    return true;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable for markMessagesAsRead. Using in-memory fallback for this request.", err);
     let affected = false;
     fallbackStore.messages.forEach(m => {
       if (m.bookingId === bookingId && m.senderRole === targetRole && m.status !== "read") {
@@ -1447,18 +1371,6 @@ export async function markMessagesAsRead(
     });
     if (affected) saveFallbackStore();
     return true;
-  }
-  try {
-    await ensureInit();
-    await query(
-      "UPDATE messages SET status = 'read' WHERE booking_id = ? AND sender_role = ?",
-      [bookingId, targetRole]
-    );
-    return true;
-  } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return markMessagesAsRead(bookingId, role);
   }
 }
 
@@ -1499,26 +1411,17 @@ function rowToSpecial(r: SpecialRow): SpecialItem {
 }
 
 export async function getSpecials(): Promise<SpecialItem[]> {
-  if (useFallback) {
-    return [...fallbackStore.specials].sort((a, b) => a.order - b.order);
-  }
   try {
     await ensureInit();
     const rows = await query<SpecialRow>("SELECT * FROM specials ORDER BY `order` ASC");
     return rows.map(rowToSpecial);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return getSpecials();
+    console.warn("⚠️ Database unavailable for getSpecials. Using in-memory fallback for this request.", err);
+    return [...fallbackStore.specials].sort((a, b) => a.order - b.order);
   }
 }
 
 export async function createSpecial(special: SpecialItem): Promise<SpecialItem> {
-  if (useFallback) {
-    fallbackStore.specials.push(special);
-    saveFallbackStore();
-    return special;
-  }
   try {
     await ensureInit();
     await query(
@@ -1542,22 +1445,14 @@ export async function createSpecial(special: SpecialItem): Promise<SpecialItem> 
     );
     return special;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return createSpecial(special);
+    console.warn("⚠️ Database unavailable for createSpecial. Using in-memory fallback for this request.", err);
+    fallbackStore.specials.push(special);
+    saveFallbackStore();
+    return special;
   }
 }
 
 export async function updateSpecial(id: string, updates: Partial<SpecialItem>): Promise<SpecialItem> {
-  if (useFallback) {
-    const idx = fallbackStore.specials.findIndex(x => x.id === id);
-    if (idx !== -1) {
-      fallbackStore.specials[idx] = { ...fallbackStore.specials[idx], ...updates };
-      saveFallbackStore();
-      return fallbackStore.specials[idx];
-    }
-    throw new Error("Special not found");
-  }
   try {
     await ensureInit();
     const setClauses: string[] = [];
@@ -1587,20 +1482,18 @@ export async function updateSpecial(id: string, updates: Partial<SpecialItem>): 
     const rows = await query<SpecialRow>("SELECT * FROM specials WHERE id = ?", [id]);
     return rowToSpecial(rows[0]);
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return updateSpecial(id, updates);
+    console.warn("⚠️ Database unavailable for updateSpecial. Using in-memory fallback for this request.", err);
+    const idx = fallbackStore.specials.findIndex(x => x.id === id);
+    if (idx !== -1) {
+      fallbackStore.specials[idx] = { ...fallbackStore.specials[idx], ...updates };
+      saveFallbackStore();
+      return fallbackStore.specials[idx];
+    }
+    throw new Error("Special not found");
   }
 }
 
 export async function deleteSpecial(id: string): Promise<boolean> {
-  if (useFallback) {
-    const before = fallbackStore.specials.length;
-    fallbackStore.specials = fallbackStore.specials.filter(x => x.id !== id);
-    const affected = fallbackStore.specials.length < before;
-    if (affected) saveFallbackStore();
-    return affected;
-  }
   try {
     await ensureInit();
     const result = await query("DELETE FROM specials WHERE id = ?", [id]);
@@ -1608,9 +1501,12 @@ export async function deleteSpecial(id: string): Promise<boolean> {
     const affected = r.affectedRows !== undefined ? r.affectedRows > 0 : true;
     return affected;
   } catch (err) {
-    console.warn("⚠️ Database unavailable. Falling back to in-memory store.", err);
-    useFallback = true;
-    return deleteSpecial(id);
+    console.warn("⚠️ Database unavailable for deleteSpecial. Using in-memory fallback for this request.", err);
+    const before = fallbackStore.specials.length;
+    fallbackStore.specials = fallbackStore.specials.filter(x => x.id !== id);
+    const affected = fallbackStore.specials.length < before;
+    if (affected) saveFallbackStore();
+    return affected;
   }
 }
 

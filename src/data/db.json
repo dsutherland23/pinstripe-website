@@ -338,17 +338,7 @@
     }
   },
   "settings": {
-    "tentPlannerEnabled": false,
-    "maintenanceMode": false,
-    "analyticsId": "",
-    "payInPersonEnabled": false,
-    "galleryEnabled": false,
-    "categoriesEnabled": false,
-    "featuredRentalsEnabled": false,
-    "depositEnabled": true,
-    "depositPercentage": 50,
-    "promoCodes": [],
-    "specialsEnabled": true
+    "tentPlannerEnabled": null
   },
   "bookings": [
     {

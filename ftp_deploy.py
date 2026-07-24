@@ -205,10 +205,37 @@ function delete_directory($dir) {{
     return rmdir($dir);
 }}
 
+// Safe copy: copies public assets but does NOT overwrite files that already exist
+// in the uploads directory (admin-uploaded images must survive deployments).
+function safe_recurse_copy($src, $dst, $is_uploads_dir = false) {{
+    if (!is_dir($src)) return;
+    $dir = opendir($src);
+    @mkdir($dst, 0755, true);
+    while (false !== ($file = readdir($dir))) {{
+        if (($file != '.') && ($file != '..')) {{
+            $srcPath = $src . '/' . $file;
+            $dstPath = $dst . '/' . $file;
+            $in_uploads = $is_uploads_dir || (basename($src) === 'uploads');
+            if (is_dir($srcPath)) {{
+                safe_recurse_copy($srcPath, $dstPath, $in_uploads || (basename($srcPath) === 'uploads'));
+            }} else {{
+                // If we're inside the uploads directory, only copy if file doesn't already exist
+                // This preserves admin-uploaded images across deployments
+                if ($in_uploads && file_exists($dstPath)) {{
+                    echo "Skipping (preserving existing upload): $file\\n";
+                }} else {{
+                    copy($srcPath, $dstPath);
+                }}
+            }}
+        }}
+    }}
+    closedir($dir);
+}}
+
 echo "\\n--- Copying static assets to web root ---\\n";
 if (is_dir($extractTo . 'public')) {{
-    echo "Copying public assets to $webRoot...\\n";
-    recurse_copy($extractTo . 'public', $webRoot);
+    echo "Copying public assets to $webRoot (preserving admin-uploaded images)...\\n";
+    safe_recurse_copy($extractTo . 'public', $webRoot);
     echo "Public assets copied successfully.\\n";
 }}
 
