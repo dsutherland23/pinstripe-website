@@ -6,10 +6,7 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { Loader2, AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react";
 
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
-if (!stripePublishableKey) {
-  console.warn("⚠️ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not configured.");
-}
-const stripePromise = loadStripe(stripePublishableKey);
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 interface StripePaymentFormProps {
   clientSecret: string;
@@ -26,6 +23,20 @@ export default function StripePaymentForm({
   onSuccess,
   onCancel,
 }: StripePaymentFormProps) {
+  if (!stripePublishableKey || !stripePromise) {
+    return (
+      <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "1rem", padding: "1.5rem", textAlign: "center", color: "#ffffff" }}>
+        <AlertCircle size={32} style={{ color: "#ef4444", marginBottom: "0.75rem" }} />
+        <h4 style={{ fontSize: "1rem", fontWeight: 700, margin: "0 0 0.5rem 0" }}>Stripe Integration Pending</h4>
+        <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", margin: "0 0 1.25rem 0" }}>
+          Online card processing is currently awaiting API key configuration. Please select Pay in Person or contact us directly to confirm your booking.
+        </p>
+        <button onClick={onCancel} style={{ padding: "0.6rem 1.2rem", borderRadius: "0.5rem", background: "rgba(255,255,255,0.1)", border: "none", color: "#ffffff", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>
+          Choose Another Payment Method
+        </button>
+      </div>
+    );
+  }
   const options = {
     clientSecret,
     appearance: {

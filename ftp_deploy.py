@@ -301,6 +301,27 @@ if ($conn->connect_error) {{
         $stmt2->close();
     }} else {{
         echo "Prepare failed for inventory seeding: " . $conn->error . "\\n";
+    // 4. Clean up broken missing uploaded image references in database
+    $res = $conn->query("SELECT id, image, category FROM inventory WHERE image LIKE '/images/uploads/%'");
+    if ($res) {{
+        while ($row = $res->fetch_assoc()) {{
+            $imgPath = $row['image'];
+            $fullPath = $webRoot . '/' . ltrim($imgPath, '/');
+            if (!file_exists($fullPath)) {{
+                $defaultImg = '/images/canopy-tent.png';
+                $c = strtolower($row['category']);
+                if (strpos($c, 'slide') !== false) $defaultImg = '/images/water-slide-1.png';
+                else if (strpos($c, 'chair') !== false) $defaultImg = '/images/folding-chair.png';
+                else if (strpos($c, 'table') !== false) $defaultImg = '/images/banquet-table.png';
+                else if (strpos($c, 'popcorn') !== false) $defaultImg = '/images/popcorn-machine.png';
+                else if (strpos($c, 'photo') !== false) $defaultImg = '/images/photo-booth.png';
+                else if (strpos($c, 'snow') !== false) $defaultImg = '/images/kids-snowcones.png';
+                else if (strpos($c, 'candy') !== false) $defaultImg = '/images/kids-cotton-candy.png';
+
+                $conn->query("UPDATE inventory SET image = '" . $conn->real_escape_string($defaultImg) . "' WHERE id = '" . $conn->real_escape_string($row['id']) . "'");
+                echo "Repaired missing upload reference for item ID " . $row['id'] . " -> set to $defaultImg\n";
+            }}
+        }}
     }}
     
     $conn->close();

@@ -447,7 +447,12 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                               alt={item.title} 
                               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} 
                               loading="lazy" 
-                              onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK; }} 
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                if (!target.src.includes("/images/canopy-tent.png")) {
+                                  target.src = "/images/canopy-tent.png";
+                                }
+                              }} 
                             />
                             
                             {/* Overlay gradient mask */}

@@ -77,7 +77,10 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
           alt={item.title}
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           onError={(e) => {
-            (e.target as HTMLImageElement).src = FALLBACK;
+            const target = e.target as HTMLImageElement;
+            if (!target.src.includes("/images/canopy-tent.png")) {
+              target.src = "/images/canopy-tent.png";
+            }
           }}
         />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)" }} />
