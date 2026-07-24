@@ -300,7 +300,7 @@ export default function AdminDashboard() {
   const [savingSettings, setSavingSettings] = useState(false);
 
   // Content
-  const [savingContent, setSavingContent] = useState(false);
+  const [savingSection, setSavingSection] = useState<string | null>(null);
   const [contentForm, setContentForm] = useState<SiteContent | null>(null);
 
   // ── Auth ──────────────────────────────────────────────────────────────────
@@ -762,17 +762,30 @@ export default function AdminDashboard() {
   // ── Site Content ─────────────────────────────────────────────────────────
   const handleSaveContent = async (section: string) => {
     if (!contentForm) return;
-    setSavingContent(true);
+    setSavingSection(section);
     try {
-      const res = await fetch("/api/admin/content", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
-        body: JSON.stringify({ section, data: (contentForm as any)[section] }),
-      });
-      const d = await res.json();
-      if (d.success) notify("Content saved!"); else notify(d.error || "Failed.", "error");
+      if (section === "all") {
+        for (const s of ["hero", "stats", "footer", "navbar"]) {
+          await fetch("/api/admin/content", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+            body: JSON.stringify({ section: s, data: (contentForm as any)[s] }),
+          });
+        }
+        notify("All site content sections saved!");
+      } else {
+        const res = await fetch("/api/admin/content", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+          body: JSON.stringify({ section, data: (contentForm as any)[section] }),
+        });
+        const d = await res.json();
+        if (d.success) notify(`${section.charAt(0).toUpperCase() + section.slice(1)} content saved!`);
+        else notify(d.error || "Failed to save content.", "error");
+      }
+      loadAll();
     } catch { notify("Network error.", "error"); }
-    finally { setSavingContent(false); }
+    finally { setSavingSection(null); }
   };
 
   // ── System Settings ───────────────────────────────────────────────────────
@@ -2038,12 +2051,41 @@ export default function AdminDashboard() {
           {/* ── SITE CONTENT TAB ─────────────────────────────────────────── */}
           {activeTab === "content" && contentForm && (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: "800px" }}>
+              {/* Header & Save All Action */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
+                <div>
+                  <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>Site Content & Copy Editor</h2>
+                  <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.78rem", margin: 0 }}>Edit text, headlines, and details across the website sections below.</p>
+                </div>
+                <button
+                  onClick={() => handleSaveContent("all")}
+                  disabled={savingSection !== null}
+                  style={{
+                    padding: "0.6rem 1.25rem",
+                    borderRadius: "0.5rem",
+                    background: "linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%)",
+                    border: "none",
+                    color: "#000",
+                    fontWeight: 800,
+                    fontSize: "0.82rem",
+                    cursor: savingSection !== null ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    opacity: savingSection !== null ? 0.7 : 1,
+                  }}
+                >
+                  <Save size={15} />
+                  {savingSection === "all" ? "Saving All Sections…" : "Save All Sections"}
+                </button>
+              </div>
+
               {/* Hero */}
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
                   <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>🦸 Hero Section</h3>
-                  <button onClick={() => handleSaveContent("hero")} disabled={savingContent} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <Save size={13} />{savingContent ? "Saving…" : "Save Hero"}
+                  <button onClick={() => handleSaveContent("hero")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "hero" ? 0.6 : 1 }}>
+                    <Save size={13} />{savingSection === "hero" ? "Saving Hero…" : "Save Hero"}
                   </button>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -2066,8 +2108,8 @@ export default function AdminDashboard() {
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
                   <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>📊 Stats Bar</h3>
-                  <button onClick={() => handleSaveContent("stats")} disabled={savingContent} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <Save size={13} />{savingContent ? "Saving…" : "Save Stats"}
+                  <button onClick={() => handleSaveContent("stats")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "stats" ? 0.6 : 1 }}>
+                    <Save size={13} />{savingSection === "stats" ? "Saving Stats…" : "Save Stats"}
                   </button>
                 </div>
                 {contentForm.stats.map((stat, i) => (
@@ -2083,8 +2125,8 @@ export default function AdminDashboard() {
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
                   <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>🦶 Footer Info</h3>
-                  <button onClick={() => handleSaveContent("footer")} disabled={savingContent} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <Save size={13} />{savingContent ? "Saving…" : "Save Footer"}
+                  <button onClick={() => handleSaveContent("footer")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "footer" ? 0.6 : 1 }}>
+                    <Save size={13} />{savingSection === "footer" ? "Saving Footer…" : "Save Footer"}
                   </button>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -2107,8 +2149,8 @@ export default function AdminDashboard() {
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
                   <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>🧭 Navbar Text</h3>
-                  <button onClick={() => handleSaveContent("navbar")} disabled={savingContent} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <Save size={13} />{savingContent ? "Saving…" : "Save Navbar"}
+                  <button onClick={() => handleSaveContent("navbar")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "navbar" ? 0.6 : 1 }}>
+                    <Save size={13} />{savingSection === "navbar" ? "Saving Navbar…" : "Save Navbar"}
                   </button>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
