@@ -204,16 +204,14 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
               Book & Reserve
             </button>
             <a
-              href="#rentals"
+              href="/inventory"
               onClick={(e) => {
-                e.preventDefault();
                 const rentalsSection = document.getElementById("rentals");
                 if (rentalsSection) {
+                  e.preventDefault();
                   const navbarHeight = 90;
                   const top = rentalsSection.getBoundingClientRect().top + window.scrollY - navbarHeight;
                   window.scrollTo({ top, behavior: "smooth" });
-                } else {
-                  window.location.href = "/#rentals";
                 }
               }}
               style={{
