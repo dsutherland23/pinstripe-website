@@ -69,7 +69,7 @@ export default function FeaturedRentals({
   });
 
   return (
-    <section id="rentals" style={{ padding: "5rem 0", background: "#ffffff" }}>
+    <section id="rentals" style={{ padding: "5rem 0", background: "#ffffff", scrollMarginTop: "90px" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.25rem" }}>
         {/* Header */}
         <div

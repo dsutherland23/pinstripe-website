@@ -209,6 +209,7 @@ export default function AdminDashboard() {
   const [successMsg, setSuccessMsg] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCat, setFilterCat]   = useState("All");
+  const [filterLowStock, setFilterLowStock] = useState(false);
 
   // Inventory editor
   const [editingItem, setEditingItem]     = useState<RentalItem | null>(null);
@@ -791,14 +792,17 @@ export default function AdminDashboard() {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const fmt = (p: number) => `$${p.toFixed(2)}`;
+  const lowStockItems = inventory.filter(i => (i.stock ?? 5) <= 3);
+  const lowStock = lowStockItems.length;
+
   const filteredInventory = inventory.filter(i => {
     const matchCat = filterCat === "All" || i.category === filterCat;
     const matchQ = !searchQuery || i.title.toLowerCase().includes(searchQuery.toLowerCase()) || i.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchQ;
+    const matchLow = !filterLowStock || (i.stock ?? 5) <= 3;
+    return matchCat && matchQ && matchLow;
   });
 
   const totalRevenue = bookings.reduce((s, b) => s + b.estimatedTotal, 0);
-  const lowStock = inventory.filter(i => (i.stock ?? 5) <= 3).length;
   const pendingBookings = bookings.filter(b => !b.status || b.status === "pending").length;
 
   // ── LOGIN SCREEN ──────────────────────────────────────────────────────────
@@ -1025,18 +1029,125 @@ export default function AdminDashboard() {
                   { label: "Total Revenue", value: fmt(totalRevenue), sub: `${bookings.length} quote requests`, color: "#D4AF37", icon: <BarChart3 size={20} /> },
                   { label: "Rental Items", value: String(inventory.length), sub: `${inventory.filter(i => i.availability).length} active`, color: "#60a5fa", icon: <Package size={20} /> },
                   { label: "Pending Bookings", value: String(pendingBookings), sub: "Awaiting confirmation", color: "#f59e0b", icon: <Clock size={20} /> },
-                  { label: "Low Stock Alerts", value: String(lowStock), sub: "Items ≤ 3 units", color: lowStock > 0 ? "#ef4444" : "#10b981", icon: <AlertTriangle size={20} /> },
+                  { 
+                    label: "Low Stock Alerts", 
+                    value: String(lowStock), 
+                    sub: lowStock > 0 ? "Click to view low stock items" : "All items in stock", 
+                    color: lowStock > 0 ? "#ef4444" : "#10b981", 
+                    icon: <AlertTriangle size={20} />,
+                    onClick: () => {
+                      setFilterLowStock(true);
+                      setActiveTab("inventory");
+                    }
+                  },
                 ].map(stat => (
-                  <div key={stat.label} style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div 
+                    key={stat.label} 
+                    onClick={stat.onClick}
+                    style={{ 
+                      ...cardStyle, 
+                      display: "flex", 
+                      flexDirection: "column", 
+                      gap: "0.75rem",
+                      cursor: stat.onClick ? "pointer" : "default",
+                      transition: "all 0.2s ease",
+                      border: stat.color === "#ef4444" && lowStock > 0 ? "1px solid rgba(239,68,68,0.4)" : cardStyle.border
+                    }}
+                  >
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)", margin: 0 }}>{stat.label}</p>
                       <span style={{ color: stat.color, opacity: 0.7 }}>{stat.icon}</span>
                     </div>
                     <p style={{ fontSize: "2rem", fontWeight: 900, color: "#ffffff", margin: 0, lineHeight: 1 }}>{stat.value}</p>
-                    <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", margin: 0 }}>{stat.sub}</p>
+                    <p style={{ fontSize: "0.75rem", color: stat.color === "#ef4444" && lowStock > 0 ? "#ef4444" : "rgba(255,255,255,0.45)", margin: 0 }}>{stat.sub}</p>
                   </div>
                 ))}
               </div>
+
+              {/* Low Stock Items Alert Banner & Quick Restock */}
+              {lowStock > 0 && (
+                <div style={{ ...cardStyle, border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.04)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <AlertTriangle size={18} style={{ color: "#ef4444" }} />
+                      <h3 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>
+                        Low Stock Alert ({lowStockItems.length} {lowStockItems.length === 1 ? "item" : "items"} require restocking)
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setFilterLowStock(true);
+                        setActiveTab("inventory");
+                      }}
+                      style={{
+                        padding: "0.4rem 0.8rem",
+                        borderRadius: "0.375rem",
+                        background: "rgba(239,68,68,0.15)",
+                        border: "1px solid rgba(239,68,68,0.3)",
+                        color: "#ef4444",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      View All in Inventory →
+                    </button>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.75rem" }}>
+                    {lowStockItems.map(item => (
+                      <div
+                        key={item.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "0.75rem",
+                          borderRadius: "0.5rem",
+                          background: "rgba(0,0,0,0.3)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
+                          <img
+                            src={item.image}
+                            alt=""
+                            style={{ width: "42px", height: "42px", objectFit: "cover", borderRadius: "0.375rem", flexShrink: 0 }}
+                            onError={(e) => { (e.target as HTMLImageElement).src = "/images/canopy-tent.png"; }}
+                          />
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ fontWeight: 700, color: "#ffffff", fontSize: "0.82rem", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
+                            <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.7rem", margin: 0 }}>{item.category}</p>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+                          <Badge
+                            label={`${item.stock ?? 0} left`}
+                            color={(item.stock ?? 0) <= 1 ? "red" : "gold"}
+                          />
+                          <button
+                            onClick={() => {
+                              setActiveTab("inventory");
+                              startEdit(item);
+                            }}
+                            style={{
+                              background: "rgba(212,175,55,0.15)",
+                              border: "1px solid rgba(212,175,55,0.3)",
+                              color: "#D4AF37",
+                              borderRadius: "0.375rem",
+                              padding: "0.35rem 0.6rem",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Quick actions */}
               <div style={cardStyle}>
@@ -1110,6 +1221,27 @@ export default function AdminDashboard() {
                     <option value="All">All Categories</option>
                     {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => setFilterLowStock(!filterLowStock)}
+                    style={{
+                      padding: "0.625rem 0.875rem",
+                      borderRadius: "0.625rem",
+                      background: filterLowStock ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.06)",
+                      border: filterLowStock ? "1px solid rgba(239,68,68,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                      color: filterLowStock ? "#ef4444" : "rgba(255,255,255,0.7)",
+                      fontSize: "0.82rem",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.4rem",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <AlertTriangle size={14} />
+                    {filterLowStock ? `Low Stock Only (${lowStock})` : `Low Stock (${lowStock})`}
+                  </button>
                 </div>
 
                 {isMobile ? (

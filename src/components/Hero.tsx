@@ -205,6 +205,17 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
             </button>
             <a
               href="#rentals"
+              onClick={(e) => {
+                e.preventDefault();
+                const rentalsSection = document.getElementById("rentals");
+                if (rentalsSection) {
+                  const navbarHeight = 90;
+                  const top = rentalsSection.getBoundingClientRect().top + window.scrollY - navbarHeight;
+                  window.scrollTo({ top, behavior: "smooth" });
+                } else {
+                  window.location.href = "/#rentals";
+                }
+              }}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -223,6 +234,7 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
                 backdropFilter: "blur(8px)",
                 transition: "all 0.25s ease",
                 whiteSpace: "nowrap",
+                cursor: "pointer",
               }}
             >
               Browse Rentals
