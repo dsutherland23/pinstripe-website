@@ -164,7 +164,7 @@ export const mockInventory: RentalItem[] = [
   {
     id: "10",
     title: "Cotton Candy Kit (50 Servings)",
-    category: "Products",
+    category: "Party Extras",
     description: "Sweet cotton candy sugar floss and cones — yields approximately 50 servings. Works perfectly with our cotton candy makers.",
     price: 20,
     depositAmount: 5,
@@ -180,7 +180,7 @@ export const mockInventory: RentalItem[] = [
   {
     id: "11",
     title: "Popcorn Kit (50 Servings)",
-    category: "Products",
+    category: "Party Extras",
     description: "Theatre-style popcorn kits including gourmet kernels, coconut oil, and seasoning salt — yields approximately 50 servings.",
     price: 18,
     depositAmount: 5,
@@ -196,7 +196,7 @@ export const mockInventory: RentalItem[] = [
   {
     id: "12",
     title: "Snow-cone Kit (50 Servings)",
-    category: "Products",
+    category: "Party Extras",
     description: "Premium snow-cone syrups and cups — yields approximately 50 cool, refreshing servings.",
     price: 20,
     depositAmount: 5,
@@ -212,7 +212,7 @@ export const mockInventory: RentalItem[] = [
   {
     id: "13",
     title: "Equipment Stand",
-    category: "Products",
+    category: "Party Extras",
     description: "Heavy-duty mobile equipment stand designed to hold and showcase our concession machinery.",
     price: 25,
     depositAmount: 5,
@@ -228,7 +228,7 @@ export const mockInventory: RentalItem[] = [
   {
     id: "14",
     title: "Additional Rental Hour",
-    category: "Products",
+    category: "Party Extras",
     description: "Additional hourly service/rental time for concession machinery.",
     price: 15,
     depositAmount: 0,

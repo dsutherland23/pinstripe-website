@@ -60,7 +60,10 @@ export default function FeaturedRentals({
 
   const filtered = inventory.filter((item) => {
     const matchCat =
-      activeCategory === "All" || item.category === activeCategory;
+      activeCategory === "All" ||
+      item.category === activeCategory ||
+      ((activeCategory === "Party Extras" || activeCategory === "Products") &&
+        (item.category === "Party Extras" || item.category === "Products"));
     const q = searchQuery.toLowerCase();
     const matchQ =
       !q ||

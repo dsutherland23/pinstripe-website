@@ -391,7 +391,7 @@ export async function initDb(): Promise<void> {
       { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
       { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
       { id: "cat-9", name: "Snow-cone Machines",    icon: "ice",     featured: false, order: 9 },
-      { id: "cat-10", name: "Products",             icon: "shopping-bag", featured: false, order: 10 },
+      { id: "cat-10", name: "Party Extras",         icon: "shopping-bag", featured: false, order: 10 },
     ];
     for (const cat of DEFAULT_CATEGORIES) {
       await conn.query(
@@ -516,7 +516,7 @@ const fallbackStore = {
     { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
     { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
     { id: "cat-9", name: "Snow-cone Machines",    icon: "ice",     featured: false, order: 9 },
-    { id: "cat-10", name: "Products",             icon: "shopping-bag", featured: false, order: 10 },
+    { id: "cat-10", name: "Party Extras",         icon: "shopping-bag", featured: false, order: 10 },
   ],
   siteContent: { ...DEFAULT_SITE_CONTENT },
   settings: { 

@@ -153,6 +153,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
     const catItems = inventory.filter((item) => {
       if (!matchesSearch(item)) return false;
       if (item.category === catName) return true;
+      if ((catName === "Party Extras" || catName === "Products" || slug === "party-extras" || slug === "products") && (item.category === "Party Extras" || item.category === "Products")) return true;
       if (slug === "inflatables" && (item.category === "Bounce Houses" || item.category === "Water Slides")) return true;
       if (slug === "concession-equipment" && (item.category === "Cotton Candy Machines" || item.category === "Popcorn Machines" || item.category === "Snow-cone Machines")) return true;
       return false;
