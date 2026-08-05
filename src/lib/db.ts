@@ -638,6 +638,7 @@ export async function getInventory(): Promise<RentalItem[]> {
 }
 
 export async function updateInventoryItem(id: string, updates: Partial<RentalItem>): Promise<RentalItem | null> {
+  let updatedItem: RentalItem | null = null;
   try {
     await ensureInit();
     const fieldMap: Record<string, string> = {
@@ -655,19 +656,24 @@ export async function updateInventoryItem(id: string, updates: Partial<RentalIte
       setClauses.push(`${col} = ?`);
       values.push(key === "availability" ? (val ? 1 : 0) : (val ?? null));
     }
-    if (setClauses.length === 0) return null;
-    values.push(id);
-    await query(`UPDATE inventory SET ${setClauses.join(", ")} WHERE id = ?`, values);
-    const rows = await query<InventoryRow>("SELECT * FROM inventory WHERE id = ?", [id]);
-    return rows.length ? rowToItem(rows[0]) : null;
+    if (setClauses.length > 0) {
+      values.push(id);
+      await query(`UPDATE inventory SET ${setClauses.join(", ")} WHERE id = ?`, values);
+      const rows = await query<InventoryRow>("SELECT * FROM inventory WHERE id = ?", [id]);
+      if (rows.length) updatedItem = rowToItem(rows[0]);
+    }
   } catch (err) {
-    console.warn("⚠️ Database unavailable for updateInventoryItem. Using in-memory fallback for this request.", err);
-    const idx = fallbackStore.inventory.findIndex(item => item.id === id);
-    if (idx === -1) return null;
+    console.warn("⚠️ Database unavailable for updateInventoryItem. Updating fallback store.", err);
+  }
+
+  // ALWAYS keep fallbackStore & db.json synced across all requests
+  const idx = fallbackStore.inventory.findIndex(item => item.id === id);
+  if (idx !== -1) {
     fallbackStore.inventory[idx] = { ...fallbackStore.inventory[idx], ...updates };
     saveFallbackStore();
-    return fallbackStore.inventory[idx];
+    if (!updatedItem) updatedItem = fallbackStore.inventory[idx];
   }
+  return updatedItem;
 }
 
 export async function addInventoryItem(item: RentalItem): Promise<RentalItem> {
@@ -693,28 +699,39 @@ export async function addInventoryItem(item: RentalItem): Promise<RentalItem> {
         item.deliveryFee ?? 0
       ]
     );
-    return item;
   } catch (err) {
-    console.warn("⚠️ Database unavailable for addInventoryItem. Using in-memory fallback for this request.", err);
-    fallbackStore.inventory.push(item);
-    saveFallbackStore();
-    return item;
+    console.warn("⚠️ Database unavailable for addInventoryItem. Updating fallback store.", err);
   }
+
+  // ALWAYS keep fallbackStore & db.json synced across all requests
+  const existingIdx = fallbackStore.inventory.findIndex(i => i.id === item.id);
+  if (existingIdx !== -1) {
+    fallbackStore.inventory[existingIdx] = { ...item };
+  } else {
+    fallbackStore.inventory.push(item);
+  }
+  saveFallbackStore();
+  return item;
 }
 
 export async function deleteInventoryItem(id: string): Promise<boolean> {
+  let affected = false;
   try {
     await ensureInit();
     const [result] = await getPool().execute<mysql.ResultSetHeader>("DELETE FROM inventory WHERE id = ?", [id]);
-    return result.affectedRows > 0;
+    affected = result.affectedRows > 0;
   } catch (err) {
-    console.warn("⚠️ Database unavailable for deleteInventoryItem. Using in-memory fallback for this request.", err);
-    const before = fallbackStore.inventory.length;
-    fallbackStore.inventory = fallbackStore.inventory.filter(item => item.id !== id);
-    const affected = fallbackStore.inventory.length < before;
-    if (affected) saveFallbackStore();
-    return affected;
+    console.warn("⚠️ Database unavailable for deleteInventoryItem. Updating fallback store.", err);
   }
+
+  // ALWAYS keep fallbackStore & db.json synced across all requests
+  const before = fallbackStore.inventory.length;
+  fallbackStore.inventory = fallbackStore.inventory.filter(item => item.id !== id);
+  if (fallbackStore.inventory.length < before) {
+    saveFallbackStore();
+    affected = true;
+  }
+  return affected;
 }
 
 // ─── Bookings ─────────────────────────────────────────────────────────────────
