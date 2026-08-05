@@ -145,21 +145,27 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
 
   const toSlug = (str: string) => str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-  const catNamesFromInv = Array.from(new Set(inventory.map((i) => i.category))).filter(Boolean);
-  const allCategoryNames = Array.from(new Set([...categories.map((c) => c.name), ...catNamesFromInv]));
+  const normalizeCategoryName = (name: string) => {
+    if (!name) return "";
+    if (name.toLowerCase() === "products") return "Party Extras";
+    return name;
+  };
+
+  const catNamesFromInv = Array.from(new Set(inventory.map((i) => normalizeCategoryName(i.category)))).filter(Boolean);
+  const allCategoryNames = Array.from(new Set([...categories.map((c) => normalizeCategoryName(c.name)), ...catNamesFromInv]));
 
   const rawSections = allCategoryNames.map((catName) => {
     const slug = toSlug(catName);
     const catItems = inventory.filter((item) => {
       if (!matchesSearch(item)) return false;
-      if (item.category === catName) return true;
-      if ((catName === "Party Extras" || catName === "Products" || slug === "party-extras" || slug === "products") && (item.category === "Party Extras" || item.category === "Products")) return true;
+      const itemCatNorm = normalizeCategoryName(item.category);
+      if (itemCatNorm === catName || item.category === catName) return true;
       if (slug === "inflatables" && (item.category === "Bounce Houses" || item.category === "Water Slides")) return true;
       if (slug === "concession-equipment" && (item.category === "Cotton Candy Machines" || item.category === "Popcorn Machines" || item.category === "Snow-cone Machines")) return true;
       return false;
     });
 
-    const catObj = categories.find((c) => c.name === catName);
+    const catObj = categories.find((c) => normalizeCategoryName(c.name) === catName);
     return {
       title: catName,
       id: slug,
@@ -171,16 +177,15 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
   });
 
   const targetCategory = queryCategory || selectedCategorySlug;
-  const targetSlug = targetCategory ? toSlug(targetCategory) : "";
+  const targetCategoryNorm = targetCategory ? normalizeCategoryName(targetCategory) : "";
+  const targetSlug = targetCategoryNorm ? toSlug(targetCategoryNorm) : "";
 
-  const sectionsConfig = targetCategory
+  const sectionsConfig = targetCategoryNorm
     ? rawSections.filter(
         (s) =>
           s.id === targetSlug ||
-          s.categoryName.toLowerCase() === targetCategory.toLowerCase() ||
-          (targetSlug === "inflatables" && (s.categoryName === "Bounce Houses" || s.categoryName === "Water Slides")) ||
-          ((targetSlug === "party-extras" || targetSlug === "products") &&
-            (s.id === "party-extras" || s.id === "products" || s.categoryName.toLowerCase().includes("party extra") || s.categoryName.toLowerCase().includes("product")))
+          s.categoryName.toLowerCase() === targetCategoryNorm.toLowerCase() ||
+          (targetSlug === "inflatables" && (s.categoryName === "Bounce Houses" || s.categoryName === "Water Slides"))
       )
     : rawSections;
 

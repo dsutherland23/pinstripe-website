@@ -400,6 +400,10 @@ export async function initDb(): Promise<void> {
       );
     }
 
+    // Auto-migrate legacy Products category name to Party Extras in MySQL database
+    await conn.query("UPDATE categories SET name = 'Party Extras' WHERE name = 'Products'");
+    await conn.query("UPDATE inventory SET category = 'Party Extras' WHERE category = 'Products'");
+
     const [scCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM site_content");
     if ((scCount as mysql.RowDataPacket[])[0].c === 0) {
       const DEFAULT_SITE_CONTENT: SiteContent = {
