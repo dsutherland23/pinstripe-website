@@ -196,7 +196,9 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
             (s) =>
               s.id === targetSlug ||
               s.categoryName.toLowerCase() === targetCategoryNorm.toLowerCase() ||
-              (targetSlug === "inflatables" && (s.categoryName === "Bounce Houses" || s.categoryName === "Water Slides"))
+              (targetSlug === "inflatables" && (s.categoryName === "Bounce Houses" || s.categoryName === "Water Slides")) ||
+              ((targetSlug === "photo-booths" || targetSlug === "photobooth") &&
+                (s.id === "photo-booths" || s.id === "photobooth" || s.categoryName.toLowerCase().includes("photo booth")))
           ))
     : rawSections;
 
