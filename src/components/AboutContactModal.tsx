@@ -64,6 +64,27 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
     }
   }, [isOpen]);
 
+  const [aboutData, setAboutData] = useState({
+    title: "Discover Our Vision",
+    paragraph1: "At Pinstripes Party & Event Rentals, we take immense pride in delivering premier, commercial-grade event equipment and sophisticated designs to elevate every occasion. From majestic, high-peak wedding marquee setups to vibrant, meticulously sanitized bounce castles and interactive concession systems, our core mission is to transform your milestones into unforgettable memories.",
+    paragraph2: "Under local ownership in Hampton Roads, Virginia, we represent absolute commitment to flawless service delivery, rigorous safety compliance, and fully licensed & insured logistics. Our dedicated team is committed to ensuring that your custom setup is executed seamlessly, leaving you free to celebrate with complete peace of mind.",
+  });
+
+  useEffect(() => {
+    fetch(`/api/content?t=${Date.now()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && data.content?.about) {
+          setAboutData((prev) => ({
+            title: data.content.about.title || prev.title,
+            paragraph1: data.content.about.paragraph1 || prev.paragraph1,
+            paragraph2: data.content.about.paragraph2 || prev.paragraph2,
+          }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -98,7 +119,7 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
                 Pinstripes Rentals
               </span>
               <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.3rem", color: "#0f0f0f", margin: 0 }}>
-                {activeTab === "about" ? "Discover Our Vision" : "Get In Touch"}
+                {activeTab === "about" ? (aboutData.title || "Discover Our Vision") : "Get In Touch"}
               </h2>
             </div>
             <button
@@ -177,10 +198,10 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               <div style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)", borderRadius: "1.25rem", padding: "1.25rem" }}>
                 <p style={{ fontFamily: "var(--font-body)", fontSize: "0.85rem", color: "#333", lineHeight: 1.65, margin: 0 }}>
-                  At <strong>Pinstripes Party & Event Rentals</strong>, we take immense pride in delivering premier, commercial-grade event equipment and sophisticated designs to elevate every occasion. From majestic, high-peak wedding marquee setups to vibrant, meticulously sanitized bounce castles and interactive concession systems, our core mission is to transform your milestones into unforgettable memories. 
+                  {aboutData.paragraph1}
                 </p>
                 <p style={{ fontFamily: "var(--font-body)", fontSize: "0.85rem", color: "#333", lineHeight: 1.65, marginTop: "0.75rem", marginBottom: 0 }}>
-                  Under local ownership in Hampton Roads, Virginia, we represent absolute commitment to flawless service delivery, rigorous safety compliance, and fully licensed & insured logistics. Our dedicated team is committed to ensuring that your custom setup is executed seamlessly, leaving you free to celebrate with complete peace of mind.
+                  {aboutData.paragraph2}
                 </p>
               </div>
 

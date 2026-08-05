@@ -17,8 +17,8 @@ import Reveal from "@/components/Reveal";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
 
-// ---- Category data ----
-const categories = [
+// ---- Default Fallback Category data ----
+const DEFAULT_CATEGORIES = [
   { name: "Bounce Houses",         icon: "castle",  featured: true },
   { name: "Water Slides",          icon: "water",   featured: true },
   { name: "Tents",                 icon: "tent",    featured: true },
@@ -31,6 +31,7 @@ const categories = [
 ];
 
 export default function Home() {
+  const [categories, setCategories]           = useState(DEFAULT_CATEGORIES);
   const [quoteOpen, setQuoteOpen]             = useState(false);
   const [selectedItem, setSelectedItem]       = useState<RentalItem | null>(null);
   const [activeCategory, setActiveCategory]   = useState("All");
@@ -44,6 +45,23 @@ export default function Home() {
   const [galleryEnabled, setGalleryEnabled]     = useState(true);
   const [categoriesEnabled, setCategoriesEnabled] = useState(true);
   const [featuredRentalsEnabled, setFeaturedRentalsEnabled] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/categories?t=${Date.now()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories(
+            data.categories.map((c: { name: string; icon?: string; featured?: boolean }) => ({
+              name: c.name,
+              icon: c.icon || "tent",
+              featured: Boolean(c.featured),
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch(`/api/settings?t=${Date.now()}`)

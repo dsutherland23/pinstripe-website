@@ -50,6 +50,7 @@ interface SiteContent {
   stats: Array<{ value: string; label: string; suffix?: string }>;
   footer: { phone: string; email: string; address: string; instagramUrl: string; facebookUrl: string };
   navbar: { rainCheckText: string; dispatchHours: string; serviceArea: string };
+  about?: { title: string; paragraph1: string; paragraph2: string };
 }
 
 // ── Icon options for categories ────────────────────────────────────────────
@@ -765,7 +766,7 @@ export default function AdminDashboard() {
     setSavingSection(section);
     try {
       if (section === "all") {
-        for (const s of ["hero", "stats", "footer", "navbar"]) {
+        for (const s of ["hero", "stats", "footer", "navbar", "about"]) {
           await fetch("/api/admin/content", {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
@@ -2166,7 +2167,30 @@ export default function AdminDashboard() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                   <div><label style={labelStyle}>Rain-Check Text</label><textarea rows={2} value={contentForm.navbar.rainCheckText} onChange={e => setContentForm(f => f ? { ...f, navbar: { ...f.navbar, rainCheckText: e.target.value } } : f)} style={{ ...inputStyle, resize: "none" }} /></div>
                   <div><label style={labelStyle}>Dispatch Hours</label><input type="text" value={contentForm.navbar.dispatchHours} onChange={e => setContentForm(f => f ? { ...f, navbar: { ...f.navbar, dispatchHours: e.target.value } } : f)} style={inputStyle} /></div>
-                  <div><label style={labelStyle}>Service Area</label><input type="text" value={contentForm.navbar.serviceArea} onChange={e => setContentForm(f => f ? { ...f, navbar: { ...f.navbar, serviceArea: e.target.value } } : f)} style={inputStyle} /></div>
+                </div>
+              </div>
+
+              {/* About Us / Discover Our Vision */}
+              <div style={cardStyle}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>📖 About Us / Discover Our Vision</h3>
+                  <button onClick={() => handleSaveContent("about")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "about" ? 0.6 : 1 }}>
+                    <Save size={13} />{savingSection === "about" ? "Saving About…" : "Save About"}
+                  </button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div>
+                    <label style={labelStyle}>Headline / Modal Title</label>
+                    <input type="text" value={contentForm.about?.title || "Discover Our Vision"} onChange={e => setContentForm(f => f ? { ...f, about: { ...(f.about || { title: "Discover Our Vision", paragraph1: "", paragraph2: "" }), title: e.target.value } } : f)} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Main Overview & Story (Paragraph 1)</label>
+                    <textarea rows={4} value={contentForm.about?.paragraph1 || ""} onChange={e => setContentForm(f => f ? { ...f, about: { ...(f.about || { title: "Discover Our Vision", paragraph1: "", paragraph2: "" }), paragraph1: e.target.value } } : f)} style={{ ...inputStyle, resize: "vertical" }} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Company Mission & Service Commitment (Paragraph 2)</label>
+                    <textarea rows={4} value={contentForm.about?.paragraph2 || ""} onChange={e => setContentForm(f => f ? { ...f, about: { ...(f.about || { title: "Discover Our Vision", paragraph1: "", paragraph2: "" }), paragraph2: e.target.value } } : f)} style={{ ...inputStyle, resize: "vertical" }} />
+                  </div>
                 </div>
               </div>
             </div>

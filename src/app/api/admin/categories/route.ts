@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCategories, saveCategories, type Category } from "@/lib/db";
+import { getCategories, saveCategories, renameCategoryInInventory, type Category } from "@/lib/db";
 import { isAdminAuthorized } from "@/lib/auth-security";
 
 export async function GET(req: NextRequest) {
@@ -18,14 +18,19 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { action, category, categories } = body;
+    const current = await getCategories();
 
     if (action === "save-all" && Array.isArray(categories)) {
-      // Full replace
+      // Check for name changes across categories
+      for (const cat of categories as Category[]) {
+        const existing = current.find((c) => c.id === cat.id);
+        if (existing && cat.name && existing.name !== cat.name) {
+          await renameCategoryInInventory(existing.name, cat.name);
+        }
+      }
       await saveCategories(categories);
       return NextResponse.json({ success: true, categories });
     }
-
-    const current = await getCategories();
 
     if (action === "create" && category) {
       const newCat: Category = {
@@ -40,6 +45,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "update" && category?.id) {
+      const existing = current.find((c) => c.id === category.id);
+      if (existing && category.name && existing.name !== category.name) {
+        await renameCategoryInInventory(existing.name, category.name);
+      }
       const updated = current.map((c) =>
         c.id === category.id ? { ...c, ...category } : c
       );

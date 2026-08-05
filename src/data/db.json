@@ -366,42 +366,7 @@
       }
     ]
   },
-  "bookings": [
-    {
-      "id": "PSR-MPWA68R3",
-      "customer": {
-        "name": "John Doe",
-        "email": "john.doe@example.com",
-        "phone": "2145550199"
-      },
-      "event": {
-        "type": "Birthday Party",
-        "date": "2026-08-15",
-        "location": "Dallas, TX",
-        "guestCount": 50
-      },
-      "delivery": {
-        "address": "123 Main St",
-        "city": "Dallas",
-        "zipCode": "75201",
-        "method": "delivery",
-        "fee": 0
-      },
-      "items": {
-        "1": 2
-      },
-      "itemCount": 2,
-      "estimatedTotal": 150,
-      "discount": 0,
-      "paymentMethod": "Pay Cash / Card on Delivery",
-      "status": "pending",
-      "notes": "Test quote submission",
-      "submittedAt": "2026-07-24T15:22:57.537Z",
-      "amountPaid": 0,
-      "paymentStatus": "unpaid",
-      "payments": []
-    }
-  ],
+  "bookings": [],
   "users": [
     {
       "email": "socialkon10@gmail.com",

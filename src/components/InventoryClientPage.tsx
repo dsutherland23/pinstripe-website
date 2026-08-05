@@ -35,6 +35,9 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
   // Client-side search queries
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; icon: string }>>([]);
+  const [queryCategory, setQueryCategory] = useState<string | null>(null);
+
   useEffect(() => {
     fetch(`/api/inventory?t=${Date.now()}`)
       .then((r) => r.json())
@@ -43,6 +46,19 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
       })
       .catch((err) => console.error("Error loading inventory:", err))
       .finally(() => setLoading(false));
+
+    fetch(`/api/categories?t=${Date.now()}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.categories)) setCategories(data.categories);
+      })
+      .catch(() => {});
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const catParam = params.get("category");
+      if (catParam) setQueryCategory(catParam);
+    }
   }, []);
 
   // Listen for the hash in the URL on load to scroll to correct section
@@ -100,71 +116,69 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
     );
   };
 
-  // Group inventory items by category slugs and search filter
-  const tents = inventory.filter((item) => item.category === "Tents" && matchesSearch(item));
-  const tables = inventory.filter((item) => item.category === "Tables" && matchesSearch(item));
-  const chairs = inventory.filter((item) => item.category === "Chairs" && matchesSearch(item));
-  const inflatables = inventory.filter((item) => (item.category === "Bounce Houses" || item.category === "Water Slides") && matchesSearch(item));
-  const photoBooths = inventory.filter((item) => item.category === "Photo Booths" && matchesSearch(item));
-  const concessions = inventory.filter((item) => (item.category === "Cotton Candy Machines" || item.category === "Popcorn Machines" || item.category === "Snow-cone Machines") && matchesSearch(item));
-  const products = inventory.filter((item) => item.category === "Products" && matchesSearch(item));
+  const getCategoryIcon = (iconName?: string) => {
+    switch (iconName) {
+      case "castle":
+      case "water":
+      case "wind":
+        return <Wind size={18} />;
+      case "tent":
+        return <Tent size={18} />;
+      case "table":
+        return <Table2 size={18} />;
+      case "chair":
+        return <Armchair size={18} />;
+      case "camera":
+        return <Camera size={18} />;
+      case "candy":
+      case "popcorn":
+      case "ice":
+      case "coffee":
+        return <Coffee size={18} />;
+      case "shopping-bag":
+        return <ShoppingBag size={18} />;
+      default:
+        return <Tent size={18} />;
+    }
+  };
 
-  // Category listing configuration
-  const rawSections = [
-    { 
-      title: "Premium High-Peak Tents", 
-      id: "tents", 
-      items: tents, 
-      icon: <Tent size={18} />, 
-      desc: "Elegant high-peak structures designed to withstand wind and rain. Perfect for wedding receptions, corporate gatherings, and VIP garden parties." 
-    },
-    { 
-      title: "Heavy-Duty Event Tables", 
-      id: "tables", 
-      items: tables, 
-      icon: <Table2 size={18} />, 
-      desc: "Commercial-grade round, banquet, and high-top cocktail tables. Sturdy foundations for your formal sit-down dinners or casual buffets." 
-    },
-    { 
-      title: "Premium Chairs & Seating", 
-      id: "chairs", 
-      items: chairs, 
-      icon: <Armchair size={18} />, 
-      desc: "Comfortable and pristine white fan-back folding chairs. Clean, professional seating options that blend into any decorative theme." 
-    },
-    { 
-      title: "Commercial Inflatables & Slides", 
-      id: "inflatables", 
-      items: inflatables, 
-      icon: <Wind size={18} />, 
-      desc: "High-grade bounce houses, wet/dry water slides, and interactive obstacles. Thoroughly sanitized and anchored for safe, active play." 
-    },
-    { 
-      title: "Interactive Open-Air Photo Booths", 
-      id: "photobooth", 
-      items: photoBooths, 
-      icon: <Camera size={18} />, 
-      desc: "Touchscreen open-air photo stations with instant SMS delivery, custom print layouts, backdrops, and fun wedding/birthday props." 
-    },
-    { 
-      title: "Concession Machinery", 
-      id: "concession-equipment", 
-      items: concessions, 
-      icon: <Coffee size={18} />, 
-      desc: "Cotton candy carts and theatre-style popcorn machines. Complete with supplies to bring sweet concession stand vibes to your event." 
-    },
-    { 
-      title: "Party Supplies & Add-ons", 
-      id: "products", 
-      items: products, 
-      icon: <ShoppingBag size={18} />, 
-      desc: "Individual party supplies, servings kits, and equipment stands to support your event." 
-    },
-  ];
+  const toSlug = (str: string) => str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-  const sectionsConfig = selectedCategorySlug
-    ? rawSections.filter((s) => s.id === selectedCategorySlug)
-    : rawSections.filter((s) => s.id !== "products");
+  const catNamesFromInv = Array.from(new Set(inventory.map((i) => i.category))).filter(Boolean);
+  const allCategoryNames = Array.from(new Set([...categories.map((c) => c.name), ...catNamesFromInv]));
+
+  const rawSections = allCategoryNames.map((catName) => {
+    const slug = toSlug(catName);
+    const catItems = inventory.filter((item) => {
+      if (!matchesSearch(item)) return false;
+      if (item.category === catName) return true;
+      if (slug === "inflatables" && (item.category === "Bounce Houses" || item.category === "Water Slides")) return true;
+      if (slug === "concession-equipment" && (item.category === "Cotton Candy Machines" || item.category === "Popcorn Machines" || item.category === "Snow-cone Machines")) return true;
+      return false;
+    });
+
+    const catObj = categories.find((c) => c.name === catName);
+    return {
+      title: catName,
+      id: slug,
+      categoryName: catName,
+      items: catItems,
+      icon: getCategoryIcon(catObj?.icon),
+      desc: `Explore our commercial-grade ${catName.toLowerCase()} available for event rentals.`,
+    };
+  });
+
+  const targetCategory = queryCategory || selectedCategorySlug;
+  const targetSlug = targetCategory ? toSlug(targetCategory) : "";
+
+  const sectionsConfig = targetCategory
+    ? rawSections.filter(
+        (s) =>
+          s.id === targetSlug ||
+          s.categoryName.toLowerCase() === targetCategory.toLowerCase() ||
+          (targetSlug === "inflatables" && (s.categoryName === "Bounce Houses" || s.categoryName === "Water Slides"))
+      )
+    : rawSections.filter((s) => s.id !== "products" && s.categoryName.toLowerCase() !== "products");
 
   return (
     <main className="pb-18 lg:pb-0" style={{ fontFamily: "var(--font-body)", background: "var(--bg-primary)", color: "var(--text-primary)", minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
@@ -194,7 +208,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
       >
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           {(() => {
-            const activeSection = rawSections.find((s) => s.id === selectedCategorySlug);
+            const activeSection = sectionsConfig.length === 1 ? sectionsConfig[0] : rawSections.find((s) => s.id === targetSlug || s.categoryName.toLowerCase() === targetCategory?.toLowerCase());
             return (
               <>
                 <div className="section-label" style={{ justifyContent: "center", display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.4rem 1rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>

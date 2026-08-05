@@ -110,6 +110,11 @@ export interface SiteContent {
     dispatchHours: string;
     serviceArea: string;
   };
+  about?: {
+    title: string;
+    paragraph1: string;
+    paragraph2: string;
+  };
 }
 
 // ─── Connection Pool ──────────────────────────────────────────────────────────
@@ -491,6 +496,11 @@ const DEFAULT_SITE_CONTENT: SiteContent = {
     rainCheckText: "100% Free date shifts & weather protection for all Hampton Roads rentals.",
     dispatchHours: "7:00 AM – 7:00 PM",
     serviceArea: "Serving Norfolk, VA Beach, Chesapeake, Suffolk & surrounding.",
+  },
+  about: {
+    title: "Discover Our Vision",
+    paragraph1: "At Pinstripes Party & Event Rentals, we take immense pride in delivering premier, commercial-grade event equipment and sophisticated designs to elevate every occasion. From majestic, high-peak wedding marquee setups to vibrant, meticulously sanitized bounce castles and interactive concession systems, our core mission is to transform your milestones into unforgettable memories.",
+    paragraph2: "Under local ownership in Hampton Roads, Virginia, we represent absolute commitment to flawless service delivery, rigorous safety compliance, and fully licensed & insured logistics. Our dedicated team is committed to ensuring that your custom setup is executed seamlessly, leaving you free to celebrate with complete peace of mind.",
   },
 };
 
@@ -1174,11 +1184,33 @@ export async function saveCategories(categories: Category[]): Promise<void> {
   }
 }
 
+export async function renameCategoryInInventory(oldName: string, newName: string): Promise<void> {
+  if (!oldName || !newName || oldName === newName) return;
+  try {
+    await ensureInit();
+    await query("UPDATE inventory SET category = ? WHERE category = ?", [newName, oldName]);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable for renameCategoryInInventory. Updating fallback store.", err);
+  }
+  // Also update fallback store to keep in sync
+  let modified = false;
+  fallbackStore.inventory = fallbackStore.inventory.map((item) => {
+    if (item.category === oldName) {
+      modified = true;
+      return { ...item, category: newName };
+    }
+    return item;
+  });
+  if (modified) {
+    saveFallbackStore();
+  }
+}
+
 // ─── Site Content ─────────────────────────────────────────────────────────────
 
 function normalizeSiteContent(content: SiteContent): SiteContent {
   if (!content) return DEFAULT_SITE_CONTENT;
-  const copy = { ...content };
+  const copy = { ...DEFAULT_SITE_CONTENT, ...content };
   if (copy.stats && !Array.isArray(copy.stats)) {
     copy.stats = Object.values(copy.stats);
   }
@@ -1187,6 +1219,9 @@ function normalizeSiteContent(content: SiteContent): SiteContent {
       ...copy.hero,
       trustPillars: Object.values(copy.hero.trustPillars),
     };
+  }
+  if (!copy.about) {
+    copy.about = DEFAULT_SITE_CONTENT.about;
   }
   return copy;
 }

@@ -27,15 +27,40 @@ import {
   Zap,
 } from "lucide-react";
 
-const rentalSubItems = [
-  { label: "Tents",                href: "/inventory/tents",                categorySlug: "tents",                icon: <Tent size={15} />,     desc: "High-peak wedding & party tents" },
-  { label: "Tables",               href: "/inventory/tables",               categorySlug: "tables",               icon: <Table2 size={15} />,   desc: "Banquet, round & specialty tables" },
-  { label: "Chairs",               href: "/inventory/chairs",               categorySlug: "chairs",               icon: <Armchair size={15} />, desc: "Folding, cross-back & chiavari" },
-  { label: "Inflatables",          href: "/inventory/inflatables",          categorySlug: "inflatables",          icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },
-  { label: "Photo Booth",          href: "/inventory/photobooth",          categorySlug: "photobooth",          icon: <Camera size={15} />,   desc: "360° & open-air photo experiences" },
-  { label: "Concession Equipment", href: "/inventory/concession-equipment", categorySlug: "concession-equipment", icon: <Coffee size={15} />,   desc: "Popcorn, cotton candy & more" },
-];
+function getCategoryIcon(iconName?: string) {
+  switch (iconName) {
+    case "castle":
+    case "water":
+    case "wind":
+      return <Wind size={15} />;
+    case "tent":
+      return <Tent size={15} />;
+    case "table":
+      return <Table2 size={15} />;
+    case "chair":
+      return <Armchair size={15} />;
+    case "camera":
+      return <Camera size={15} />;
+    case "candy":
+    case "popcorn":
+    case "ice":
+    case "coffee":
+      return <Coffee size={15} />;
+    case "shopping-bag":
+      return <ShoppingBag size={15} />;
+    default:
+      return <Tent size={15} />;
+  }
+}
 
+const DEFAULT_RENTAL_SUB_ITEMS = [
+  { label: "Tents",                categorySlug: "tents",                categoryName: "Tents",                icon: <Tent size={15} />,     desc: "High-peak wedding & party tents" },
+  { label: "Tables",               categorySlug: "tables",               categoryName: "Tables",               icon: <Table2 size={15} />,   desc: "Banquet, round & specialty tables" },
+  { label: "Chairs",               categorySlug: "chairs",               categoryName: "Chairs",               icon: <Armchair size={15} />, desc: "Folding, cross-back & chiavari" },
+  { label: "Inflatables",          categorySlug: "inflatables",          categoryName: "Bounce Houses",        icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },
+  { label: "Photo Booth",          categorySlug: "photobooth",          categoryName: "Photo Booths",         icon: <Camera size={15} />,   desc: "360° & open-air photo experiences" },
+  { label: "Concession Equipment", categorySlug: "concession-equipment", categoryName: "Cotton Candy Machines",icon: <Coffee size={15} />,   desc: "Popcorn, cotton candy & more" },
+];
 
 interface NavbarProps {
   onOpenQuote: () => void;
@@ -55,6 +80,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   const [galleryEnabled, setGalleryEnabled] = useState(true);
   const [specialsEnabled, setSpecialsEnabled] = useState(true);
   const [phone, setPhone] = useState("(757) 749-3407");
+  const [rentalSubItems, setRentalSubItems] = useState(DEFAULT_RENTAL_SUB_ITEMS);
   const rentalsRef = useRef<HTMLDivElement>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -62,6 +88,27 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
     const hasClass = document.body.classList.contains("evening");
     setIsEvening(hasClass);
     setMounted(true);
+
+    // Fetch categories dynamically
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          const mapped = data.categories.map((cat: { name: string; icon?: string }) => {
+            const name = cat.name;
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+            return {
+              label: name,
+              categorySlug: slug,
+              categoryName: name,
+              icon: getCategoryIcon(cat.icon),
+              desc: `Explore ${name} rentals`,
+            };
+          });
+          setRentalSubItems(mapped);
+        }
+      })
+      .catch(() => {});
 
     // Fetch settings to check if gallery is enabled
     fetch("/api/settings")
@@ -142,17 +189,31 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
     return `/${defaultHash}`;
   };
 
-  const handleRentalSubClick = (categorySlug: string) => {
+  const handleRentalSubClick = (subArg: string | { label?: string; categoryName?: string; categorySlug: string }) => {
     // Close menus first
     setRentalsDropdownOpen(false);
     setOpen(false);
     setMobileRentalsOpen(false);
 
+    const slug = typeof subArg === "string" ? subArg : subArg.categorySlug;
+    const catName = typeof subArg === "string" ? subArg : (subArg.categoryName || subArg.label || subArg.categorySlug);
+
     if (typeof window !== "undefined") {
-      if (categorySlug === "all") {
+      if (slug === "all") {
         window.location.href = "/inventory";
       } else {
-        window.location.href = `/inventory/${categorySlug}`;
+        const isHome = window.location.pathname === "/";
+        if (isHome) {
+          window.dispatchEvent(new CustomEvent("pinstripe:selectCategory", { detail: { category: catName } }));
+          const rentalsSection = document.getElementById("rentals");
+          if (rentalsSection) {
+            const navbarHeight = 90;
+            const top = rentalsSection.getBoundingClientRect().top + window.scrollY - navbarHeight;
+            window.scrollTo({ top, behavior: "smooth" });
+            return;
+          }
+        }
+        window.location.href = `/inventory?category=${encodeURIComponent(catName)}`;
       }
     }
   };
@@ -381,7 +442,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                       {rentalSubItems.map((sub, i) => (
                         <button
                           key={sub.label}
-                          onClick={() => handleRentalSubClick(sub.categorySlug)}
+                          onClick={() => handleRentalSubClick(sub)}
                           style={{
                             display: "flex",
                             alignItems: "center",
@@ -778,7 +839,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                         {rentalSubItems.map((sub) => (
                           <button
                             key={sub.label}
-                            onClick={() => handleRentalSubClick(sub.categorySlug)}
+                            onClick={() => handleRentalSubClick(sub)}
                             style={{
                               display: "flex",
                               alignItems: "center",
