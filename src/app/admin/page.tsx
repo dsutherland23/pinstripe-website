@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { getItemFallbackImage } from "@/lib/image-utils";
 import {
   Lock, Database, Calendar, Plus, RefreshCw, Edit, Check, AlertTriangle,
   Eye, Trash2, Upload, Settings, Tag, Globe, ChevronDown, ChevronRight,
@@ -1126,7 +1127,7 @@ export default function AdminDashboard() {
                             src={item.image}
                             alt=""
                             style={{ width: "42px", height: "42px", objectFit: "cover", borderRadius: "0.375rem", flexShrink: 0 }}
-                            onError={(e) => { (e.target as HTMLImageElement).src = "/images/canopy-tent.png"; }}
+                            onError={(e) => { (e.target as HTMLImageElement).src = getItemFallbackImage(item.category); }}
                           />
                           <div style={{ minWidth: 0 }}>
                             <p style={{ fontWeight: 700, color: "#ffffff", fontSize: "0.82rem", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
@@ -1262,7 +1263,7 @@ export default function AdminDashboard() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                     {filteredInventory.map(item => (
                       <div key={item.id} style={{ ...cardStyle, background: "rgba(255,255,255,0.02)", display: "flex", gap: "0.75rem", padding: "1rem" }}>
-                        <img src={item.image} alt="" style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "0.5rem", background: "#1a1a1a", flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).src = "/images/canopy-tent.png"; }} />
+                        <img src={item.image} alt="" style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "0.5rem", background: "#1a1a1a", flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).src = getItemFallbackImage(item.category); }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontWeight: 700, color: "#ffffff", fontSize: "0.85rem", margin: "0 0 0.25rem 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</p>
                           <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.4rem", flexWrap: "wrap" }}>
@@ -1312,7 +1313,7 @@ export default function AdminDashboard() {
                         {filteredInventory.map(item => (
                           <tr key={item.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                             <td style={{ padding: "10px" }}>
-                              <img src={item.image} alt="" style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "0.375rem", background: "#1a1a1a" }} onError={e => { (e.target as HTMLImageElement).src = "/images/canopy-tent.png"; }} />
+                              <img src={item.image} alt="" style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "0.375rem", background: "#1a1a1a" }} onError={e => { (e.target as HTMLImageElement).src = getItemFallbackImage(item.category); }} />
                             </td>
                             <td style={{ padding: "10px", fontWeight: 600, color: "#ffffff", fontSize: "0.85rem", maxWidth: "200px" }}>
                               <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
@@ -1383,7 +1384,7 @@ export default function AdminDashboard() {
                       <div>
                         <label style={labelStyle}>Image</label>
                         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.625rem", padding: "0.75rem" }}>
-                          <img src={editingItem.image || itemForm.image} alt="" style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "0.375rem" }} onError={e => { (e.target as HTMLImageElement).src = "/images/canopy-tent.png"; }} />
+                          <img src={editingItem?.image || itemForm.image} alt="" style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "0.375rem" }} onError={e => { (e.target as HTMLImageElement).src = getItemFallbackImage(editingItem?.category || itemForm.category); }} />
                           <div style={{ flex: 1 }}>
                             <input type="text" value={itemForm.image} onChange={e => setItemForm(f => ({ ...f, image: e.target.value }))} placeholder="Image URL…" style={{ ...inputStyle, marginBottom: "0.5rem" }} />
                             <label style={{ padding: "0.4rem 0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(212,175,55,0.3)", background: "rgba(212,175,55,0.08)", color: "#D4AF37", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>

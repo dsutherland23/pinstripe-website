@@ -59,7 +59,7 @@ export const mockInventory: RentalItem[] = [
     availability: true,
     dimensions: "36″ × 24″ × 42″",
     capacity: "120 Cones / hr",
-    image: "/images/logo.jpg",
+    image: "/images/kids-cotton-candy.png",
     rating: 4.9,
     reviews: 28,
     deliveryFee: 20,

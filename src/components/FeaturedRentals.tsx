@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { Star, Maximize2, Users, ShoppingCart, Calendar } from "lucide-react";
 import { RadialGlowCard } from "./CursorReactive";
 
+import { getItemFallbackImage } from "@/lib/image-utils";
+
 // Re-export RentalItem type so other files can still import it from here
 export type { RentalItem } from "@/data/mockInventory";
 import type { RentalItem } from "@/data/mockInventory";
@@ -162,8 +164,9 @@ export default function FeaturedRentals({
                       loading="lazy"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        if (!target.src.includes("/images/canopy-tent.png")) {
-                          target.src = "/images/canopy-tent.png";
+                        const fallback = getItemFallbackImage(item.category);
+                        if (!target.src.includes(fallback)) {
+                          target.src = fallback;
                         }
                       }}
                     />

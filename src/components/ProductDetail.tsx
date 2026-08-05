@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { X, Star, Maximize2, Users, Calendar, ShieldCheck, Sparkles, CloudSun } from "lucide-react";
 import type { RentalItem } from "./FeaturedRentals";
+import { getItemFallbackImage } from "@/lib/image-utils";
 
 const FALLBACK = "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=60";
 
@@ -78,8 +79,9 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            if (!target.src.includes("/images/canopy-tent.png")) {
-              target.src = "/images/canopy-tent.png";
+            const fallback = getItemFallbackImage(item.category);
+            if (!target.src.includes(fallback)) {
+              target.src = fallback;
             }
           }}
         />

@@ -15,6 +15,7 @@ import Reveal from "@/components/Reveal";
 import { RadialGlowCard } from "@/components/CursorReactive";
 import type { RentalItem } from "@/data/mockInventory";
 import Packages from "@/components/Packages";
+import { getItemFallbackImage } from "@/lib/image-utils";
 
 const FALLBACK = "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=60";
 
@@ -463,8 +464,9 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                               loading="lazy" 
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                if (!target.src.includes("/images/canopy-tent.png")) {
-                                  target.src = "/images/canopy-tent.png";
+                                const fallback = getItemFallbackImage(item.category);
+                                if (!target.src.includes(fallback)) {
+                                  target.src = fallback;
                                 }
                               }} 
                             />
