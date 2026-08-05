@@ -177,9 +177,11 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
         (s) =>
           s.id === targetSlug ||
           s.categoryName.toLowerCase() === targetCategory.toLowerCase() ||
-          (targetSlug === "inflatables" && (s.categoryName === "Bounce Houses" || s.categoryName === "Water Slides"))
+          (targetSlug === "inflatables" && (s.categoryName === "Bounce Houses" || s.categoryName === "Water Slides")) ||
+          ((targetSlug === "party-extras" || targetSlug === "products") &&
+            (s.id === "party-extras" || s.id === "products" || s.categoryName.toLowerCase().includes("party extra") || s.categoryName.toLowerCase().includes("product")))
       )
-    : rawSections.filter((s) => s.id !== "products" && s.categoryName.toLowerCase() !== "products");
+    : rawSections;
 
   return (
     <main className="pb-18 lg:pb-0" style={{ fontFamily: "var(--font-body)", background: "var(--bg-primary)", color: "var(--text-primary)", minHeight: "100vh", position: "relative", overflowX: "hidden" }}>

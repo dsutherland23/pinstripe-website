@@ -218,10 +218,22 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
     }
   };
 
+  // Dynamic category for Products / Party Extras if renamed
+  const productsCatItem = rentalSubItems.find(
+    (item) =>
+      item.categorySlug === "products" ||
+      item.categorySlug === "party-extras" ||
+      item.categoryName.toLowerCase().includes("product") ||
+      item.categoryName.toLowerCase().includes("party extra") ||
+      item.categoryName.toLowerCase().includes("extra")
+  );
+  const dynamicProductsLabel = productsCatItem ? productsCatItem.categoryName : "Party Extras";
+  const dynamicProductsHref = productsCatItem ? `/inventory/${productsCatItem.categorySlug}` : "/inventory/party-extras";
+
   const links = [
     { label: "Home",       href: getLinkHref("Home", "#home"),           desc: "Return to grand showcase" },
     { label: "Rentals",    href: getLinkHref("Rentals", "/inventory"),   desc: "Browse tents, tables & slides" },
-    { label: "Products",   href: "/inventory/products",                  desc: "Kits, stands & extra party supplies" },
+    { label: dynamicProductsLabel, href: dynamicProductsHref,           desc: "Kits, stands & extra party supplies" },
     ...(specialsEnabled ? [{ label: "Specials",   href: "/specials",                            desc: "Limited-time deals & packages" }] : []),
     ...(galleryEnabled ? [{ label: "Gallery",    href: getLinkHref("Gallery", "#gallery"),     desc: "Real celebration inspiration" }] : []),
     { label: "My Account", href: "/portal",                              desc: "Sign in, register or track orders" },
@@ -233,16 +245,18 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   }));
 
   const renderIcon = (label: string, size = 16) => {
+    if (label === dynamicProductsLabel || label === "Products" || label === "Party Extras") {
+      return <ShoppingBag size={size} />;
+    }
     switch (label) {
       case "Home":       return <Home size={size} />;
       case "Rentals":    return <Compass size={size} />;
-      case "Products":   return <ShoppingBag size={size} />;
       case "Specials":   return <Zap size={size} />;
       case "Gallery":    return <ImageIcon size={size} />;
       case "My Account": return <User size={size} />;
       case "About":      return <Award size={size} />;
       case "Contact":    return <MessageSquare size={size} />;
-      default:           return null;
+      default:           return <ShoppingBag size={size} />;
     }
   };
 
