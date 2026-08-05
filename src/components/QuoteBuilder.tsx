@@ -50,7 +50,7 @@ const PHOTO_BOOTH_PACKAGES: PhotoBoothPackage[] = [
 interface QuoteBuilderProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedItemFromInventory?: { id: string; title: string; price: number } | null;
+  selectedItemFromInventory?: { id: string; title: string; price: number; category?: string } | null;
   selectedPackageFromUI?: string | null;
   defaultDate?: string;
   defaultCity?: string;
@@ -232,7 +232,9 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
       setSelected({});
       setStep(1);
     } else if (selectedItemFromInventory) {
-      setBookingMode("items");
+      const cat = (selectedItemFromInventory.category || "").toLowerCase();
+      const isPB = cat.includes("photo") || cat.includes("booth") || cat.includes("package");
+      setBookingMode(isPB ? "package" : "items");
       setSelected({ [selectedItemFromInventory.id]: 1 });
       setSelectedPackageName("Party");
       setPackageHours(4);
@@ -327,10 +329,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
 
   const isPhotoBoothApplicable = () => {
     if (bookingMode === "package") return true;
+    if (selectedPackageFromUI) return true;
     if (selectedItemFromInventory) {
+      const cat = (selectedItemFromInventory.category || "").toLowerCase();
+      if (cat.includes("photo") || cat.includes("booth") || cat.includes("package")) return true;
       const item = mockInventory.find((i) => i.id === selectedItemFromInventory.id);
-      if (item && item.category === "Photo Booths") return true;
-      return false;
+      if (item && (item.category.toLowerCase().includes("photo") || item.category.toLowerCase().includes("booth"))) return true;
     }
     const totalSelectedCount = Object.values(selected).reduce((sum, val) => sum + val, 0);
     if (totalSelectedCount === 0) return true;
@@ -338,7 +342,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     const hasSelectedPhotoBooth = Object.keys(selected).some((id) => {
       if (selected[id] <= 0) return false;
       const item = mockInventory.find((i) => i.id === id);
-      return item?.category === "Photo Booths";
+      const cat = (item?.category || "").toLowerCase();
+      return cat.includes("photo") || cat.includes("booth");
     });
     return hasSelectedPhotoBooth;
   };
