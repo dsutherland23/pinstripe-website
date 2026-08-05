@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   Star, Maximize2, Users, Calendar, Table2, Armchair, 
-  Wind, Camera, Coffee, Tent, Search, Info, CheckCircle2, ShoppingBag 
+  Wind, Camera, Coffee, Tent, Search, Info, CheckCircle2, ShoppingBag, Package 
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -180,13 +180,24 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
   const targetCategoryNorm = targetCategory ? normalizeCategoryName(targetCategory) : "";
   const targetSlug = targetCategoryNorm ? toSlug(targetCategoryNorm) : "";
 
+  const packageSection = {
+    title: "Curated Packages",
+    id: "packages",
+    categoryName: "Packages",
+    items: [],
+    icon: <Package size={18} />,
+    desc: "All-inclusive event & photo booth packages featuring delivery, backdrop, props, and staffing options.",
+  };
+
   const sectionsConfig = targetCategoryNorm
-    ? rawSections.filter(
-        (s) =>
-          s.id === targetSlug ||
-          s.categoryName.toLowerCase() === targetCategoryNorm.toLowerCase() ||
-          (targetSlug === "inflatables" && (s.categoryName === "Bounce Houses" || s.categoryName === "Water Slides"))
-      )
+    ? (targetSlug === "packages"
+        ? [packageSection]
+        : rawSections.filter(
+            (s) =>
+              s.id === targetSlug ||
+              s.categoryName.toLowerCase() === targetCategoryNorm.toLowerCase() ||
+              (targetSlug === "inflatables" && (s.categoryName === "Bounce Houses" || s.categoryName === "Water Slides"))
+          ))
     : rawSections;
 
   return (
@@ -395,7 +406,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                 </div>
               </Reveal>
 
-              {sec.id === "photobooth" && !searchQuery && (
+              {(sec.id === "packages" || sec.id === "photo-booths" || sec.id === "photobooth" || targetSlug === "packages") && !searchQuery && (
                 <div style={{ marginBottom: "3.5rem" }}>
                   <Reveal>
                     <div style={{ marginBottom: "1.5rem" }}>

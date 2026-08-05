@@ -25,6 +25,7 @@ import {
   Tent,
   ShoppingBag,
   Zap,
+  Package,
 } from "lucide-react";
 
 function getCategoryIcon(iconName?: string) {
@@ -48,6 +49,8 @@ function getCategoryIcon(iconName?: string) {
       return <Coffee size={15} />;
     case "shopping-bag":
       return <ShoppingBag size={15} />;
+    case "package":
+      return <Package size={15} />;
     default:
       return <Tent size={15} />;
   }
@@ -60,6 +63,7 @@ const DEFAULT_RENTAL_SUB_ITEMS = [
   { label: "Inflatables",          categorySlug: "inflatables",          categoryName: "Bounce Houses",        icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },
   { label: "Photo Booth",          categorySlug: "photobooth",          categoryName: "Photo Booths",         icon: <Camera size={15} />,   desc: "360° & open-air photo experiences" },
   { label: "Concession Equipment", categorySlug: "concession-equipment", categoryName: "Cotton Candy Machines",icon: <Coffee size={15} />,   desc: "Popcorn, cotton candy & more" },
+  { label: "Packages",             categorySlug: "packages",             categoryName: "Packages",             icon: <Package size={15} />,  desc: "All-inclusive event & photo booth deals" },
 ];
 
 interface NavbarProps {
@@ -105,6 +109,15 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
               desc: `Explore ${name} rentals`,
             };
           });
+          if (!mapped.some((item: { categorySlug: string }) => item.categorySlug === "packages")) {
+            mapped.push({
+              label: "Packages",
+              categorySlug: "packages",
+              categoryName: "Packages",
+              icon: <Package size={15} />,
+              desc: "All-inclusive event & photo booth deals",
+            });
+          }
           setRentalSubItems(mapped);
         }
       })
