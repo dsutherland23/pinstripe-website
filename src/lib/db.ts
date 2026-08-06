@@ -265,7 +265,7 @@ export async function initDb(): Promise<void> {
     await conn.query(`
       CREATE TABLE IF NOT EXISTS settings (
         id                   INT        NOT NULL PRIMARY KEY DEFAULT 1,
-        tent_planner_enabled TINYINT(1) NOT NULL DEFAULT 1,
+        tent_planner_enabled TINYINT(1) NOT NULL DEFAULT 0,
         maintenance_mode     TINYINT(1) NOT NULL DEFAULT 0,
         analytics_id         VARCHAR(128) NOT NULL DEFAULT '',
         pay_in_person_enabled TINYINT(1) NOT NULL DEFAULT 1,
@@ -319,6 +319,12 @@ export async function initDb(): Promise<void> {
       await conn.query("ALTER TABLE settings ADD COLUMN promo_codes JSON");
     } catch (err) {
       // Ignore if column already exists
+    }
+
+    try {
+      await conn.query("UPDATE settings SET tent_planner_enabled = 0");
+    } catch (err) {
+      // Ignore
     }
 
     try {
@@ -510,7 +516,7 @@ export async function initDb(): Promise<void> {
     const [setCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM settings");
     if ((setCount as mysql.RowDataPacket[])[0].c === 0) {
       await conn.query(
-        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled, gallery_enabled, categories_enabled, featured_rentals_enabled, deposit_enabled, deposit_percentage, promo_codes) VALUES (1, 1, 0, '', 1, 1, 1, 1, 1, 50, '[{\"code\":\"WELCOME10\",\"type\":\"percent\",\"value\":10},{\"code\":\"VIP50\",\"type\":\"percent\",\"value\":50},{\"code\":\"ONSITE20\",\"type\":\"percent\",\"value\":20}]')"
+        "INSERT IGNORE INTO settings (id, tent_planner_enabled, maintenance_mode, analytics_id, pay_in_person_enabled, gallery_enabled, categories_enabled, featured_rentals_enabled, deposit_enabled, deposit_percentage, promo_codes) VALUES (1, 0, 0, '', 1, 1, 1, 1, 1, 50, '[{\"code\":\"WELCOME10\",\"type\":\"percent\",\"value\":10},{\"code\":\"VIP50\",\"type\":\"percent\",\"value\":50},{\"code\":\"ONSITE20\",\"type\":\"percent\",\"value\":20}]')"
       );
     }
   } finally {
@@ -586,7 +592,7 @@ const fallbackStore = {
   ],
   siteContent: { ...DEFAULT_SITE_CONTENT },
   settings: { 
-    tentPlannerEnabled: true, 
+    tentPlannerEnabled: false, 
     maintenanceMode: false, 
     analyticsId: "", 
     payInPersonEnabled: true, 

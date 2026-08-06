@@ -18,17 +18,14 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import Packages from "@/components/Packages";
 
 
-// ---- Default Fallback Category data ----
 const DEFAULT_CATEGORIES = [
   { name: "Bounce Houses",         icon: "castle",  featured: true },
   { name: "Water Slides",          icon: "water",   featured: true },
-  { name: "Tents",                 icon: "tent",    featured: true },
   { name: "Tables",                icon: "table",   featured: false },
   { name: "Chairs",                icon: "chair",   featured: false },
-  { name: "Cotton Candy Machines", icon: "candy",   featured: false },
-  { name: "Popcorn Machines",      icon: "popcorn", featured: false },
-  { name: "Snow-cone Machines",    icon: "ice",     featured: false },
+  { name: "Concession Equipment",  icon: "candy",   featured: false },
   { name: "Photo Booths",          icon: "camera",  featured: false },
+  { name: "Party Extras",          icon: "shopping-bag", featured: false },
 ];
 
 export default function Home() {
