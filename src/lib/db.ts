@@ -438,6 +438,27 @@ export async function initDb(): Promise<void> {
       );
     }
 
+    for (const pkg of fallbackStore.packages) {
+      await conn.query(
+        `INSERT IGNORE INTO packages (id, name, tagline, description, price, duration, extra_hour_price, color, popular, \`order\`, items, addons)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          pkg.id,
+          pkg.name,
+          pkg.tagline ?? null,
+          pkg.description,
+          pkg.price,
+          pkg.duration || "4 hrs",
+          pkg.extraHourPrice || 65,
+          pkg.color || "#D4AF37",
+          pkg.popular ? 1 : 0,
+          pkg.order || 1,
+          JSON.stringify(pkg.items || []),
+          JSON.stringify(pkg.addons || []),
+        ]
+      );
+    }
+
     // Auto-migrate legacy Products category name to Party Extras in MySQL database
     await conn.query("UPDATE categories SET name = 'Party Extras' WHERE name = 'Products'");
     await conn.query("UPDATE inventory SET category = 'Party Extras' WHERE category = 'Products'");
