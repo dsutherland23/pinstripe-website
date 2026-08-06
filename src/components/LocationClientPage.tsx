@@ -38,7 +38,7 @@ export default function LocationClientPage({ cityKey, cityName }: LocationClient
   const [selectedItem, setSelectedItem]       = useState<RentalItem | null>(null);
   const [activeCategory, setActiveCategory]   = useState("All");
   const [searchQuery, setSearchQuery]         = useState("");
-  const [searchDate, setSearchDate]           = useState("2026-06-20");
+  const [searchDate, setSearchDate]           = useState("");
   const [quotePreItem, setQuotePreItem]       = useState<RentalItem | null>(null);
   const [aboutContactOpen, setAboutContactOpen] = useState(false);
   const [aboutContactTab, setAboutContactTab]   = useState<"about" | "contact">("about");

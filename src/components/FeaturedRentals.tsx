@@ -223,8 +223,8 @@ export default function FeaturedRentals({
                       </div>
                     </div>
 
-                    {/* Availability dot */}
-                    {item.availability && (
+                    {/* Availability dot - Only display if item is booked */}
+                    {item.availability && isBooked && (
                       <div
                         style={{
                           position: "absolute",
@@ -233,18 +233,15 @@ export default function FeaturedRentals({
                           display: "flex",
                           alignItems: "center",
                           gap: "0.35rem",
-                          background: isBooked ? "rgba(254,226,226,0.95)" : "rgba(255,255,255,0.92)",
+                          background: "rgba(254,226,226,0.95)",
                           borderRadius: "9999px",
                           padding: "0.2rem 0.6rem",
-                          border: isBooked ? "1px solid rgba(239,68,68,0.2)" : "none",
+                          border: "1px solid rgba(239,68,68,0.2)",
                         }}
                       >
-                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isBooked ? "#ef4444" : "#22c55e" }} />
-                         <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.55rem", color: isBooked ? "#ef4444" : "#22c55e", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                          {isBooked
-                            ? `Booked on ${searchDate && searchDate.includes("-") ? `${searchDate.split("-")[1]}/${searchDate.split("-")[2]}` : ""}`
-                            : `Available ${searchDate && searchDate.includes("-") ? `on ${searchDate.split("-")[1]}/${searchDate.split("-")[2]}` : "Now"}`
-                          }
+                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#ef4444" }} />
+                        <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.55rem", color: "#ef4444", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          Booked {searchDate && searchDate.includes("-") ? `on ${searchDate.split("-")[1]}/${searchDate.split("-")[2]}` : ""}
                         </span>
                       </div>
                     )}
