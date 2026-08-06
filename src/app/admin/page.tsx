@@ -9,7 +9,7 @@ import {
   X, Save, Star, Package, LayoutGrid, Palette, FileText, BarChart3,
   Phone, Mail, MapPin, Link2, Share2, Menu, Search, Filter,
   ArrowUp, ArrowDown, ToggleLeft, ToggleRight, Image as ImageIcon,
-  CheckCircle, XCircle, Clock, Zap, Download, Copy,
+  CheckCircle, XCircle, Clock, Zap, Download, Copy, Camera,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -145,7 +145,28 @@ interface SpecialItem {
   order: number;
 }
 
-type TabId = "overview" | "inventory" | "categories" | "bookings" | "specials" | "content" | "settings";
+interface PackageAddon {
+  id: string;
+  label: string;
+  price: number;
+}
+
+interface PhotoBoothPackage {
+  id: string;
+  name: string;
+  tagline?: string;
+  description: string;
+  price: number;
+  duration: string;
+  extraHourPrice: number;
+  color: string;
+  popular: boolean;
+  order: number;
+  items: string[];
+  addons: PackageAddon[];
+}
+
+type TabId = "overview" | "inventory" | "categories" | "packages" | "bookings" | "specials" | "content" | "settings";
 
 export default function AdminDashboard() {
   const [passcode, setPasscode]   = useState("");
@@ -204,6 +225,28 @@ export default function AdminDashboard() {
     featured: false,
     order: "0",
   });
+
+  // Packages state
+  const [packages, setPackages]           = useState<PhotoBoothPackage[]>([]);
+  const [editingPkg, setEditingPkg]       = useState<PhotoBoothPackage | null>(null);
+  const [isCreatingPkg, setIsCreatingPkg] = useState(false);
+  const [pkgDeleteConfirmId, setPkgDeleteConfirmId] = useState<string | null>(null);
+  const [pkgForm, setPkgForm] = useState({
+    name: "",
+    tagline: "",
+    description: "",
+    price: "250",
+    duration: "4 hrs",
+    extraHourPrice: "65",
+    color: "#D4AF37",
+    popular: false,
+    order: "1",
+    items: [] as string[],
+    addons: [] as { id: string; label: string; price: number }[],
+  });
+  const [newItemText, setNewItemText]     = useState("");
+  const [newAddonLabel, setNewAddonLabel] = useState("");
+  const [newAddonPrice, setNewAddonPrice] = useState("100");
 
   // UI state
   const [loading, setLoading]       = useState(false);
@@ -340,10 +383,11 @@ export default function AdminDashboard() {
     const c = code || getCode();
     setLoading(true); setErrorMsg("");
     try {
-      const [invRes, bkRes, catRes, contentRes, settingsRes, specialsRes] = await Promise.all([
+      const [invRes, bkRes, catRes, pkgRes, contentRes, settingsRes, specialsRes] = await Promise.all([
         fetch(`/api/admin/inventory?t=${Date.now()}`, { headers: { "x-admin-passcode": c } }),
         fetch(`/api/admin/bookings?t=${Date.now()}`,  { headers: { "x-admin-passcode": c } }),
         fetch(`/api/admin/categories?t=${Date.now()}`,{ headers: { "x-admin-passcode": c } }),
+        fetch(`/api/admin/packages?t=${Date.now()}`,  { headers: { "x-admin-passcode": c } }),
         fetch(`/api/admin/content?t=${Date.now()}`,   { headers: { "x-admin-passcode": c } }),
         fetch(`/api/admin/settings?t=${Date.now()}`,  { headers: { "x-admin-passcode": c } }),
         fetch(`/api/admin/specials?t=${Date.now()}`,  { headers: { "x-admin-passcode": c } }),
@@ -351,6 +395,7 @@ export default function AdminDashboard() {
       if (invRes.ok)  { const d = await invRes.json();     setInventory(d.items || []); }
       if (bkRes.ok)   { const d = await bkRes.json();      setBookings(d.bookings || []); }
       if (catRes.ok)  { const d = await catRes.json();     setCategories(d.categories || []); }
+      if (pkgRes.ok)  { const d = await pkgRes.json();      setPackages(d.packages || []); }
       if (contentRes.ok) { const d = await contentRes.json(); setSiteContent(d.content); setContentForm(d.content); }
       if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true, categoriesEnabled: d.categoriesEnabled ?? true, featuredRentalsEnabled: d.featuredRentalsEnabled ?? true, depositEnabled: d.depositEnabled ?? true, depositPercentage: d.depositPercentage ?? 50, promoCodes: d.promoCodes ?? [], specialsEnabled: d.specialsEnabled ?? true }); }
       if (specialsRes.ok) { const d = await specialsRes.json(); setSpecials(d.items || []); }
@@ -578,6 +623,119 @@ export default function AdminDashboard() {
         }
         loadAll();
       } else notify(d.error || "Failed to upload image.", "error");
+    } catch { notify("Network error.", "error"); }
+    finally { setLoading(false); }
+  };
+
+  // ── Packages & Add-ons CRUD ────────────────────────────────────────────────
+  const startCreatePackage = () => {
+    setEditingPkg(null); setIsCreatingPkg(true);
+    setPkgForm({
+      name: "",
+      tagline: "",
+      description: "",
+      price: "250",
+      duration: "4 hrs",
+      extraHourPrice: "65",
+      color: "#D4AF37",
+      popular: false,
+      order: String(packages.length + 1),
+      items: [
+        "Open-air booth experience",
+        "Studio lighting setup",
+        "Custom photo template overlay",
+        "Instant digital text & email sharing",
+      ],
+      addons: [
+        { id: "prints", label: "Unlimited Physical Prints (2×6 or 4×6)", price: 250 },
+        { id: "glam", label: "Glam Filter (Magazine-style finish)", price: 100 },
+        { id: "guestbook", label: "Memory Photo Guest Book", price: 100 },
+      ],
+    });
+    setNewItemText(""); setNewAddonLabel(""); setNewAddonPrice("100");
+  };
+
+  const startEditPackage = (pkg: PhotoBoothPackage) => {
+    setEditingPkg(pkg); setIsCreatingPkg(false);
+    setPkgForm({
+      name: pkg.name,
+      tagline: pkg.tagline || "",
+      description: pkg.description || "",
+      price: String(pkg.price),
+      duration: pkg.duration || "4 hrs",
+      extraHourPrice: String(pkg.extraHourPrice || 65),
+      color: pkg.color || "#D4AF37",
+      popular: pkg.popular,
+      order: String(pkg.order),
+      items: [...(pkg.items || [])],
+      addons: [...(pkg.addons || [])],
+    });
+    setNewItemText(""); setNewAddonLabel(""); setNewAddonPrice("100");
+  };
+
+  const handleSavePackage = async (e: React.FormEvent) => {
+    e.preventDefault(); setLoading(true);
+    try {
+      const res = await fetch("/api/admin/packages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+        body: JSON.stringify({
+          action: isCreatingPkg ? "create" : "update",
+          item: {
+            id: editingPkg?.id,
+            name: pkgForm.name,
+            tagline: pkgForm.tagline,
+            description: pkgForm.description,
+            price: parseFloat(pkgForm.price) || 0,
+            duration: pkgForm.duration,
+            extraHourPrice: parseFloat(pkgForm.extraHourPrice) || 65,
+            color: pkgForm.color,
+            popular: pkgForm.popular,
+            order: parseInt(pkgForm.order, 10) || 1,
+            items: pkgForm.items,
+            addons: pkgForm.addons,
+          },
+        }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        notify(isCreatingPkg ? "Photo booth package created!" : "Photo booth package updated!");
+        setEditingPkg(null); setIsCreatingPkg(false);
+        loadAll();
+      } else notify(d.error || "Failed to save package.", "error");
+    } catch { notify("Network error.", "error"); }
+    finally { setLoading(false); }
+  };
+
+  const handleDeletePackage = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/packages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+        body: JSON.stringify({ action: "delete", id }),
+      });
+      const d = await res.json();
+      if (d.success) { notify("Package deleted."); loadAll(); }
+      else notify(d.error || "Failed to delete package.", "error");
+    } catch { notify("Network error.", "error"); }
+    finally { setLoading(false); setPkgDeleteConfirmId(null); }
+  };
+
+  const handleTogglePkgPopular = async (pkg: PhotoBoothPackage) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/packages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+        body: JSON.stringify({
+          action: "update",
+          item: { ...pkg, popular: !pkg.popular },
+        }),
+      });
+      const d = await res.json();
+      if (d.success) { notify(pkg.popular ? "Popular badge removed." : "Popular badge enabled."); loadAll(); }
+      else notify(d.error || "Failed to toggle badge.", "error");
     } catch { notify("Network error.", "error"); }
     finally { setLoading(false); }
   };
@@ -869,6 +1027,7 @@ export default function AdminDashboard() {
     { id: "overview",   label: "Overview",     icon: <BarChart3 size={18} /> },
     { id: "inventory",  label: "Inventory",    icon: <Package size={18} />,  badge: inventory.length },
     { id: "categories", label: "Categories",   icon: <Tag size={18} />,      badge: categories.length },
+    { id: "packages",   label: "Packages & Add-ons", icon: <Camera size={18} />, badge: packages.length },
     { id: "specials",   label: "Specials",     icon: <Zap size={18} />,      badge: specials.length },
     { id: "bookings",   label: "Bookings",     icon: <Calendar size={18} />, badge: pendingBookings > 0 ? pendingBookings : undefined },
     { id: "content",    label: "Site Content", icon: <Globe size={18} /> },
@@ -2642,6 +2801,352 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ── PACKAGES & ADD-ONS TAB ────────────────────────────────────────── */}
+          {activeTab === "packages" && (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+                <div>
+                  <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>Photo Booth Packages & Add-ons</h2>
+                  <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.82rem", margin: "0.2rem 0 0" }}>Manage package tiers, pricing, included features, and custom add-on option checklists.</p>
+                </div>
+                <button
+                  onClick={startCreatePackage}
+                  style={{
+                    background: "linear-gradient(135deg, #D4AF37 0%, #f5e8a0 50%, #D4AF37 100%)",
+                    border: "none", color: "#000", fontWeight: 800, padding: "0.6rem 1.1rem",
+                    borderRadius: "0.5rem", fontSize: "0.82rem", cursor: "pointer", display: "flex",
+                    alignItems: "center", gap: "0.4rem", boxShadow: "0 4px 15px rgba(212,175,55,0.2)"
+                  }}
+                >
+                  <Plus size={16} /> Create New Package
+                </button>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: (editingPkg || isCreatingPkg) ? (isMobile ? "1fr" : "1fr 400px") : "1fr", gap: "1.5rem" }}>
+                {/* Packages Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))", gap: "1.25rem", alignItems: "start" }}>
+                  {packages.map((pkg) => (
+                    <div
+                      key={pkg.id}
+                      style={{
+                        ...cardStyle,
+                        border: `1px solid ${pkg.color || "#D4AF37"}33`,
+                        position: "relative",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "1rem",
+                      }}
+                    >
+                      {/* Color bar top indicator */}
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "4px", background: pkg.color || "#D4AF37", borderRadius: "1rem 1rem 0 0" }} />
+
+                      {/* Header */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingTop: "0.5rem" }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>{pkg.name}</h3>
+                            {pkg.popular && (
+                              <span style={{ background: "rgba(212,175,55,0.2)", border: "1px solid rgba(212,175,55,0.4)", color: "#D4AF37", fontSize: "0.6rem", fontWeight: 800, padding: "0.15rem 0.5rem", borderRadius: "9999px", textTransform: "uppercase" }}>
+                                Popular
+                              </span>
+                            )}
+                          </div>
+                          {pkg.tagline && <p style={{ color: pkg.color || "#D4AF37", fontSize: "0.75rem", fontWeight: 700, margin: "0.2rem 0 0" }}>{pkg.tagline}</p>}
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: "1.25rem", fontWeight: 900, color: "#ffffff" }}>${pkg.price}</div>
+                          <div style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)" }}>{pkg.duration}</div>
+                        </div>
+                      </div>
+
+                      <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.5, margin: 0 }}>{pkg.description}</p>
+
+                      {/* Included Items */}
+                      <div>
+                        <div style={{ fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#D4AF37", marginBottom: "0.4rem" }}>
+                          Included Features ({pkg.items?.length || 0})
+                        </div>
+                        <ul style={{ margin: 0, paddingLeft: "1rem", fontSize: "0.78rem", color: "rgba(255,255,255,0.75)", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                          {(pkg.items || []).map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Addons List */}
+                      {pkg.addons && pkg.addons.length > 0 && (
+                        <div style={{ borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "0.75rem" }}>
+                          <div style={{ fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)", marginBottom: "0.4rem" }}>
+                            Package Add-Ons ({pkg.addons.length})
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                            {pkg.addons.map((ad, i) => (
+                              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.03)", padding: "0.35rem 0.6rem", borderRadius: "0.375rem", fontSize: "0.75rem" }}>
+                                <span style={{ color: "rgba(255,255,255,0.8)" }}>{ad.label}</span>
+                                <span style={{ color: "#D4AF37", fontWeight: 700 }}>+${ad.price}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div style={{ display: "flex", gap: "0.5rem", marginTop: "auto", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        <button
+                          onClick={() => startEditPackage(pkg)}
+                          style={{ flex: 1, padding: "0.45rem", borderRadius: "0.375rem", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem" }}
+                        >
+                          <Edit size={14} /> Edit Package
+                        </button>
+                        <button
+                          onClick={() => handleTogglePkgPopular(pkg)}
+                          style={{ padding: "0.45rem 0.6rem", borderRadius: "0.375rem", background: pkg.popular ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.04)", border: pkg.popular ? "1px solid rgba(212,175,55,0.3)" : "1px solid rgba(255,255,255,0.08)", color: pkg.popular ? "#D4AF37" : "rgba(255,255,255,0.4)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
+                          title="Toggle Popular Badge"
+                        >
+                          <Star size={14} fill={pkg.popular ? "#D4AF37" : "none"} />
+                        </button>
+                        <button
+                          onClick={() => setPkgDeleteConfirmId(pkg.id)}
+                          style={{ padding: "0.45rem 0.6rem", borderRadius: "0.375rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", fontSize: "0.75rem", cursor: "pointer" }}
+                          title="Delete Package"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Editor Panel Drawer */}
+                {(editingPkg || isCreatingPkg) && (
+                  <div style={{
+                    ...cardStyle,
+                    border: "1px solid rgba(212,175,55,0.25)",
+                    position: isMobile ? "static" : "sticky",
+                    top: isMobile ? undefined : "80px",
+                    maxHeight: isMobile ? undefined : "calc(100vh - 100px)",
+                    overflowY: isMobile ? undefined : "auto"
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+                      <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>
+                        {isCreatingPkg ? "Create Package" : `Edit #${editingPkg?.id}`}
+                      </h3>
+                      <button onClick={() => { setEditingPkg(null); setIsCreatingPkg(false); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex" }}><X size={18} /></button>
+                    </div>
+
+                    <form onSubmit={handleSavePackage} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      <div>
+                        <label style={labelStyle}>Package Name</label>
+                        <input required type="text" placeholder="e.g. Party Package" value={pkgForm.name} onChange={e => setPkgForm(f => ({ ...f, name: e.target.value }))} style={inputStyle} />
+                      </div>
+
+                      <div>
+                        <label style={labelStyle}>Sub-heading / Tagline</label>
+                        <input type="text" placeholder="e.g. Full-service, staffed booth experience" value={pkgForm.tagline} onChange={e => setPkgForm(f => ({ ...f, tagline: e.target.value }))} style={inputStyle} />
+                      </div>
+
+                      <div>
+                        <label style={labelStyle}>Description</label>
+                        <textarea required rows={3} value={pkgForm.description} onChange={e => setPkgForm(f => ({ ...f, description: e.target.value }))} style={{ ...inputStyle, resize: "vertical" }} />
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                        <div>
+                          <label style={labelStyle}>Price ($)</label>
+                          <input required type="number" step="1" value={pkgForm.price} onChange={e => setPkgForm(f => ({ ...f, price: e.target.value }))} style={inputStyle} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Included Duration</label>
+                          <input required type="text" placeholder="e.g. 4 hrs" value={pkgForm.duration} onChange={e => setPkgForm(f => ({ ...f, duration: e.target.value }))} style={inputStyle} />
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                        <div>
+                          <label style={labelStyle}>Extra Hour Price ($)</label>
+                          <input type="number" step="1" value={pkgForm.extraHourPrice} onChange={e => setPkgForm(f => ({ ...f, extraHourPrice: e.target.value }))} style={inputStyle} />
+                        </div>
+                        <div>
+                          <label style={labelStyle}>Accent Color Hex</label>
+                          <input type="text" value={pkgForm.color} onChange={e => setPkgForm(f => ({ ...f, color: e.target.value }))} style={inputStyle} />
+                        </div>
+                      </div>
+
+                      {/* Included Features Editor */}
+                      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "0.75rem" }}>
+                        <label style={labelStyle}>Included Features Bullet Points</label>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.5rem" }}>
+                          {pkgForm.items.map((itemStr, idx) => (
+                            <div key={idx} style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                              <input
+                                type="text"
+                                value={itemStr}
+                                onChange={(e) => {
+                                  const updated = [...pkgForm.items];
+                                  updated[idx] = e.target.value;
+                                  setPkgForm(f => ({ ...f, items: updated }));
+                                }}
+                                style={{ ...inputStyle, padding: "0.4rem 0.6rem", fontSize: "0.78rem" }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = pkgForm.items.filter((_, i) => i !== idx);
+                                  setPkgForm(f => ({ ...f, items: updated }));
+                                }}
+                                style={{ background: "rgba(239,68,68,0.15)", border: "none", color: "#ef4444", padding: "0.4rem", borderRadius: "0.375rem", cursor: "pointer" }}
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: "flex", gap: "0.4rem" }}>
+                          <input
+                            type="text"
+                            placeholder="Add new feature bullet..."
+                            value={newItemText}
+                            onChange={(e) => setNewItemText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                if (newItemText.trim()) {
+                                  setPkgForm(f => ({ ...f, items: [...f.items, newItemText.trim()] }));
+                                  setNewItemText("");
+                                }
+                              }
+                            }}
+                            style={{ ...inputStyle, padding: "0.4rem 0.6rem", fontSize: "0.78rem" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (newItemText.trim()) {
+                                setPkgForm(f => ({ ...f, items: [...f.items, newItemText.trim()] }));
+                                setNewItemText("");
+                              }
+                            }}
+                            style={{ background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, padding: "0.4rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.75rem", cursor: "pointer", whiteSpace: "nowrap" }}
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Package Add-ons Editor */}
+                      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "0.75rem" }}>
+                        <label style={labelStyle}>Available Package Add-Ons</label>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.5rem" }}>
+                          {pkgForm.addons.map((ad, idx) => (
+                            <div key={idx} style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                              <input
+                                type="text"
+                                value={ad.label}
+                                onChange={(e) => {
+                                  const updated = [...pkgForm.addons];
+                                  updated[idx] = { ...updated[idx], label: e.target.value };
+                                  setPkgForm(f => ({ ...f, addons: updated }));
+                                }}
+                                style={{ ...inputStyle, flex: 2, padding: "0.4rem 0.6rem", fontSize: "0.78rem" }}
+                              />
+                              <div style={{ display: "flex", alignItems: "center", background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.375rem", padding: "0 0.4rem" }}>
+                                <span style={{ color: "#D4AF37", fontSize: "0.75rem", fontWeight: 700 }}>+$</span>
+                                <input
+                                  type="number"
+                                  value={ad.price}
+                                  onChange={(e) => {
+                                    const updated = [...pkgForm.addons];
+                                    updated[idx] = { ...updated[idx], price: parseFloat(e.target.value) || 0 };
+                                    setPkgForm(f => ({ ...f, addons: updated }));
+                                  }}
+                                  style={{ background: "transparent", border: "none", color: "#fff", width: "50px", padding: "0.4rem 0.2rem", fontSize: "0.78rem", outline: "none" }}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = pkgForm.addons.filter((_, i) => i !== idx);
+                                  setPkgForm(f => ({ ...f, addons: updated }));
+                                }}
+                                style={{ background: "rgba(239,68,68,0.15)", border: "none", color: "#ef4444", padding: "0.4rem", borderRadius: "0.375rem", cursor: "pointer" }}
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: "flex", gap: "0.4rem" }}>
+                          <input
+                            type="text"
+                            placeholder="Addon label (e.g. Memory Guest Book)"
+                            value={newAddonLabel}
+                            onChange={(e) => setNewAddonLabel(e.target.value)}
+                            style={{ ...inputStyle, flex: 2, padding: "0.4rem 0.6rem", fontSize: "0.78rem" }}
+                          />
+                          <input
+                            type="number"
+                            placeholder="Price"
+                            value={newAddonPrice}
+                            onChange={(e) => setNewAddonPrice(e.target.value)}
+                            style={{ ...inputStyle, width: "70px", padding: "0.4rem 0.4rem", fontSize: "0.78rem" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (newAddonLabel.trim()) {
+                                const id = newAddonLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                                setPkgForm(f => ({ ...f, addons: [...f.addons, { id, label: newAddonLabel.trim(), price: parseFloat(newAddonPrice) || 0 }] }));
+                                setNewAddonLabel("");
+                                setNewAddonPrice("100");
+                              }
+                            }}
+                            style={{ background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, padding: "0.4rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.75rem", cursor: "pointer", whiteSpace: "nowrap" }}
+                          >
+                            + Addon
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "0.5rem" }}>
+                        <span style={{ fontSize: "0.8rem", color: "#ffffff", fontWeight: 600 }}>Mark as Popular Package?</span>
+                        <Toggle checked={pkgForm.popular} onChange={(v) => setPkgForm(f => ({ ...f, popular: v }))} />
+                      </div>
+
+                      <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                        <button type="submit" style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                          Save Package
+                        </button>
+                        <button type="button" onClick={() => { setEditingPkg(null); setIsCreatingPkg(false); }} style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
+
+              {/* Package Delete Confirmation */}
+              {pkgDeleteConfirmId && (
+                <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
+                  <div style={{ ...cardStyle, maxWidth: "400px", border: "1px solid rgba(239,68,68,0.2)" }}>
+                    <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#ef4444", marginTop: 0, marginBottom: "0.5rem" }}>Delete Package?</h4>
+                    <p style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.5, marginBottom: "1.25rem" }}>
+                      Are you sure you want to delete this photo booth package?
+                    </p>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button onClick={() => handleDeletePackage(pkgDeleteConfirmId)} style={{ flex: 1, padding: "0.55rem", borderRadius: "0.375rem", background: "#ef4444", border: "none", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                        Yes, Delete
+                      </button>
+                      <button onClick={() => setPkgDeleteConfirmId(null)} style={{ flex: 1, padding: "0.55rem", borderRadius: "0.375rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

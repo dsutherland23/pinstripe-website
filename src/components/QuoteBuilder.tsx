@@ -103,6 +103,19 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     fetchSettings();
   }, []);
 
+  const [photoBoothPackages, setPhotoBoothPackages] = useState<PhotoBoothPackage[]>(PHOTO_BOOTH_PACKAGES);
+
+  useEffect(() => {
+    fetch("/api/packages")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.packages) && data.packages.length > 0) {
+          setPhotoBoothPackages(data.packages);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Fetch availability when date is changed
   useEffect(() => {
     if (!eventDate || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) return;
@@ -388,7 +401,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     }, 0);
   }, [deliveryMethod, bookingMode, selected]);
 
-  const selectedPkg = PHOTO_BOOTH_PACKAGES.find((p) => p.name === selectedPackageName);
+  const selectedPkg = photoBoothPackages.find((p) => p.name === selectedPackageName);
   const packageBaseTotal = selectedPkg ? selectedPkg.price : 0;
   const extraHoursPrice = Math.max(0, packageHours - 4) * 65;
   const addonsTotal = selectedPkg
@@ -919,7 +932,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       <div>
                         <label style={labelStyle}>Select Curated Package</label>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-                          {PHOTO_BOOTH_PACKAGES.map((pkg) => {
+                          {photoBoothPackages.map((pkg) => {
                             const isSelected = selectedPackageName === pkg.name;
                             return (
                               <div

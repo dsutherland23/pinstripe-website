@@ -1,16 +1,23 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Check, Camera, Star, Crown, Calendar, Sparkles, Plus } from "lucide-react";
 import { RadialGlowCard } from "./CursorReactive";
-
 
 interface PackagesProps {
   onOpenQuote: (pkgName?: string) => void;
   isEmbedded?: boolean;
 }
 
-const pkgs = [
+function getPkgIcon(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes("snap")) return <Camera size={24} />;
+  if (n.includes("party")) return <Star size={24} />;
+  if (n.includes("vip")) return <Crown size={24} />;
+  return <Sparkles size={24} />;
+}
+
+const DEFAULT_PKGS = [
   {
     name: "Snap It",
     icon: <Camera size={24} />,
@@ -81,13 +88,42 @@ const pkgs = [
     ],
     addons: [
       { label: "Photo Guest Book", price: "+$100" },
-      { label: "Red Carpet & Stanchions VIP Setup", price: "+$150" },
+      { label: "Red Carpet & Stanchions Setup", price: "+$150" },
       { label: "Additional Idle Time", price: "+$50/hr" },
     ],
   },
 ];
 
 export default function Packages({ onOpenQuote, isEmbedded }: PackagesProps) {
+  const [pkgs, setPkgs] = useState<any[]>(DEFAULT_PKGS);
+
+  useEffect(() => {
+    fetch("/api/packages")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.packages) && data.packages.length > 0) {
+          const mapped = data.packages.map((p: any) => ({
+            name: p.name,
+            icon: getPkgIcon(p.name),
+            tagline: p.tagline || "",
+            description: p.description || "",
+            price: p.price,
+            duration: p.duration || "4 hrs",
+            extraHour: p.extraHourPrice || 65,
+            color: p.color || "#D4AF37",
+            popular: p.popular === true,
+            items: p.items || [],
+            addons: (p.addons || []).map((ad: any) => ({
+              label: ad.label,
+              price: `+$${ad.price}`,
+            })),
+          }));
+          setPkgs(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section id={isEmbedded ? undefined : "packages"} style={{ padding: isEmbedded ? "0" : "5rem 0", background: isEmbedded ? "transparent" : "var(--bg-secondary)", transition: "all 0.5s ease" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: isEmbedded ? "0" : "0 1.25rem" }}>
@@ -229,7 +265,7 @@ export default function Packages({ onOpenQuote, isEmbedded }: PackagesProps) {
 
               {/* Item list */}
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.625rem", marginBottom: "1.25rem" }}>
-                {pkg.items.map((item, i) => (
+                {pkg.items.map((item: string, i: number) => (
                   <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: "0.625rem" }}>
                     <div
                       style={{
@@ -276,7 +312,7 @@ export default function Packages({ onOpenQuote, isEmbedded }: PackagesProps) {
                     Available Add-Ons
                   </p>
                   <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                    {pkg.addons.map((addon, i) => (
+                    {pkg.addons.map((addon: { label: string; price: string }, i: number) => (
                       <li key={i} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <Plus size={11} color={pkg.color} strokeWidth={2.5} style={{ flexShrink: 0 }} />
                         <span style={{ fontFamily: "var(--font-body)", fontSize: "0.78rem", color: "var(--text-secondary)", flex: 1 }}>

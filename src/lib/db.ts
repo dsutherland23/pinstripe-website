@@ -90,6 +90,27 @@ export interface SpecialItem {
   order: number;
 }
 
+export interface PackageAddon {
+  id: string;
+  label: string;
+  price: number;
+}
+
+export interface PhotoBoothPackage {
+  id: string;
+  name: string;
+  tagline?: string;
+  description: string;
+  price: number;
+  duration: string;
+  extraHourPrice: number;
+  color: string;
+  popular: boolean;
+  order: number;
+  items: string[];
+  addons: PackageAddon[];
+}
+
 export interface SiteContent {
   hero: {
     badge: string;
@@ -339,6 +360,23 @@ export async function initDb(): Promise<void> {
     `);
 
     await conn.query(`
+      CREATE TABLE IF NOT EXISTS packages (
+        id               VARCHAR(64)   NOT NULL PRIMARY KEY,
+        name             VARCHAR(255)  NOT NULL,
+        tagline          VARCHAR(255)  NOT NULL DEFAULT '',
+        description      TEXT          NOT NULL,
+        price            DECIMAL(10,2) NOT NULL DEFAULT 0,
+        duration         VARCHAR(64)   NOT NULL DEFAULT '4 hrs',
+        extra_hour_price DECIMAL(10,2) NOT NULL DEFAULT 65,
+        color            VARCHAR(64)   NOT NULL DEFAULT '#D4AF37',
+        popular          TINYINT(1)    NOT NULL DEFAULT 0,
+        \`order\`          INT           NOT NULL DEFAULT 0,
+        items            JSON          NOT NULL,
+        addons           JSON          NOT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    await conn.query(`
       CREATE TABLE IF NOT EXISTS specials (
         id             VARCHAR(64)   NOT NULL PRIMARY KEY,
         title          VARCHAR(255)  NOT NULL,
@@ -573,6 +611,85 @@ const fallbackStore = {
       order: 2
     }
   ] as SpecialItem[],
+  packages: [
+    {
+      id: "pkg-snapit",
+      name: "Snap It",
+      tagline: "DIY hosts who want great digital photos",
+      description: "Perfect for DIY hosts who want great digital photos without the full-service price. Optional backdrop & print add-ons available.",
+      price: 250,
+      duration: "4 hrs",
+      extraHourPrice: 65,
+      color: "#f59e0b",
+      popular: false,
+      order: 1,
+      items: [
+        "Open-air booth (drop-off)",
+        "Studio lighting for high-quality photos",
+        "Theme-matched photo template",
+        "Instant text sharing + live gallery",
+        "GIFs, Boomerangs & Slow Motion"
+      ],
+      addons: [
+        { id: "backdrop", label: "Choice of Premium Backdrop", price: 100 },
+        { id: "prints", label: "Unlimited Physical Prints (2×6 or 4×6)", price: 250 },
+        { id: "glam", label: "Glam Filter (Magazine-style finish)", price: 100 },
+        { id: "guestbook", label: "Memory Photo Guest Book", price: 100 }
+      ]
+    },
+    {
+      id: "pkg-party",
+      name: "Party",
+      tagline: "Full-service, staffed booth experience",
+      description: "Full-service, staffed booth. We handle everything before, during, and after — you just enjoy.",
+      price: 500,
+      duration: "4 hrs",
+      extraHourPrice: 65,
+      color: "#D4AF37",
+      popular: true,
+      order: 2,
+      items: [
+        "Everything in Snap It, plus:",
+        "On-site professional attendant",
+        "Props included",
+        "Choice of backdrop",
+        "Custom photo overlay",
+        "Custom tap-to-start screen",
+        "GIFs, Boomerangs & Slow Motion"
+      ],
+      addons: [
+        { id: "prints", label: "Unlimited Physical Prints (2×6 or 4×6)", price: 250 },
+        { id: "glam", label: "Glam Filter (Magazine-style finish)", price: 100 },
+        { id: "guestbook", label: "Memory Photo Guest Book", price: 100 },
+        { id: "idle", label: "Additional Idle Time", price: 50 }
+      ]
+    },
+    {
+      id: "pkg-vvip",
+      name: "VVIP",
+      tagline: "Guests look like they're on a red carpet",
+      description: "Guests look like they're on a red carpet. Glam filter, unlimited prints, and video messaging included.",
+      price: 750,
+      duration: "4 hrs",
+      extraHourPrice: 65,
+      color: "#a855f7",
+      popular: false,
+      order: 3,
+      items: [
+        "Everything in Party, plus:",
+        "Glam filter (B&W or Smooth Skin)",
+        "Unlimited prints (2×6 or 4×6)",
+        "Audio / Video messaging",
+        "Live slideshow on TV or secondary screen",
+        "Priority VIP setup & teardown"
+      ],
+      addons: [
+        { id: "guestbook", label: "Memory Photo Guest Book", price: 100 },
+        { id: "redcarpet", label: "Red Carpet & Stanchions VIP Setup", price: 150 },
+        { id: "idle", label: "Additional Idle Time", price: 50 }
+      ]
+    }
+  ] as PhotoBoothPackage[],
 };
 
 // Resolve local JSON fallback path
@@ -591,6 +708,7 @@ try {
     if (parsed.users) fallbackStore.users = parsed.users;
     if (parsed.messages) fallbackStore.messages = parsed.messages;
     if (parsed.specials) fallbackStore.specials = parsed.specials;
+    if (parsed.packages && Array.isArray(parsed.packages) && parsed.packages.length > 0) fallbackStore.packages = parsed.packages;
     console.log("💾 Loaded fallback database from local JSON file.");
   }
 } catch (err) {
@@ -1577,6 +1695,138 @@ export async function deleteSpecial(id: string): Promise<boolean> {
     const before = fallbackStore.specials.length;
     fallbackStore.specials = fallbackStore.specials.filter(x => x.id !== id);
     const affected = fallbackStore.specials.length < before;
+    if (affected) saveFallbackStore();
+    return affected;
+  }
+}
+
+// ─── Photo Booth Packages ───────────────────────────────────────────────────
+
+type PackageRow = {
+  id: string;
+  name: string;
+  tagline: string | null;
+  description: string;
+  price: number;
+  duration: string;
+  extra_hour_price: number;
+  color: string;
+  popular: number;
+  order: number;
+  items: any;
+  addons: any;
+};
+
+function rowToPackage(r: PackageRow): PhotoBoothPackage {
+  return {
+    id: r.id,
+    name: r.name,
+    tagline: r.tagline ?? undefined,
+    description: r.description,
+    price: Number(r.price),
+    duration: r.duration || "4 hrs",
+    extraHourPrice: Number(r.extra_hour_price),
+    color: r.color || "#D4AF37",
+    popular: Boolean(r.popular),
+    order: r.order,
+    items: Array.isArray(r.items) ? r.items : typeof r.items === "string" ? JSON.parse(r.items) : [],
+    addons: Array.isArray(r.addons) ? r.addons : typeof r.addons === "string" ? JSON.parse(r.addons) : [],
+  };
+}
+
+export async function getPhotoBoothPackages(): Promise<PhotoBoothPackage[]> {
+  try {
+    await ensureInit();
+    const rows = await query<PackageRow>("SELECT * FROM packages ORDER BY `order` ASC");
+    return rows.map(rowToPackage);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable for getPhotoBoothPackages. Using in-memory fallback for this request.", err);
+    return [...fallbackStore.packages].sort((a, b) => a.order - b.order);
+  }
+}
+
+export async function createPhotoBoothPackage(pkg: PhotoBoothPackage): Promise<PhotoBoothPackage> {
+  try {
+    await ensureInit();
+    await query(
+      `INSERT INTO packages (id, name, tagline, description, price, duration, extra_hour_price, color, popular, \`order\`, items, addons)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        pkg.id,
+        pkg.name,
+        pkg.tagline ?? null,
+        pkg.description,
+        pkg.price,
+        pkg.duration || "4 hrs",
+        pkg.extraHourPrice || 65,
+        pkg.color || "#D4AF37",
+        pkg.popular ? 1 : 0,
+        pkg.order || 1,
+        JSON.stringify(pkg.items || []),
+        JSON.stringify(pkg.addons || []),
+      ]
+    );
+    return pkg;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable for createPhotoBoothPackage. Using in-memory fallback for this request.", err);
+    fallbackStore.packages.push(pkg);
+    saveFallbackStore();
+    return pkg;
+  }
+}
+
+export async function updatePhotoBoothPackage(id: string, updates: Partial<PhotoBoothPackage>): Promise<PhotoBoothPackage> {
+  try {
+    await ensureInit();
+    const setClauses: string[] = [];
+    const values: unknown[] = [];
+    if (updates.name !== undefined) { setClauses.push("name = ?"); values.push(updates.name); }
+    if (updates.tagline !== undefined) { setClauses.push("tagline = ?"); values.push(updates.tagline ?? null); }
+    if (updates.description !== undefined) { setClauses.push("description = ?"); values.push(updates.description); }
+    if (updates.price !== undefined) { setClauses.push("price = ?"); values.push(updates.price); }
+    if (updates.duration !== undefined) { setClauses.push("duration = ?"); values.push(updates.duration); }
+    if (updates.extraHourPrice !== undefined) { setClauses.push("extra_hour_price = ?"); values.push(updates.extraHourPrice); }
+    if (updates.color !== undefined) { setClauses.push("color = ?"); values.push(updates.color); }
+    if (updates.popular !== undefined) { setClauses.push("popular = ?"); values.push(updates.popular ? 1 : 0); }
+    if (updates.order !== undefined) { setClauses.push("`order` = ?"); values.push(updates.order); }
+    if (updates.items !== undefined) { setClauses.push("items = ?"); values.push(JSON.stringify(updates.items)); }
+    if (updates.addons !== undefined) { setClauses.push("addons = ?"); values.push(JSON.stringify(updates.addons)); }
+
+    if (setClauses.length === 0) {
+      const rows = await query<PackageRow>("SELECT * FROM packages WHERE id = ?", [id]);
+      if (!rows.length) throw new Error("Package not found");
+      return rowToPackage(rows[0]);
+    }
+
+    values.push(id);
+    await query(`UPDATE packages SET ${setClauses.join(", ")} WHERE id = ?`, values);
+
+    const rows = await query<PackageRow>("SELECT * FROM packages WHERE id = ?", [id]);
+    return rowToPackage(rows[0]);
+  } catch (err) {
+    console.warn("⚠️ Database unavailable for updatePhotoBoothPackage. Using in-memory fallback for this request.", err);
+    const idx = fallbackStore.packages.findIndex(x => x.id === id);
+    if (idx !== -1) {
+      fallbackStore.packages[idx] = { ...fallbackStore.packages[idx], ...updates };
+      saveFallbackStore();
+      return fallbackStore.packages[idx];
+    }
+    throw new Error("Package not found");
+  }
+}
+
+export async function deletePhotoBoothPackage(id: string): Promise<boolean> {
+  try {
+    await ensureInit();
+    const result = await query("DELETE FROM packages WHERE id = ?", [id]);
+    const r = result as any;
+    const affected = r.affectedRows !== undefined ? r.affectedRows > 0 : true;
+    return affected;
+  } catch (err) {
+    console.warn("⚠️ Database unavailable for deletePhotoBoothPackage. Using in-memory fallback for this request.", err);
+    const before = fallbackStore.packages.length;
+    fallbackStore.packages = fallbackStore.packages.filter(x => x.id !== id);
+    const affected = fallbackStore.packages.length < before;
     if (affected) saveFallbackStore();
     return affected;
   }
