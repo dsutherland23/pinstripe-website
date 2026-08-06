@@ -238,7 +238,6 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
   const links = [
     { label: "Home",       href: getLinkHref("Home", "#home"),           desc: "Return to grand showcase" },
     { label: "Rentals",    href: getLinkHref("Rentals", "/inventory"),   desc: "Browse tents, tables & slides" },
-    { label: dynamicProductsLabel, href: dynamicProductsHref,           desc: "Kits, stands & extra party supplies" },
     ...(specialsEnabled ? [{ label: "Specials",   href: "/specials",                            desc: "Limited-time deals & packages" }] : []),
     ...(galleryEnabled ? [{ label: "Gallery",    href: getLinkHref("Gallery", "#gallery"),     desc: "Real celebration inspiration" }] : []),
     { label: "My Account", href: "/portal",                              desc: "Sign in, register or track orders" },
