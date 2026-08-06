@@ -57,7 +57,6 @@ function getCategoryIcon(iconName?: string) {
 }
 
 const DEFAULT_RENTAL_SUB_ITEMS = [
-  { label: "Tents",                categorySlug: "tents",                categoryName: "Tents",                icon: <Tent size={15} />,     desc: "High-peak wedding & party tents" },
   { label: "Tables",               categorySlug: "tables",               categoryName: "Tables",               icon: <Table2 size={15} />,   desc: "Banquet, round & specialty tables" },
   { label: "Chairs",               categorySlug: "chairs",               categoryName: "Chairs",               icon: <Armchair size={15} />, desc: "Folding, cross-back & chiavari" },
   { label: "Inflatables",          categorySlug: "inflatables",          categoryName: "Bounce Houses",        icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },

@@ -60,24 +60,10 @@
       "reviews": 19
     },
     {
-      "id": "5",
-      "title": "High-Peak Elegance Canopy Tent",
-      "category": "Tents",
-      "description": "Stunning professional high-peak tent — perfect for outdoor wedding receptions, corporate dinners, or milestone celebrations.",
-      "price": 450,
-      "depositAmount": 150,
-      "availability": true,
-      "dimensions": "20ft × 30ft",
-      "capacity": "Up to 80 seated",
-      "image": "/images/canopy-tent.png",
-      "rating": 4.9,
-      "reviews": 31
-    },
-    {
       "id": "6",
       "title": "Round Banqueting Table (60-inch)",
       "category": "Tables",
-      "description": "Premium heavy-duty round tables built for high-end dining setups. Seats 8–10 guests comfortably under our event tents.",
+      "description": "Premium heavy-duty round tables built for high-end dining setups. Seats 8–10 guests comfortably.",
       "price": 18,
       "depositAmount": 5,
       "availability": true,
@@ -224,13 +210,6 @@
       "icon": "water",
       "featured": true,
       "order": 2
-    },
-    {
-      "id": "cat-3",
-      "name": "Tents",
-      "icon": "tent",
-      "featured": true,
-      "order": 3
     },
     {
       "id": "cat-4",
@@ -413,20 +392,6 @@
       "enabled": true,
       "featured": true,
       "order": 1
-    },
-    {
-      "id": "spec-2",
-      "title": "Elite Wedding Tent Package",
-      "description": "Includes a 20x40 High-Peak Tent, 6 round tables, 48 folding chairs, and beautiful warm white globe lighting setup.",
-      "image": "/images/canopy-tent.png",
-      "originalPrice": 750,
-      "specialPrice": 599,
-      "promoCode": "ONSITE20",
-      "endDate": "2026-09-30T23:59:59.000Z",
-      "badge": "Luxury Deal",
-      "enabled": true,
-      "featured": true,
-      "order": 2
     }
   ],
   "packages": [

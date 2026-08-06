@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: LocationPageProps): Promise<M
 
   return {
     title: `Premium Party & Event Rentals in ${cityName}, VA | Pinstripes`,
-    description: `Rent high-peak wedding tents, commercial bounce houses, water slides, tables, and chairs in ${cityName}, VA. Professional delivery, setup, and sanitization.`,
+    description: `Rent 360 photo booths, commercial bounce houses, water slides, tables, and chairs in ${cityName}, VA. Professional delivery, setup, and sanitization.`,
     alternates: {
       canonical: `/locations/${city.toLowerCase()}`,
     },
@@ -70,7 +70,7 @@ export default async function LocationPage({ params }: LocationPageProps) {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": `Pinstripes Party & Event Rentals - ${cityName}`,
-    "description": `Premium party and event rental services in ${cityName}, VA. Rent clean, commercial-grade tents, tables, chairs, slides, and bounce houses.`,
+    "description": `Premium party and event rental services in ${cityName}, VA. Rent clean, commercial-grade photo booths, tables, chairs, slides, and bounce houses.`,
     "url": `https://pinstripesrentals.com/locations/${slug}`,
     "telephone": phone,
     "email": email,

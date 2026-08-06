@@ -422,7 +422,6 @@ export async function initDb(): Promise<void> {
     const DEFAULT_CATEGORIES: Category[] = [
       { id: "cat-1", name: "Bounce Houses",        icon: "castle",  featured: true,  order: 1 },
       { id: "cat-2", name: "Water Slides",          icon: "water",   featured: true,  order: 2 },
-      { id: "cat-3", name: "Tents",                 icon: "tent",    featured: true,  order: 3 },
       { id: "cat-4", name: "Tables",                icon: "table",   featured: false, order: 4 },
       { id: "cat-5", name: "Chairs",                icon: "chair",   featured: false, order: 5 },
       { id: "cat-6", name: "Cotton Candy Machines", icon: "candy",   featured: false, order: 6 },
@@ -470,7 +469,7 @@ export async function initDb(): Promise<void> {
           badge: "America's #1 Rated Event Rentals",
           headline: "Creating Unforgettable Events, One Rental At A Time",
           subheadline:
-            "From premium bounce houses & massive water slides to elegant wedding tents, tables, chairs, and concession machines — Pinstripes delivers everything your event needs.",
+            "From premium bounce houses & massive water slides to tables, chairs, photo booths, and concession machines — Pinstripes delivers everything your event needs.",
           trustPillars: [
             { value: "100%", label: "Sanitised Equipment" },
             { value: "Ontime", label: "Delivery & Setup" },
@@ -535,7 +534,7 @@ const DEFAULT_SITE_CONTENT: SiteContent = {
     badge: "America's #1 Rated Event Rentals",
     headline: "Creating Unforgettable Events, One Rental At A Time",
     subheadline:
-      "From premium bounce houses & massive water slides to elegant wedding tents, tables, chairs, and concession machines — Pinstripes delivers everything your event needs.",
+      "From premium bounce houses & massive water slides to tables, chairs, photo booths, and concession machines — Pinstripes delivers everything your event needs.",
     trustPillars: [
       { value: "100%", label: "Sanitised Equipment" },
       { value: "Ontime", label: "Delivery & Setup" },
@@ -562,7 +561,7 @@ const DEFAULT_SITE_CONTENT: SiteContent = {
   },
   about: {
     title: "Discover Our Vision",
-    paragraph1: "At Pinstripes Party & Event Rentals, we take immense pride in delivering premier, commercial-grade event equipment and sophisticated designs to elevate every occasion. From majestic, high-peak wedding marquee setups to vibrant, meticulously sanitized bounce castles and interactive concession systems, our core mission is to transform your milestones into unforgettable memories.",
+    paragraph1: "At Pinstripes Party & Event Rentals, we take immense pride in delivering premier, commercial-grade event equipment and sophisticated designs to elevate every occasion. From vibrant, meticulously sanitized bounce castles to 360 photo booths, luxury seating setups, and interactive concession systems, our core mission is to transform your milestones into unforgettable memories.",
     paragraph2: "Under local ownership in Hampton Roads, Virginia, we represent absolute commitment to flawless service delivery, rigorous safety compliance, and fully licensed & insured logistics. Our dedicated team is committed to ensuring that your custom setup is executed seamlessly, leaving you free to celebrate with complete peace of mind.",
   },
 };
@@ -572,7 +571,6 @@ const fallbackStore = {
   categories: [
     { id: "cat-1", name: "Bounce Houses",        icon: "castle",  featured: true,  order: 1 },
     { id: "cat-2", name: "Water Slides",          icon: "water",   featured: true,  order: 2 },
-    { id: "cat-3", name: "Tents",                 icon: "tent",    featured: true,  order: 3 },
     { id: "cat-4", name: "Tables",                icon: "table",   featured: false, order: 4 },
     { id: "cat-5", name: "Chairs",                icon: "chair",   featured: false, order: 5 },
     { id: "cat-6", name: "Cotton Candy Machines", icon: "candy",   featured: false, order: 6 },
@@ -616,20 +614,6 @@ const fallbackStore = {
       enabled: true,
       featured: true,
       order: 1
-    },
-    {
-      id: "spec-2",
-      title: "Elite Wedding Tent Package",
-      description: "Includes a 20x40 High-Peak Tent, 6 round tables, 48 folding chairs, and beautiful warm white globe lighting setup.",
-      image: "/images/canopy-tent.png",
-      originalPrice: 750,
-      specialPrice: 599,
-      promoCode: "ONSITE20",
-      endDate: "2026-09-30T23:59:59.000Z",
-      badge: "Luxury Deal",
-      enabled: true,
-      featured: true,
-      order: 2
     }
   ] as SpecialItem[],
   packages: [

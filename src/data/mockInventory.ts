@@ -81,27 +81,11 @@ export const mockInventory: RentalItem[] = [
     deliveryFee: 50,
   },
   {
-    id: "5",
-    title: "High-Peak Elegance Canopy Tent",
-    category: "Tents",
-    description:
-      "Stunning professional high-peak tent — perfect for outdoor wedding receptions, corporate dinners, or milestone celebrations.",
-    price: 450,
-    depositAmount: 150,
-    availability: true,
-    dimensions: "20ft × 30ft",
-    capacity: "Up to 80 seated",
-    image: "/images/canopy-tent.png",
-    rating: 4.9,
-    reviews: 31,
-    deliveryFee: 50,
-  },
-  {
     id: "6",
     title: "Round Banqueting Table (60-inch)",
     category: "Tables",
     description:
-      "Premium heavy-duty round tables built for high-end dining setups. Seats 8–10 guests comfortably under our event tents.",
+      "Premium heavy-duty round tables built for high-end dining setups. Seats 8–10 guests comfortably.",
     price: 18,
     depositAmount: 5,
     availability: true,

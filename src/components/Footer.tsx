@@ -198,7 +198,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
               </span>
             </div>
             <p style={{ fontSize: "0.8rem", lineHeight: 1.6, marginBottom: "1.5rem", color: "rgba(255,255,255,0.45)" }}>
-              Premium event rentals for every milestone — bounce houses, water slides, wedding setups, tents, tables, and concession machines. Delivering memory-making equipment across Hampton Roads.
+              Premium event rentals for every milestone — bounce houses, water slides, photo booths, tables, chairs, and concession machines. Delivering memory-making equipment across Hampton Roads.
             </p>
             {/* Social Links */}
             <div style={{ display: "flex", gap: "0.75rem" }}>

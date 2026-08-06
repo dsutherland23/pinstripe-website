@@ -263,7 +263,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
             </span>
             <input 
               type="text" 
-              placeholder={selectedCategorySlug ? `Search in this category...` : "Search tents, chairs, bounce houses..."}
+              placeholder={selectedCategorySlug ? `Search in this category...` : "Search photo booths, chairs, bounce houses..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{

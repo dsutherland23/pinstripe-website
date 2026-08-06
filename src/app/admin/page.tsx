@@ -261,7 +261,7 @@ export default function AdminDashboard() {
   const [isCreating, setIsCreating]       = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [itemForm, setItemForm] = useState({
-    title: "", category: "Tents", price: "0", depositAmount: "0", deliveryFee: "0",
+    title: "", category: "Bounce Houses", price: "0", depositAmount: "0", deliveryFee: "0",
     stock: "5", description: "", dimensions: "", capacity: "",
     availability: true, image: "", rating: "4.8", reviews: "0",
   });
@@ -270,7 +270,7 @@ export default function AdminDashboard() {
   const [editingCat, setEditingCat]   = useState<Category | null>(null);
   const [isCreatingCat, setIsCreatingCat] = useState(false);
   const [catDeleteConfirm, setCatDeleteConfirm] = useState<string | null>(null);
-  const [catForm, setCatForm] = useState({ name: "", icon: "tent", featured: false });
+  const [catForm, setCatForm] = useState({ name: "", icon: "castle", featured: false });
 
   // Booking
   const [bookingDeleteConfirm, setBookingDeleteConfirm] = useState<string | null>(null);
@@ -424,7 +424,7 @@ export default function AdminDashboard() {
 
   const startCreate = () => {
     setEditingItem(null); setIsCreating(true);
-    setItemForm({ title: "", category: categories[0]?.name || "Tents", price: "100", depositAmount: "30", deliveryFee: "20", stock: "5", description: "", dimensions: "10ft × 10ft", capacity: "Standard", availability: true, image: "", rating: "4.8", reviews: "0" });
+    setItemForm({ title: "", category: categories[0]?.name || "Bounce Houses", price: "100", depositAmount: "30", deliveryFee: "20", stock: "5", description: "", dimensions: "10ft × 10ft", capacity: "Standard", availability: true, image: "", rating: "4.8", reviews: "0" });
   };
 
   const handleSaveItem = async (e: React.FormEvent) => {
@@ -769,7 +769,7 @@ export default function AdminDashboard() {
 
   const startCreateCat = () => {
     setEditingCat(null); setIsCreatingCat(true);
-    setCatForm({ name: "", icon: "tent", featured: false });
+    setCatForm({ name: "", icon: "castle", featured: false });
   };
 
   const handleSaveCat = async (e: React.FormEvent) => {

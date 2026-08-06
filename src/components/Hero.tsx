@@ -186,7 +186,7 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
               fontFamily: "var(--font-body)",
             }}
           >
-            {customSubtitle || "From premium bounce houses & massive water slides to elegant wedding tents, tables, chairs, and concession machines — Pinstripes delivers everything your event needs."}
+            {customSubtitle || "From premium bounce houses & massive water slides to photo booths, tables, chairs, and concession machines — Pinstripes delivers everything your event needs."}
           </p>
 
           {/* CTAs */}
