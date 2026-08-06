@@ -104,6 +104,22 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   }, []);
 
   const [photoBoothPackages, setPhotoBoothPackages] = useState<PhotoBoothPackage[]>(PHOTO_BOOTH_PACKAGES);
+  const [liveInventory, setLiveInventory] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/inventory")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.items) && data.items.length > 0) {
+          setLiveInventory(data.items);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const activeInventory = useMemo(() => {
+    return liveInventory.length > 0 ? liveInventory : mockInventory;
+  }, [liveInventory]);
 
   useEffect(() => {
     fetch("/api/packages")
@@ -352,7 +368,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     if (selectedItemFromInventory) {
       const cat = (selectedItemFromInventory.category || "").toLowerCase();
       if (cat.includes("photo") || cat.includes("booth") || cat.includes("package")) return true;
-      const item = mockInventory.find((i) => i.id === selectedItemFromInventory.id);
+      const item = activeInventory.find((i) => i.id === selectedItemFromInventory.id);
       if (item && (item.category.toLowerCase().includes("photo") || item.category.toLowerCase().includes("booth"))) return true;
     }
     const totalSelectedCount = Object.values(selected).reduce((sum, val) => sum + val, 0);
@@ -360,7 +376,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
 
     const hasSelectedPhotoBooth = Object.keys(selected).some((id) => {
       if (selected[id] <= 0) return false;
-      const item = mockInventory.find((i) => i.id === id);
+      const item = activeInventory.find((i) => i.id === id);
       const cat = (item?.category || "").toLowerCase();
       return cat.includes("photo") || cat.includes("booth");
     });
@@ -378,12 +394,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     if (bookingMode === "package") return false;
     return !Object.entries(selected).some(([id, qty]) => {
       if (qty <= 0) return false;
-      const item = mockInventory.find((i) => i.id === id);
+      const item = activeInventory.find((i) => i.id === id);
       if (!item) return false;
       const cat = item.category.toLowerCase();
       return cat === "water slides" || cat === "bounce houses" || cat === "photo booths";
     });
-  }, [bookingMode, selected]);
+  }, [bookingMode, selected, activeInventory]);
 
   useEffect(() => {
     if (!isPickupAllowed) {
@@ -395,11 +411,11 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     if (deliveryMethod === "pickup") return 0;
     if (bookingMode === "package") return 0;
     return Object.entries(selected).reduce((sum, [id, qty]) => {
-      const item = mockInventory.find((i) => i.id === id);
+      const item = activeInventory.find((i) => i.id === id);
       const fee = (item as any)?.deliveryFee ?? 0;
       return sum + (fee * qty);
     }, 0);
-  }, [deliveryMethod, bookingMode, selected]);
+  }, [deliveryMethod, bookingMode, selected, activeInventory]);
 
   const selectedPkg = photoBoothPackages.find((p) => p.name === selectedPackageName);
   const packageBaseTotal = selectedPkg ? selectedPkg.price : 0;
@@ -415,7 +431,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   const total = bookingMode === "package"
     ? packageTotal
     : Object.entries(selected).reduce((sum, [id, qty]) => {
-        const item = mockInventory.find((i) => i.id === id);
+        const item = activeInventory.find((i) => i.id === id);
         let itemTotal = item ? item.price * qty : 0;
 
         const addons = itemAddons[id];
@@ -724,7 +740,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                 } else if (bookingMode === "items") {
                   const addonSummaries: string[] = [];
                   Object.entries(itemAddons).forEach(([itemId, addon]) => {
-                    const item = mockInventory.find((i) => i.id === itemId);
+                    const item = activeInventory.find((i) => i.id === itemId);
                     if (!item) return;
 
                     const summaries: string[] = [];
@@ -1110,7 +1126,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "-0.25rem", marginBottom: "0.5rem", fontFamily: "var(--font-body)" }}>{errors.selectedItems}</p>
                       )}
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem", maxHeight: "320px", overflowY: "auto" }}>
-                        {[...mockInventory]
+                        {[...activeInventory]
                           .sort((a, b) => {
                             const aSelected = (selected[a.id] || 0) > 0;
                             const bSelected = (selected[b.id] || 0) > 0;
