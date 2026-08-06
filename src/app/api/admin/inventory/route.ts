@@ -3,6 +3,8 @@ import { getInventory, updateInventoryItem, addInventoryItem, deleteInventoryIte
 import type { RentalItem } from "@/data/mockInventory";
 import { isAdminAuthorized } from "@/lib/auth-security";
 
+import { getItemFallbackImage } from "@/lib/image-utils";
+
 export async function GET(req: NextRequest) {
   if (!isAdminAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
         availability: item.availability !== false,
         dimensions: item.dimensions || "",
         capacity: item.capacity || "",
-        image: item.image || "/images/canopy-tent.png",
+        image: item.image || getItemFallbackImage(item.category),
         rating: parseFloat(item.rating) || 4.8,
         reviews: parseInt(item.reviews, 10) || 0,
         stock: parseInt(item.stock, 10) || 5,

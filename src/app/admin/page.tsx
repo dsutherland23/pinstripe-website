@@ -1025,7 +1025,7 @@ export default function AdminDashboard() {
   // ── SIDEBAR NAV ───────────────────────────────────────────────────────────
   const navItems: Array<{ id: TabId; label: string; icon: React.ReactNode; badge?: number }> = [
     { id: "overview",   label: "Overview",     icon: <BarChart3 size={18} /> },
-    { id: "inventory",  label: "Inventory",    icon: <Package size={18} />,  badge: inventory.length },
+    { id: "inventory",  label: "Rentals & Equipment", icon: <Package size={18} />, badge: inventory.length },
     { id: "categories", label: "Categories",   icon: <Tag size={18} />,      badge: categories.length },
     { id: "packages",   label: "Packages & Add-ons", icon: <Camera size={18} />, badge: packages.length },
     { id: "specials",   label: "Specials",     icon: <Zap size={18} />,      badge: specials.length },
