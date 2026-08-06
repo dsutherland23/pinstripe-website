@@ -206,7 +206,7 @@ export async function initDb(): Promise<void> {
         availability TINYINT(1)  NOT NULL DEFAULT 1,
         dimensions  VARCHAR(255) NOT NULL DEFAULT '',
         capacity    VARCHAR(255) NOT NULL DEFAULT '',
-        image       VARCHAR(512) NOT NULL DEFAULT '',
+        image       MEDIUMTEXT,
         rating      DECIMAL(3,1) NOT NULL DEFAULT 5.0,
         reviews     INT          NOT NULL DEFAULT 0,
         stock       INT          NULL
@@ -381,7 +381,7 @@ export async function initDb(): Promise<void> {
         id             VARCHAR(64)   NOT NULL PRIMARY KEY,
         title          VARCHAR(255)  NOT NULL,
         description    TEXT          NOT NULL,
-        image          VARCHAR(512),
+        image          MEDIUMTEXT,
         original_price DECIMAL(10,2) NOT NULL DEFAULT 0,
         special_price  DECIMAL(10,2) NOT NULL DEFAULT 0,
         promo_code     VARCHAR(64),
@@ -460,6 +460,14 @@ export async function initDb(): Promise<void> {
     await conn.query("DELETE FROM categories WHERE name IN ('Cotton Candy Machines', 'Popcorn Machines', 'Snow-cone Machines', 'Tents', 'Products')");
     await conn.query("UPDATE inventory SET category = 'Concession Equipment' WHERE category IN ('Cotton Candy Machines', 'Popcorn Machines', 'Snow-cone Machines')");
     await conn.query("UPDATE categories SET name = 'Party Extras' WHERE name = 'Products'");
+
+    // Alter image columns to support large Base64 data URLs on existing MySQL databases
+    try {
+      await conn.query("ALTER TABLE inventory MODIFY COLUMN image MEDIUMTEXT");
+      await conn.query("ALTER TABLE specials MODIFY COLUMN image MEDIUMTEXT");
+    } catch (err) {
+      console.warn("Could not alter image columns to MEDIUMTEXT:", err);
+    }
 
     const [scCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM site_content");
     if ((scCount as mysql.RowDataPacket[])[0].c === 0) {

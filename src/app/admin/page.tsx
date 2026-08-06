@@ -168,6 +168,47 @@ interface PhotoBoothPackage {
 
 type TabId = "overview" | "inventory" | "categories" | "packages" | "bookings" | "specials" | "content" | "settings";
 
+function compressImageFile(file: File, maxWidth = 1000, quality = 0.8): Promise<File> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          }, "image/jpeg", quality);
+        } else {
+          resolve(file);
+        }
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function AdminDashboard() {
   const [passcode, setPasscode]   = useState("");
   const [isAuth, setIsAuth]       = useState(false);
@@ -594,9 +635,10 @@ export default function AdminDashboard() {
   };
 
   const handleUploadSpecialImage = async (specId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; if (!file) return;
+    const rawFile = e.target.files?.[0]; if (!rawFile) return;
     setLoading(true);
     try {
+      const file = await compressImageFile(rawFile, 1000, 0.8);
       const formData = new FormData();
       formData.append("file", file);
       formData.append("itemId", specId || "special");
@@ -742,10 +784,11 @@ export default function AdminDashboard() {
   };
 
   const handleUploadImage = async (itemId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; if (!file) return;
+    const rawFile = e.target.files?.[0]; if (!rawFile) return;
     setLoading(true);
-    const fd = new FormData(); fd.append("file", file); fd.append("itemId", itemId || "new");
     try {
+      const file = await compressImageFile(rawFile, 1000, 0.8);
+      const fd = new FormData(); fd.append("file", file); fd.append("itemId", itemId || "new");
       const res = await fetch("/api/admin/upload", {
         method: "POST", headers: { "x-admin-passcode": getCode() }, body: fd,
       });
