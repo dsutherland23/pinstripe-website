@@ -63,7 +63,6 @@ const DEFAULT_RENTAL_SUB_ITEMS = [
   { label: "Inflatables",          categorySlug: "inflatables",          categoryName: "Bounce Houses",        icon: <Wind size={15} />,     desc: "Bounce houses & water slides" },
   { label: "Photo Booth",          categorySlug: "photobooth",          categoryName: "Photo Booths",         icon: <Camera size={15} />,   desc: "360° & open-air photo experiences" },
   { label: "Concession Equipment", categorySlug: "concession-equipment", categoryName: "Cotton Candy Machines",icon: <Coffee size={15} />,   desc: "Popcorn, cotton candy & more" },
-  { label: "Packages",             categorySlug: "packages",             categoryName: "Packages",             icon: <Package size={15} />,  desc: "All-inclusive event & photo booth deals" },
 ];
 
 interface NavbarProps {
@@ -98,26 +97,19 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
       .then((res) => res.json())
       .then((data) => {
         if (data && data.success && Array.isArray(data.categories) && data.categories.length > 0) {
-          const mapped = data.categories.map((cat: { name: string; icon?: string }) => {
-            const name = cat.name;
-            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-            return {
-              label: name,
-              categorySlug: slug,
-              categoryName: name,
-              icon: getCategoryIcon(cat.icon),
-              desc: `Explore ${name} rentals`,
-            };
-          });
-          if (!mapped.some((item: { categorySlug: string }) => item.categorySlug === "packages")) {
-            mapped.push({
-              label: "Packages",
-              categorySlug: "packages",
-              categoryName: "Packages",
-              icon: <Package size={15} />,
-              desc: "All-inclusive event & photo booth deals",
+          const mapped = data.categories
+            .filter((cat: { name: string }) => cat.name !== "Packages")
+            .map((cat: { name: string; icon?: string }) => {
+              const name = cat.name;
+              const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+              return {
+                label: name,
+                categorySlug: slug,
+                categoryName: name,
+                icon: getCategoryIcon(cat.icon),
+                desc: `Explore ${name} rentals`,
+              };
             });
-          }
           setRentalSubItems(mapped);
         }
       })

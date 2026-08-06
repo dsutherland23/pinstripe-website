@@ -60,6 +60,10 @@ export default function FeaturedRentals({
   }, [searchDate]);
 
   const filtered = inventory.filter((item) => {
+    // Hide individual standalone item cards for Photo Booths category so only Packages are displayed
+    if ((activeCategory.toLowerCase().includes("photo") || activeCategory.toLowerCase().includes("booth")) && !searchQuery) {
+      return false;
+    }
     const matchCat =
       activeCategory === "All" ||
       item.category === activeCategory ||
@@ -139,17 +143,7 @@ export default function FeaturedRentals({
           </div>
         )}
 
-        {/* Standalone Units Header */}
-        {!loading && (activeCategory.toLowerCase().includes("photo") || activeCategory.toLowerCase().includes("booth") || activeCategory.toLowerCase().includes("package")) && !searchQuery && (
-          <div style={{ marginBottom: "2rem" }}>
-            <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
-              A La Carte Equipment
-            </span>
-            <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.35rem", color: "var(--text-primary)" }}>
-              Individual Photo Booth Rentals & Standalone Units
-            </h3>
-          </div>
-        )}
+
 
         {/* Grid */}
         {!loading && filtered.length > 0 ? (
