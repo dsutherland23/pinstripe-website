@@ -51,7 +51,7 @@ export const mockInventory: RentalItem[] = [
   {
     id: "3",
     title: "Red Cotton Candy Cart",
-    category: "Cotton Candy Machines",
+    category: "Concession Equipment",
     description:
       "Professional high-yield cotton candy maker on a mobile trolley. Adds nostalgic joy and sweet treats to any event.",
     price: 85,
@@ -99,7 +99,7 @@ export const mockInventory: RentalItem[] = [
   {
     id: "7",
     title: "Theatre-Style Popcorn Maker",
-    category: "Popcorn Machines",
+    category: "Concession Equipment",
     description:
       "Fresh, hot popcorn in minutes! Comes with a stand and all starter ingredients (corn, oil, butter salt).",
     price: 75,
@@ -131,7 +131,7 @@ export const mockInventory: RentalItem[] = [
   {
     id: "9",
     title: "Professional Snow-cone Machine",
-    category: "Snow-cone Machines",
+    category: "Concession Equipment",
     description:
       "High-yield commercial-grade snow-cone shaver. Easy to operate and produces perfectly crushed ice for cool summer treats.",
     price: 75,

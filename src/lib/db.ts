@@ -420,15 +420,13 @@ export async function initDb(): Promise<void> {
     }
 
     const DEFAULT_CATEGORIES: Category[] = [
-      { id: "cat-1", name: "Bounce Houses",        icon: "castle",  featured: true,  order: 1 },
-      { id: "cat-2", name: "Water Slides",          icon: "water",   featured: true,  order: 2 },
-      { id: "cat-4", name: "Tables",                icon: "table",   featured: false, order: 4 },
-      { id: "cat-5", name: "Chairs",                icon: "chair",   featured: false, order: 5 },
-      { id: "cat-6", name: "Cotton Candy Machines", icon: "candy",   featured: false, order: 6 },
-      { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
-      { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
-      { id: "cat-9", name: "Snow-cone Machines",    icon: "ice",     featured: false, order: 9 },
-      { id: "cat-10", name: "Party Extras",         icon: "shopping-bag", featured: false, order: 10 },
+      { id: "cat-1", name: "Bounce Houses",        icon: "castle",       featured: true,  order: 1 },
+      { id: "cat-2", name: "Water Slides",         icon: "water",        featured: true,  order: 2 },
+      { id: "cat-4", name: "Tables",               icon: "table",        featured: false, order: 3 },
+      { id: "cat-5", name: "Chairs",               icon: "chair",        featured: false, order: 4 },
+      { id: "cat-8", name: "Photo Booths",         icon: "camera",       featured: false, order: 5 },
+      { id: "cat-6", name: "Concession Equipment", icon: "candy",        featured: false, order: 6 },
+      { id: "cat-10", name: "Party Extras",        icon: "shopping-bag", featured: false, order: 7 },
     ];
     for (const cat of DEFAULT_CATEGORIES) {
       await conn.query(
@@ -458,9 +456,10 @@ export async function initDb(): Promise<void> {
       );
     }
 
-    // Auto-migrate legacy Products category name to Party Extras in MySQL database
+    // Auto-cleanup legacy categories in MySQL database
+    await conn.query("DELETE FROM categories WHERE name IN ('Cotton Candy Machines', 'Popcorn Machines', 'Snow-cone Machines', 'Tents', 'Products')");
+    await conn.query("UPDATE inventory SET category = 'Concession Equipment' WHERE category IN ('Cotton Candy Machines', 'Popcorn Machines', 'Snow-cone Machines')");
     await conn.query("UPDATE categories SET name = 'Party Extras' WHERE name = 'Products'");
-    await conn.query("UPDATE inventory SET category = 'Party Extras' WHERE category = 'Products'");
 
     const [scCount] = await conn.query<mysql.RowDataPacket[]>("SELECT COUNT(*) as c FROM site_content");
     if ((scCount as mysql.RowDataPacket[])[0].c === 0) {
@@ -569,15 +568,13 @@ const DEFAULT_SITE_CONTENT: SiteContent = {
 const fallbackStore = {
   inventory: [...mockInventory],
   categories: [
-    { id: "cat-1", name: "Bounce Houses",        icon: "castle",  featured: true,  order: 1 },
-    { id: "cat-2", name: "Water Slides",          icon: "water",   featured: true,  order: 2 },
-    { id: "cat-4", name: "Tables",                icon: "table",   featured: false, order: 4 },
-    { id: "cat-5", name: "Chairs",                icon: "chair",   featured: false, order: 5 },
-    { id: "cat-6", name: "Cotton Candy Machines", icon: "candy",   featured: false, order: 6 },
-    { id: "cat-7", name: "Popcorn Machines",      icon: "popcorn", featured: false, order: 7 },
-    { id: "cat-8", name: "Photo Booths",          icon: "camera",  featured: false, order: 8 },
-    { id: "cat-9", name: "Snow-cone Machines",    icon: "ice",     featured: false, order: 9 },
-    { id: "cat-10", name: "Party Extras",         icon: "shopping-bag", featured: false, order: 10 },
+    { id: "cat-1", name: "Bounce Houses",        icon: "castle",       featured: true,  order: 1 },
+    { id: "cat-2", name: "Water Slides",         icon: "water",        featured: true,  order: 2 },
+    { id: "cat-4", name: "Tables",               icon: "table",        featured: false, order: 3 },
+    { id: "cat-5", name: "Chairs",               icon: "chair",        featured: false, order: 4 },
+    { id: "cat-8", name: "Photo Booths",         icon: "camera",       featured: false, order: 5 },
+    { id: "cat-6", name: "Concession Equipment", icon: "candy",        featured: false, order: 6 },
+    { id: "cat-10", name: "Party Extras",        icon: "shopping-bag", featured: false, order: 7 },
   ],
   siteContent: { ...DEFAULT_SITE_CONTENT },
   settings: { 
