@@ -446,7 +446,17 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
         }
 
         return sum + itemTotal;
-      }, 0);
+      }, 0) + Object.entries(selectedPackageAddons)
+        .filter(([addonId, isChecked]) => isChecked)
+        .reduce((sum, [addonId]) => {
+          const addon = [
+            { id: "prints", price: 250 },
+            { id: "glam", price: 100 },
+            { id: "guestbook", price: 100 },
+            { id: "idle", price: 50 },
+          ].find((a) => a.id === addonId);
+          return sum + (addon ? addon.price : 0);
+        }, 0);
 
   const discount = appliedPromo
     ? (appliedPromo.type === "percent" ? total * (appliedPromo.value / 100) : appliedPromo.value)
@@ -760,6 +770,18 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       addonSummaries.push(`[${item.title} Add-ons]: ${summaries.join(", ")}`);
                     }
                   });
+
+                  const generalAddons = [
+                    { id: "prints", label: "Unlimited Physical Prints (2×6 or 4×6)" },
+                    { id: "glam", label: "Glam Filter (Magazine-style finish)" },
+                    { id: "guestbook", label: "Memory Photo Guest Book" },
+                    { id: "idle", label: "Additional Idle Time" },
+                  ].filter((a) => selectedPackageAddons[a.id])
+                   .map((a) => a.label);
+
+                  if (generalAddons.length > 0) {
+                    addonSummaries.push(`[Rental Add-ons]: ${generalAddons.join(", ")}`);
+                  }
 
                   if (addonSummaries.length > 0) {
                     finalNotes = `${addonSummaries.join("\n")}${notes ? `\n\n[User Notes]: ${notes}` : ""}`;
