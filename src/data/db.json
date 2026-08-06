@@ -3,7 +3,7 @@
     {
       "id": "1",
       "title": "Adventure 5-in-1 Inflatable Water Park",
-      "category": "Water Slides",
+      "category": "Inflatables",
       "description": "The ultimate water play adventure! Features dual racing slides, climbing wall, water cannons, sprinkler arch, splash pool, and integrated sports play zone.",
       "price": 350,
       "depositAmount": 105,
@@ -34,7 +34,7 @@
     {
       "id": "3",
       "title": "Red Cotton Candy Cart",
-      "category": "Cotton Candy Machines",
+      "category": "Concession Equipment",
       "description": "Professional high-yield cotton candy maker on a mobile trolley. Adds nostalgic joy and sweet treats to any event.",
       "price": 85,
       "depositAmount": 25,
@@ -48,7 +48,7 @@
     {
       "id": "4",
       "title": "Summer Waves Double-Slide Splash Kingdom",
-      "category": "Bounce Houses",
+      "category": "Inflatables",
       "description": "Multi-activity inflatable bounce kingdom with safety netting, basketball hoop, giant splash pool and automatic water bucket drop.",
       "price": 295,
       "depositAmount": 80,
@@ -76,7 +76,7 @@
     {
       "id": "7",
       "title": "Theatre-Style Popcorn Maker",
-      "category": "Popcorn Machines",
+      "category": "Concession Equipment",
       "description": "Fresh, hot popcorn in minutes! Comes with a stand and all starter ingredients (corn, oil, butter salt).",
       "price": 75,
       "depositAmount": 20,
@@ -108,7 +108,7 @@
     {
       "id": "9",
       "title": "Professional Snow-cone Machine",
-      "category": "Snow-cone Machines",
+      "category": "Concession Equipment",
       "description": "High-yield commercial-grade snow-cone shaver. Easy to operate and produces perfectly crushed ice for cool summer treats.",
       "price": 75,
       "depositAmount": 20,
@@ -118,7 +118,8 @@
       "image": "/images/kids-snowcones.png",
       "rating": 4.8,
       "reviews": 15,
-      "stock": 5
+      "stock": 5,
+      "deliveryFee": 0
     },
     {
       "id": "10",
@@ -199,66 +200,45 @@
   "categories": [
     {
       "id": "cat-1",
-      "name": "Bounce Houses",
+      "name": "Inflatables",
       "icon": "castle",
       "featured": true,
       "order": 1
-    },
-    {
-      "id": "cat-2",
-      "name": "Water Slides",
-      "icon": "water",
-      "featured": true,
-      "order": 2
     },
     {
       "id": "cat-4",
       "name": "Tables",
       "icon": "table",
       "featured": false,
-      "order": 4
+      "order": 2
     },
     {
       "id": "cat-5",
       "name": "Chairs",
       "icon": "chair",
       "featured": false,
-      "order": 5
-    },
-    {
-      "id": "cat-6",
-      "name": "Cotton Candy Machines",
-      "icon": "candy",
-      "featured": false,
-      "order": 6
-    },
-    {
-      "id": "cat-7",
-      "name": "Popcorn Machines",
-      "icon": "popcorn",
-      "featured": false,
-      "order": 7
+      "order": 3
     },
     {
       "id": "cat-8",
       "name": "Photo Booths",
       "icon": "camera",
       "featured": false,
-      "order": 8
+      "order": 4
     },
     {
-      "id": "cat-9",
-      "name": "Snow-cone Machines",
-      "icon": "ice",
+      "id": "cat-6",
+      "name": "Concession Equipment",
+      "icon": "candy",
       "featured": false,
-      "order": 9
+      "order": 5
     },
     {
       "id": "cat-10",
       "name": "Party Extras",
       "icon": "shopping-bag",
       "featured": false,
-      "order": 10
+      "order": 6
     }
   ],
   "siteContent": {
@@ -414,10 +394,26 @@
         "GIFs, Boomerangs & Slow Motion"
       ],
       "addons": [
-        { "id": "backdrop", "label": "Choice of Premium Backdrop", "price": 100 },
-        { "id": "prints", "label": "Unlimited Physical Prints (2×6 or 4×6)", "price": 250 },
-        { "id": "glam", "label": "Glam Filter (Magazine-style finish)", "price": 100 },
-        { "id": "guestbook", "label": "Memory Photo Guest Book", "price": 100 }
+        {
+          "id": "backdrop",
+          "label": "Choice of Premium Backdrop",
+          "price": 100
+        },
+        {
+          "id": "prints",
+          "label": "Unlimited Physical Prints (2×6 or 4×6)",
+          "price": 250
+        },
+        {
+          "id": "glam",
+          "label": "Glam Filter (Magazine-style finish)",
+          "price": 100
+        },
+        {
+          "id": "guestbook",
+          "label": "Memory Photo Guest Book",
+          "price": 100
+        }
       ]
     },
     {
@@ -441,10 +437,26 @@
         "GIFs, Boomerangs & Slow Motion"
       ],
       "addons": [
-        { "id": "prints", "label": "Unlimited Physical Prints (2×6 or 4×6)", "price": 250 },
-        { "id": "glam", "label": "Glam Filter (Magazine-style finish)", "price": 100 },
-        { "id": "guestbook", "label": "Memory Photo Guest Book", "price": 100 },
-        { "id": "idle", "label": "Additional Idle Time", "price": 50 }
+        {
+          "id": "prints",
+          "label": "Unlimited Physical Prints (2×6 or 4×6)",
+          "price": 250
+        },
+        {
+          "id": "glam",
+          "label": "Glam Filter (Magazine-style finish)",
+          "price": 100
+        },
+        {
+          "id": "guestbook",
+          "label": "Memory Photo Guest Book",
+          "price": 100
+        },
+        {
+          "id": "idle",
+          "label": "Additional Idle Time",
+          "price": 50
+        }
       ]
     },
     {
@@ -467,9 +479,21 @@
         "Priority VIP setup & teardown"
       ],
       "addons": [
-        { "id": "guestbook", "label": "Memory Photo Guest Book", "price": 100 },
-        { "id": "redcarpet", "label": "Red Carpet & Stanchions VIP Setup", "price": 150 },
-        { "id": "idle", "label": "Additional Idle Time", "price": 50 }
+        {
+          "id": "guestbook",
+          "label": "Memory Photo Guest Book",
+          "price": 100
+        },
+        {
+          "id": "redcarpet",
+          "label": "Red Carpet & Stanchions VIP Setup",
+          "price": 150
+        },
+        {
+          "id": "idle",
+          "label": "Additional Idle Time",
+          "price": 50
+        }
       ]
     }
   ]
