@@ -394,8 +394,8 @@ export async function initDb(): Promise<void> {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
-    // Seed default data: unconditionally run INSERT IGNORE for mock items and categories
-    for (const item of mockInventory) {
+    // Seed default data: run INSERT IGNORE using live fallbackStore inventory
+    for (const item of fallbackStore.inventory) {
       await conn.query(
         `INSERT IGNORE INTO inventory
           (id, title, category, description, price, deposit_amount, availability, dimensions, capacity, image, rating, reviews, stock, delivery_fee)
@@ -694,13 +694,35 @@ const fallbackStore = {
   ] as PhotoBoothPackage[],
 };
 
-// Resolve local JSON fallback path
-const DB_JSON_PATH = path.resolve(process.cwd(), "src/data/db.json");
+// Resolve persistent JSON fallback path (prevents git push deployments from wiping live CMS edits)
+function getPersistentDbPath(): string {
+  if (process.env.PERSISTENT_DB_PATH) {
+    return process.env.PERSISTENT_DB_PATH;
+  }
+  const defaultLocal = path.resolve(process.cwd(), "src/data/db.json");
+  if (process.env.NODE_ENV === "production") {
+    const hostingerDir = "/home/u887289907/domains/pinstripesrentals.com/data";
+    try {
+      if (!fs.existsSync(hostingerDir)) {
+        fs.mkdirSync(hostingerDir, { recursive: true });
+      }
+      const hostingerDb = path.join(hostingerDir, "db.json");
+      if (!fs.existsSync(hostingerDb) && fs.existsSync(defaultLocal)) {
+        fs.copyFileSync(defaultLocal, hostingerDb);
+      }
+      return hostingerDb;
+    } catch {}
+  }
+  return defaultLocal;
+}
+
+const DB_JSON_PATH = getPersistentDbPath();
 
 // Eagerly load fallbackStore data from db.json if database is offline/fallback mode is active
 try {
-  if (fs.existsSync(DB_JSON_PATH)) {
-    const raw = fs.readFileSync(DB_JSON_PATH, "utf8");
+  const activeDbPath = getPersistentDbPath();
+  if (fs.existsSync(activeDbPath)) {
+    const raw = fs.readFileSync(activeDbPath, "utf8");
     const parsed = JSON.parse(raw);
     if (parsed.inventory) fallbackStore.inventory = parsed.inventory;
     if (parsed.categories) fallbackStore.categories = parsed.categories;
@@ -711,7 +733,7 @@ try {
     if (parsed.messages) fallbackStore.messages = parsed.messages;
     if (parsed.specials) fallbackStore.specials = parsed.specials;
     if (parsed.packages && Array.isArray(parsed.packages) && parsed.packages.length > 0) fallbackStore.packages = parsed.packages;
-    console.log("💾 Loaded fallback database from local JSON file.");
+    console.log("💾 Loaded fallback database from persistent JSON file:", activeDbPath);
   }
 } catch (err) {
   console.error("⚠️ Failed to load local JSON fallback database:", err);
@@ -721,8 +743,15 @@ try {
 function saveFallbackStore() {
   try {
     const raw = JSON.stringify(fallbackStore, null, 2);
-    fs.writeFileSync(DB_JSON_PATH, raw, "utf8");
-    console.log("💾 Saved fallback database to local JSON file.");
+    const activeDbPath = getPersistentDbPath();
+    fs.writeFileSync(activeDbPath, raw, "utf8");
+    try {
+      const localPath = path.resolve(process.cwd(), "src/data/db.json");
+      if (localPath !== activeDbPath && fs.existsSync(path.dirname(localPath))) {
+        fs.writeFileSync(localPath, raw, "utf8");
+      }
+    } catch {}
+    console.log("💾 Saved fallback database to persistent JSON file:", activeDbPath);
   } catch (err) {
     console.error("⚠️ Failed to save local JSON fallback database:", err);
   }
