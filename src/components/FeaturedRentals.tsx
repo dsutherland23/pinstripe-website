@@ -5,6 +5,7 @@ import { Star, Maximize2, Users, ShoppingCart, Calendar } from "lucide-react";
 import { RadialGlowCard } from "./CursorReactive";
 
 import { getItemFallbackImage } from "@/lib/image-utils";
+import Packages from "./Packages";
 
 // Re-export RentalItem type so other files can still import it from here
 export type { RentalItem } from "@/data/mockInventory";
@@ -135,6 +136,18 @@ export default function FeaturedRentals({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Standalone Units Header */}
+        {!loading && (activeCategory.toLowerCase().includes("photo") || activeCategory.toLowerCase().includes("booth") || activeCategory.toLowerCase().includes("package")) && !searchQuery && (
+          <div style={{ marginBottom: "2rem" }}>
+            <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+              A La Carte Equipment
+            </span>
+            <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.35rem", color: "var(--text-primary)" }}>
+              Individual Photo Booth Rentals & Standalone Units
+            </h3>
           </div>
         )}
 
@@ -386,7 +399,7 @@ export default function FeaturedRentals({
               );
             })}
           </div>
-        ) : !loading && (
+        ) : !loading ? (
           <div
             style={{
               padding: "5rem 2rem",
@@ -402,6 +415,24 @@ export default function FeaturedRentals({
             <p style={{ color: "#888", fontSize: "0.875rem" }}>
               Try adjusting your search or selecting a different category.
             </p>
+          </div>
+        ) : null}
+
+        {/* Curated Packages Section below Standalone Equipment */}
+        {!loading && (activeCategory.toLowerCase().includes("photo") || activeCategory.toLowerCase().includes("booth") || activeCategory.toLowerCase().includes("package")) && !searchQuery && (
+          <div style={{ marginTop: "4.5rem", paddingTop: "3.5rem", borderTop: "1px solid #e5e5e5" }}>
+            <div style={{ marginBottom: "1.5rem" }}>
+              <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+                Curated Packages
+              </span>
+              <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.35rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+                All-Inclusive Photo Booth Packages
+              </h3>
+              <p style={{ color: "#666", fontSize: "0.85rem", lineHeight: 1.5, maxWidth: "600px" }}>
+                Select one of our popular all-inclusive options featuring delivery, backdrop, props, and staffing options.
+              </p>
+            </div>
+            <Packages onOpenQuote={(pkgName) => onOpenQuote()} isEmbedded={true} />
           </div>
         )}
       </div>

@@ -408,38 +408,21 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                 </div>
               </Reveal>
 
-              {(sec.id === "packages" || sec.id === "photo-booths" || sec.id === "photobooth" || targetSlug === "packages") && !searchQuery && (
-                <div style={{ marginBottom: "3.5rem" }}>
+              {(sec.id === "photo-booths" || sec.id === "photobooth") && !searchQuery && (
+                <div style={{ marginBottom: "2rem" }}>
                   <Reveal>
-                    <div style={{ marginBottom: "1.5rem" }}>
+                    <div>
                       <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>
-                        Curated Packages
+                        A La Carte Equipment
                       </span>
                       <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
-                        All-Inclusive Photo Booth Packages
+                        Individual Photo Booth Rentals & Standalone Units
                       </h3>
-                      <p style={{ color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.5, maxWidth: "600px", marginBottom: "1.5rem" }}>
-                        Select one of our popular all-inclusive options featuring delivery, backdrop, props, and staffing options.
+                      <p style={{ color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.5, maxWidth: "600px" }}>
+                        Rent standalone booth equipment individually or build your custom event layout.
                       </p>
                     </div>
                   </Reveal>
-                  <Packages onOpenQuote={handleOpenQuote} isEmbedded={true} />
-                  
-                  {sec.items.length > 0 && (
-                    <Reveal>
-                      <div style={{ marginTop: "4.5rem", marginBottom: "2.5rem", borderTop: "1px solid var(--border-primary)", paddingTop: "3.5rem" }}>
-                        <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>
-                          Individual Rentals
-                        </span>
-                        <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
-                          A La Carte Options & Equipment
-                        </h3>
-                        <p style={{ color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.5, maxWidth: "600px" }}>
-                          Rent items individually or add them to your custom event plan.
-                        </p>
-                      </div>
-                    </Reveal>
-                  )}
                 </div>
               )}
 
@@ -713,6 +696,25 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
               ) : (
                 <div style={{ padding: "3rem", textAlign: "center", border: "1px dashed var(--border-secondary)", borderRadius: "1.5rem", background: "var(--bg-secondary)" }}>
                   <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem" }}>No items found matching your filter criteria in this category.</p>
+                </div>
+              )}
+
+              {(sec.id === "packages" || sec.id === "photo-booths" || sec.id === "photobooth" || targetSlug === "packages") && !searchQuery && (
+                <div style={{ marginTop: "4.5rem", borderTop: "1px solid var(--border-primary)", paddingTop: "3.5rem" }}>
+                  <Reveal>
+                    <div style={{ marginBottom: "1.5rem" }}>
+                      <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>
+                        Curated Packages
+                      </span>
+                      <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+                        All-Inclusive Photo Booth Packages
+                      </h3>
+                      <p style={{ color: "var(--text-secondary)", fontSize: "0.82rem", lineHeight: 1.5, maxWidth: "600px", marginBottom: "1.5rem" }}>
+                        Select one of our popular all-inclusive options featuring delivery, backdrop, props, and staffing options.
+                      </p>
+                    </div>
+                  </Reveal>
+                  <Packages onOpenQuote={handleOpenQuote} isEmbedded={true} />
                 </div>
               )}
             </section>

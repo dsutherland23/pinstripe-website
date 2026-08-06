@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X, Star, Maximize2, Users, Calendar, ShieldCheck, Sparkles, CloudSun } from "lucide-react";
 import type { RentalItem } from "./FeaturedRentals";
 import { getItemFallbackImage } from "@/lib/image-utils";
@@ -15,6 +15,7 @@ interface ProductDetailProps {
 
 export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: ProductDetailProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [selectedAddons, setSelectedAddons] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const d = dialogRef.current;
@@ -265,6 +266,55 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
                 Forecast call for rain or high winds? Reschedule your date for 100% free up to 24 hours prior.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Rental Add-ons Checklist */}
+        <div style={{ marginBottom: "1.75rem" }}>
+          <div style={{ fontFamily: "var(--font-heading)", fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-secondary)", marginBottom: "0.75rem" }}>
+            Available Rental Add-Ons
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {[
+              { id: "prints", label: "Unlimited Physical Prints (2×6 or 4×6)", price: 250 },
+              { id: "glam", label: "Glam Filter (Magazine-style finish)", price: 100 },
+              { id: "guestbook", label: "Memory Photo Guest Book", price: 100 },
+              { id: "idle", label: "Additional Idle Time", price: 50 },
+            ].map((addon) => {
+              const isChecked = !!selectedAddons[addon.id];
+              return (
+                <div
+                  key={addon.id}
+                  onClick={() => setSelectedAddons((prev) => ({ ...prev, [addon.id]: !prev[addon.id] }))}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "0.85rem 1rem",
+                    background: isChecked ? "rgba(212,175,55,0.04)" : "var(--card-bg)",
+                    border: `1.5px solid ${isChecked ? "#D4AF37" : "var(--border-primary)"}`,
+                    borderRadius: "0.875rem",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {}}
+                      style={{ accentColor: "#D4AF37", width: "18px", height: "18px", pointerEvents: "none" }}
+                    />
+                    <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.82rem", color: "var(--text-primary)" }}>
+                      {addon.label}
+                    </span>
+                  </div>
+                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.82rem", color: isChecked ? "#D4AF37" : "var(--text-primary)" }}>
+                    +${addon.price}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 

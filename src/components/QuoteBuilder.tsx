@@ -22,9 +22,12 @@ const PHOTO_BOOTH_PACKAGES: PhotoBoothPackage[] = [
   {
     name: "Snap It",
     price: 250,
-    description: "Perfect for DIY hosts who want great digital photos without the full-service price. A backdrop can be added as an optional add-on.",
+    description: "Perfect for DIY hosts who want great digital photos without the full-service price. Optional backdrop & print add-ons available.",
     addons: [
-      { id: "backdrop", label: "Backdrop", price: 100 }
+      { id: "backdrop", label: "Choice of Premium Backdrop", price: 100 },
+      { id: "prints", label: "Unlimited Physical Prints (2×6 or 4×6)", price: 250 },
+      { id: "glam", label: "Glam Filter (Magazine-style finish)", price: 100 },
+      { id: "guestbook", label: "Memory Photo Guest Book", price: 100 },
     ]
   },
   {
@@ -32,9 +35,10 @@ const PHOTO_BOOTH_PACKAGES: PhotoBoothPackage[] = [
     price: 500,
     description: "Full-service, staffed booth. We handle everything before, during, and after — you just enjoy.",
     addons: [
-      { id: "prints", label: "Unlimited Prints (2×6 or 4×6)", price: 250 },
-      { id: "glam", label: "Glam Filter", price: 100 },
-      { id: "guestbook", label: "Photo Guest Book", price: 100 }
+      { id: "prints", label: "Unlimited Physical Prints (2×6 or 4×6)", price: 250 },
+      { id: "glam", label: "Glam Filter (Magazine-style finish)", price: 100 },
+      { id: "guestbook", label: "Memory Photo Guest Book", price: 100 },
+      { id: "idle", label: "Additional Idle Time", price: 50 },
     ]
   },
   {
@@ -42,7 +46,9 @@ const PHOTO_BOOTH_PACKAGES: PhotoBoothPackage[] = [
     price: 750,
     description: "Guests look like they're on a red carpet. Glam filter, unlimited prints, and video messaging included.",
     addons: [
-      { id: "guestbook", label: "Photo Guest Book", price: 100 }
+      { id: "guestbook", label: "Memory Photo Guest Book", price: 100 },
+      { id: "redcarpet", label: "Red Carpet & Stanchions VIP Setup", price: 150 },
+      { id: "idle", label: "Additional Idle Time", price: 50 },
     ]
   }
 ];
@@ -230,7 +236,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
       setPackageHours(4);
       setSelectedPackageAddons({});
       setSelected({});
-      setStep(1);
+      setStep(2);
     } else if (selectedItemFromInventory) {
       const cat = (selectedItemFromInventory.category || "").toLowerCase();
       const isPB = cat.includes("photo") || cat.includes("booth") || cat.includes("package");
@@ -1314,6 +1320,55 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                           );
                         })}
                       </div>
+
+                      {/* Rental Add-ons Checklist matching user's screenshot */}
+                      {Object.values(selected).some((qty) => qty > 0) && (
+                        <div style={{ marginTop: "1.25rem", background: "var(--bg-secondary)", border: "1.5px solid var(--border-primary)", borderRadius: "1rem", padding: "1.25rem" }}>
+                          <label style={labelStyle}>Customize Rental Add-Ons</label>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            {[
+                              { id: "prints", label: "Unlimited Physical Prints (2×6 or 4×6)", price: 250 },
+                              { id: "glam", label: "Glam Filter (Magazine-style finish)", price: 100 },
+                              { id: "guestbook", label: "Memory Photo Guest Book", price: 100 },
+                              { id: "idle", label: "Additional Idle Time", price: 50 },
+                            ].map((addon) => {
+                              const isChecked = !!selectedPackageAddons[addon.id];
+                              return (
+                                <div
+                                  key={addon.id}
+                                  onClick={() => setSelectedPackageAddons((prev) => ({ ...prev, [addon.id]: !prev[addon.id] }))}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    padding: "0.75rem 1rem",
+                                    background: isChecked ? "rgba(212,175,55,0.04)" : "var(--card-bg)",
+                                    border: `1.5px solid ${isChecked ? "#D4AF37" : "var(--border-primary)"}`,
+                                    borderRadius: "0.75rem",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease"
+                                  }}
+                                >
+                                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => {}}
+                                      style={{ accentColor: "#D4AF37", width: "18px", height: "18px", pointerEvents: "none" }}
+                                    />
+                                    <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.8rem", color: "var(--text-primary)" }}>
+                                      {addon.label}
+                                    </span>
+                                  </div>
+                                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.8rem", color: isChecked ? "#D4AF37" : "var(--text-primary)" }}>
+                                    +${addon.price}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </>

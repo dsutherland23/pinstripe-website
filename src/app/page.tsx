@@ -15,6 +15,7 @@ import ProductDetail from "@/components/ProductDetail";
 import AboutContactModal from "@/components/AboutContactModal";
 import Reveal from "@/components/Reveal";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import Packages from "@/components/Packages";
 
 
 // ---- Default Fallback Category data ----

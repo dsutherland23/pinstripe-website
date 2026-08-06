@@ -29,7 +29,10 @@ const pkgs = [
       "GIFs, Boomerangs & Slow Motion",
     ],
     addons: [
-      { label: "Backdrop", price: "+$100" },
+      { label: "Choice of Premium Backdrop", price: "+$100" },
+      { label: "Unlimited Physical Prints (2×6 or 4×6)", price: "+$250" },
+      { label: "Glam Filter", price: "+$100" },
+      { label: "Photo Guest Book", price: "+$100" },
     ],
   },
   {
@@ -52,9 +55,10 @@ const pkgs = [
       "GIFs, Boomerangs & Slow Motion",
     ],
     addons: [
-      { label: "Unlimited Prints (2×6 or 4×6)", price: "+$250" },
+      { label: "Unlimited Physical Prints (2×6 or 4×6)", price: "+$250" },
       { label: "Glam Filter", price: "+$100" },
       { label: "Photo Guest Book", price: "+$100" },
+      { label: "Additional Idle Time", price: "+$50/hr" },
     ],
   },
   {
@@ -69,14 +73,16 @@ const pkgs = [
     popular: false,
     items: [
       "Everything in Party, plus:",
+      "Glam filter (B&W or Smooth Skin)",
       "Unlimited prints (2×6 or 4×6)",
-      "Glam filter (magazine-style finish)",
-      "Black & White Filter",
-      "Video messages",
-      "GIFs, Boomerangs & Slow Motion",
+      "Audio / Video messaging",
+      "Live slideshow on TV or secondary screen",
+      "Priority VIP setup & teardown",
     ],
     addons: [
       { label: "Photo Guest Book", price: "+$100" },
+      { label: "Red Carpet & Stanchions VIP Setup", price: "+$150" },
+      { label: "Additional Idle Time", price: "+$50/hr" },
     ],
   },
 ];
