@@ -599,7 +599,7 @@ export default function AdminDashboard() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("itemId", specId);
+      formData.append("itemId", specId || "special");
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         headers: { "x-admin-passcode": getCode() },
@@ -608,16 +608,17 @@ export default function AdminDashboard() {
       const d = await res.json();
       if (d.success) {
         notify("Image uploaded!");
+        const finalImage = d.dataUrl || d.url || d.imagePath;
+        setSpecialForm(f => ({ ...f, image: finalImage }));
         if (editingSpecial) {
-          setSpecialForm(f => ({ ...f, image: d.url }));
+          setEditingSpecial({ ...editingSpecial, image: finalImage });
         } else {
-          // Inline edit quick upload
           const spec = specials.find(s => s.id === specId);
           if (spec) {
             await fetch("/api/admin/specials", {
               method: "POST",
               headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
-              body: JSON.stringify({ action: "update", item: { ...spec, image: d.url } }),
+              body: JSON.stringify({ action: "update", item: { ...spec, image: finalImage } }),
             });
           }
         }
@@ -743,7 +744,7 @@ export default function AdminDashboard() {
   const handleUploadImage = async (itemId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     setLoading(true);
-    const fd = new FormData(); fd.append("file", file); fd.append("itemId", itemId);
+    const fd = new FormData(); fd.append("file", file); fd.append("itemId", itemId || "new");
     try {
       const res = await fetch("/api/admin/upload", {
         method: "POST", headers: { "x-admin-passcode": getCode() }, body: fd,
@@ -751,9 +752,10 @@ export default function AdminDashboard() {
       const d = await res.json();
       if (d.success) {
         notify("Image uploaded!");
-        if (editingItem?.id === itemId) {
-          setEditingItem({ ...editingItem, image: d.imagePath });
-          setItemForm(f => ({ ...f, image: d.imagePath }));
+        const finalImage = d.dataUrl || d.imagePath || d.url;
+        setItemForm(f => ({ ...f, image: finalImage }));
+        if (editingItem && editingItem.id === itemId) {
+          setEditingItem({ ...editingItem, image: finalImage });
         }
         loadAll();
       } else notify(d.error || "Upload failed.", "error");
@@ -1539,16 +1541,16 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Image preview + upload */}
-                    {editingItem && (
+                    {(editingItem || isCreating) && (
                       <div>
                         <label style={labelStyle}>Image</label>
                         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.625rem", padding: "0.75rem" }}>
-                          <img src={editingItem?.image || itemForm.image} alt="" style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "0.375rem" }} onError={e => { (e.target as HTMLImageElement).src = getItemFallbackImage(editingItem?.category || itemForm.category); }} />
+                          <img src={itemForm.image || editingItem?.image} alt="" style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "0.375rem" }} onError={e => { (e.target as HTMLImageElement).src = getItemFallbackImage(editingItem?.category || itemForm.category); }} />
                           <div style={{ flex: 1 }}>
-                            <input type="text" value={itemForm.image} onChange={e => setItemForm(f => ({ ...f, image: e.target.value }))} placeholder="Image URL…" style={{ ...inputStyle, marginBottom: "0.5rem" }} />
+                            <input type="text" value={itemForm.image} onChange={e => setItemForm(f => ({ ...f, image: e.target.value }))} placeholder="Image URL or Data URL…" style={{ ...inputStyle, marginBottom: "0.5rem" }} />
                             <label style={{ padding: "0.4rem 0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(212,175,55,0.3)", background: "rgba(212,175,55,0.08)", color: "#D4AF37", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                               <Upload size={12} />Upload File
-                              <input type="file" accept="image/*" onChange={e => handleUploadImage(editingItem.id, e)} style={{ display: "none" }} />
+                              <input type="file" accept="image/*" onChange={e => handleUploadImage(editingItem?.id || "new", e)} style={{ display: "none" }} />
                             </label>
                           </div>
                         </div>
