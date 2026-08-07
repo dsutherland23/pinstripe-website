@@ -192,6 +192,84 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">("delivery");
 
   // Clear address errors when selecting pickup
+  // Venue Surface Intelligence State
+  const [venueType, setVenueType] = useState<"residential" | "commercial" | "park" | "school" | "beach">("residential");
+  const [setupSurface, setSetupSurface] = useState<"grass" | "concrete" | "sand" | "indoors">("grass");
+  const [setupDistance, setSetupDistance] = useState<"short" | "medium" | "long">("short");
+  const [hasElevator, setHasElevator] = useState(false);
+  const [hasStairs, setHasStairs] = useState(false);
+  const [hasPower, setHasPower] = useState(true);
+  const [hasWater, setHasWater] = useState(true);
+
+  // Free Address Autocomplete State (OpenStreetMap / Nominatim)
+  const [addressSuggestions, setAddressSuggestions] = useState<Array<{ display_name: string; road?: string; house_number?: string; city?: string; state?: string; postcode?: string; lat: string; lon: string }>>([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: number; lon: number } | null>(null);
+
+  // Computed Handling Options matching Delivery Engine v2.0
+  const computedHandlingOptions = useMemo(() => {
+    const opts: string[] = [];
+    if (setupSurface === "sand") opts.push("hand-beach");
+    if (setupSurface === "concrete") opts.push("hand-concrete");
+    if (hasStairs) opts.push("hand-stairs");
+    if (hasElevator) opts.push("hand-elevator");
+    if (setupDistance === "long") opts.push("hand-longwalk");
+    return opts;
+  }, [setupSurface, hasStairs, hasElevator, setupDistance]);
+
+  // Address autocomplete debounced search effect for Step 1 (Event Location) & Step 3 (Delivery Address)
+  const activeSearchTerm = step === 1 ? eventLoc : address;
+
+  useEffect(() => {
+    if (!activeSearchTerm || activeSearchTerm.trim().length < 2) {
+      setAddressSuggestions([]);
+      setShowAddressSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearchingAddress(true);
+        const res = await fetch(`/api/address/autocomplete?q=${encodeURIComponent(activeSearchTerm)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.suggestions)) {
+            setAddressSuggestions(data.suggestions);
+            setShowAddressSuggestions(true);
+          }
+        }
+      } catch (err) {
+        console.error("Address lookup error:", err);
+      } finally {
+        setIsSearchingAddress(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [activeSearchTerm, step]);
+
+  const selectAddressSuggestion = (item: any) => {
+    const street = item.street || item.display_name.split(",")[0];
+    setAddress(street);
+    setEventLoc(item.display_name);
+    setShowAddressSuggestions(false);
+    if (item.zip) setZipCode(item.zip);
+
+    const knownCities = ["Norfolk", "Virginia Beach", "Chesapeake", "Portsmouth", "Suffolk", "Newport News", "Hampton", "Yorktown", "Williamsburg"];
+    const matched = knownCities.find(c => c.toLowerCase() === (item.city || "").toLowerCase());
+    if (matched) {
+      setCity(matched);
+    } else if (item.city) {
+      setCity("Other");
+      setCustomCity(item.city);
+    }
+
+    if (item.lat && item.lon) {
+      setSelectedCoordinates({ lat: typeof item.lat === "number" ? item.lat : parseFloat(item.lat), lon: typeof item.lon === "number" ? item.lon : parseFloat(item.lon) });
+    }
+  };
+
   useEffect(() => {
     if (deliveryMethod === "pickup") {
       clearError("address");
@@ -407,15 +485,20 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     }
   }, [isPickupAllowed]);
 
+  const [calculatedDeliveryFee, setCalculatedDeliveryFee] = useState<number | null>(null);
+  // Itemised handling breakdown returned by engine (for display)
+  const [handlingBreakdown, setHandlingBreakdown] = useState<{ id: string; name: string; amount: number }[]>([]);
+
   const deliveryFee = useMemo(() => {
     if (deliveryMethod === "pickup") return 0;
     if (bookingMode === "package") return 0;
+    if (calculatedDeliveryFee !== null) return calculatedDeliveryFee;
     return Object.entries(selected).reduce((sum, [id, qty]) => {
       const item = activeInventory.find((i) => i.id === id);
       const fee = (item as any)?.deliveryFee ?? 0;
       return sum + (fee * qty);
     }, 0);
-  }, [deliveryMethod, bookingMode, selected, activeInventory]);
+  }, [deliveryMethod, bookingMode, selected, activeInventory, calculatedDeliveryFee]);
 
   const selectedPkg = photoBoothPackages.find((p) => p.name === selectedPackageName);
   const packageBaseTotal = selectedPkg ? selectedPkg.price : 0;
@@ -462,6 +545,79 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
     ? (appliedPromo.type === "percent" ? total * (appliedPromo.value / 100) : appliedPromo.value)
     : 0;
   const netTotal = Math.max(0, total - discount) + deliveryFee;
+
+  useEffect(() => {
+    if (deliveryMethod === "pickup") {
+      setCalculatedDeliveryFee(0);
+      setHandlingBreakdown([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const itemsPayload = Object.entries(selected)
+          .filter(([_, qty]) => qty > 0)
+          .map(([id, qty]) => {
+            const item = activeInventory.find(i => i.id === id);
+            return {
+              id,
+              quantity: qty,
+              title: item?.title,
+              category: item?.category,
+              price: item?.price
+            };
+          });
+
+        if (itemsPayload.length === 0) {
+          setCalculatedDeliveryFee(0);
+          setHandlingBreakdown([]);
+          return;
+        }
+
+        const res = await fetch("/api/delivery/calculate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: itemsPayload,
+            orderTotal: total,
+            zipCode,
+            city,
+            deliveryAddress: address,
+            eventDate,
+            venueType,
+            handlingOptions: computedHandlingOptions
+          })
+        });
+        const data = await res.json();
+        if (data.success && typeof data.totalDeliveryFee === "number") {
+          setCalculatedDeliveryFee(data.totalDeliveryFee);
+          // Build itemised handling list for the price bar
+          const appliedHandling: { id: string; name: string; amount: number }[] = [];
+          for (const hId of computedHandlingOptions) {
+            const HANDLING_LABELS: Record<string, { name: string; amount: number }> = {
+              "hand-beach":    { name: "Beach/Sand Anchors",   amount: 50 },
+              "hand-concrete": { name: "Concrete Sandbags",    amount: 25 },
+              "hand-grass":    { name: "Grass Staking",        amount: 20 },
+              "hand-stairs":   { name: "Stair Carry",          amount: 25 },
+              "hand-elevator": { name: "Elevator Access",      amount: 15 },
+              "hand-longwalk": { name: "Long Walk (>100ft)",   amount: 30 },
+            };
+            const info = HANDLING_LABELS[hId];
+            if (info) appliedHandling.push({ id: hId, ...info });
+          }
+          setHandlingBreakdown(appliedHandling);
+        }
+      } catch (err) {
+        console.error("Delivery fee calculation error:", err);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [
+    deliveryMethod, selected, total, zipCode, city, address, eventDate, activeInventory,
+    // Venue intelligence — each state listed directly so React detects every change
+    setupSurface, hasStairs, hasElevator, setupDistance, venueType,
+    computedHandlingOptions
+  ]);
 
   const steps = ["Event Info", "Select Rentals", "Your Details"];
 
@@ -783,9 +939,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                     addonSummaries.push(`[Rental Add-ons]: ${generalAddons.join(", ")}`);
                   }
 
-                  if (addonSummaries.length > 0) {
-                    finalNotes = `${addonSummaries.join("\n")}${notes ? `\n\n[User Notes]: ${notes}` : ""}`;
-                  }
+                  const venueLogisticsNote = `[Venue Logistics]: Type: ${venueType.toUpperCase()} | Surface: ${setupSurface.toUpperCase()} | Truck Dist: ${setupDistance} | Stairs: ${hasStairs ? "Yes" : "No"} | Elevator: ${hasElevator ? "Yes" : "No"} | Power <50ft: ${hasPower ? "Yes" : "No"} | Water <50ft: ${hasWater ? "Yes" : "No"}`;
+                  finalNotes = `${finalNotes ? finalNotes + "\n\n" : ""}${venueLogisticsNote}`;
                 }
 
                 try {
@@ -888,7 +1043,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.eventDate}</p>
                       )}
                     </div>
-                    <div>
+                    <div style={{ position: "relative" }}>
                       <label style={labelStyle}>Event Location *</label>
                       <div style={{ position: "relative" }}>
                         <span style={iconStyle}>📍</span>
@@ -896,15 +1051,37 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                           required
                           type="text"
                           className="field"
-                          placeholder="e.g. Town Point Park, Norfolk"
+                          placeholder="Start typing venue or street address..."
                           value={eventLoc}
                           onChange={(e) => setEventLoc(e.target.value)}
                           onBlur={() => validateOnBlur("eventLoc", eventLoc)}
-                          style={{ paddingLeft: "2.3rem", ...(errors.eventLoc ? { borderColor: "#ef4444" } : {}) }}
+                          style={{ paddingLeft: "2.3rem", paddingRight: isSearchingAddress && step === 1 ? "2.5rem" : "0.75rem", ...(errors.eventLoc ? { borderColor: "#ef4444" } : {}) }}
                         />
+                        {isSearchingAddress && step === 1 && (
+                          <span style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "#D4AF37", fontWeight: 700 }}>
+                            Searching...
+                          </span>
+                        )}
                       </div>
                       {errors.eventLoc && (
                         <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.eventLoc}</p>
+                      )}
+
+                      {/* Step 1 Autocomplete Suggestions Dropdown */}
+                      {step === 1 && showAddressSuggestions && addressSuggestions.length > 0 && (
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "#18181c", border: "1px solid #D4AF37", borderRadius: "0.5rem", boxShadow: "0 8px 24px rgba(0,0,0,0.6)", marginTop: "0.25rem", overflow: "hidden" }}>
+                          {addressSuggestions.map((s, idx) => (
+                            <div
+                              key={idx}
+                              onMouseDown={(e) => { e.preventDefault(); selectAddressSuggestion(s); }}
+                              style={{ padding: "0.65rem 0.85rem", cursor: "pointer", borderBottom: idx < addressSuggestions.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none", fontSize: "0.78rem", color: "rgba(255,255,255,0.9)", transition: "background 0.15s ease" }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(212,175,55,0.15)")}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                            >
+                              📍 {s.display_name}
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1552,22 +1729,56 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
 
                   {deliveryMethod === "delivery" && (
                     <>
-                      <div>
+                      {/* Free Places Autocomplete Search Input */}
+                      <div style={{ position: "relative" }}>
                         <label style={labelStyle}>Delivery Street Address *</label>
-                        <input
-                          required
-                          type="text"
-                          className="field"
-                          placeholder="e.g. 123 Atlantic Ave"
-                          value={address}
-                          onChange={(e) => setAddress(e.target.value)}
-                          onBlur={(e) => validateOnBlur("address", e.target.value)}
-                          style={errors.address ? { borderColor: "#ef4444" } : {}}
-                        />
+                        <div style={{ position: "relative" }}>
+                          <input
+                            required
+                            type="text"
+                            className="field"
+                            placeholder="Start typing street address or venue name..."
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            onBlur={(e) => validateOnBlur("address", e.target.value)}
+                            style={{ paddingRight: isSearchingAddress ? "2.5rem" : "0.75rem", ...(errors.address ? { borderColor: "#ef4444" } : {}) }}
+                          />
+                          {isSearchingAddress && (
+                            <span style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "#D4AF37", fontWeight: 700 }}>
+                              Searching...
+                            </span>
+                          )}
+                        </div>
                         {errors.address && (
                           <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.address}</p>
                         )}
+
+                        {/* Free Address Autocomplete Dropdown */}
+                        {showAddressSuggestions && addressSuggestions.length > 0 && (
+                          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "#18181c", border: "1px solid #D4AF37", borderRadius: "0.5rem", boxShadow: "0 8px 24px rgba(0,0,0,0.6)", marginTop: "0.25rem", overflow: "hidden" }}>
+                            {addressSuggestions.map((s, idx) => (
+                              <div
+                                key={idx}
+                                onMouseDown={(e) => { e.preventDefault(); selectAddressSuggestion(s); }}
+                                style={{ padding: "0.65rem 0.85rem", cursor: "pointer", borderBottom: idx < addressSuggestions.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none", fontSize: "0.78rem", color: "rgba(255,255,255,0.9)", transition: "background 0.15s ease" }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(212,175,55,0.15)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                              >
+                                📍 {s.display_name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Free Map Coordinates Badge */}
+                        {selectedCoordinates && (
+                          <div style={{ marginTop: "0.5rem", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.3)", borderRadius: "0.5rem", padding: "0.4rem 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.72rem", color: "#D4AF37" }}>
+                            <span>🗺️ Location Verified: {selectedCoordinates.lat.toFixed(4)}°N, {Math.abs(selectedCoordinates.lon).toFixed(4)}°W</span>
+                            <span style={{ color: "#4ade80", fontWeight: 700 }}>✓ Free Route Mapped</span>
+                          </div>
+                        )}
                       </div>
+
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
                         <div>
                           <label style={labelStyle}>City *</label>
@@ -1594,6 +1805,112 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                           {errors.zipCode && (
                             <p style={{ color: "#ef4444", fontSize: "0.72rem", marginTop: "0.25rem", fontFamily: "var(--font-body)" }}>{errors.zipCode}</p>
                           )}
+                        </div>
+                      </div>
+
+                      {/* Venue Surface & Setup Intelligence Panel */}
+                      <div style={{ marginTop: "0.875rem", background: "var(--card-bg)", border: "1.5px solid var(--border-primary)", borderRadius: "1rem", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "0.875rem", boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#D4AF37", fontFamily: "var(--font-heading)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                            ⛺ Venue Surface & Logistics Intelligence
+                          </span>
+                          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-secondary)" }}>Live Delivery Math</span>
+                        </div>
+
+                        {/* Venue Category Pills */}
+                        <div>
+                          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: "0.4rem" }}>Venue Type</span>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
+                            {[
+                              { id: "residential", label: "🏡 Residential Lawn" },
+                              { id: "commercial", label: "🏢 Commercial Hall" },
+                              { id: "park", label: "🌳 Public Park" },
+                              { id: "school", label: "🏫 School / Church" },
+                              { id: "beach", label: "🏖️ Beach / Outdoor" }
+                            ].map((v) => {
+                              const isSel = venueType === v.id;
+                              return (
+                                <button
+                                  key={v.id}
+                                  type="button"
+                                  onClick={() => setVenueType(v.id as any)}
+                                  style={{
+                                    padding: "0.4rem 0.75rem",
+                                    borderRadius: "0.5rem",
+                                    fontSize: "0.75rem",
+                                    fontWeight: isSel ? 800 : 650,
+                                    background: isSel ? "rgba(212,175,55,0.18)" : "var(--bg-secondary)",
+                                    border: isSel ? "2px solid #D4AF37" : "1px solid var(--border-primary)",
+                                    color: isSel ? "#D4AF37" : "var(--text-primary)",
+                                    cursor: "pointer",
+                                    transition: "all 0.15s ease"
+                                  }}
+                                >
+                                  {v.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {venueType === "park" && (
+                            <p style={{ fontSize: "0.7rem", color: "#f59e0b", margin: "0.4rem 0 0 0", fontWeight: 650 }}>
+                              ⚠️ Note: Public parks require a city park permit. Generator required if no electrical outlet is within 50ft.
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Setup Surface & Truck Distance Grid */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.875rem" }}>
+                          <div>
+                            <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: "0.3rem" }}>Setup Surface</label>
+                            <select
+                              className="field"
+                              value={setupSurface}
+                              onChange={(e) => setSetupSurface(e.target.value as any)}
+                              style={{ width: "100%", padding: "0.5rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 650, appearance: "auto" }}
+                            >
+                              <option value="grass">🌿 Grass / Lawn (Standard Stakes)</option>
+                              <option value="concrete">🧱 Concrete / Asphalt (Sandbags +$25)</option>
+                              <option value="sand">🏖️ Sand / Beach ($50 Sand Anchors)</option>
+                              <option value="indoors">🏢 Indoors (Carpet / Hardwood)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: "0.3rem" }}>Distance from Truck to Setup</label>
+                            <select
+                              className="field"
+                              value={setupDistance}
+                              onChange={(e) => setSetupDistance(e.target.value as any)}
+                              style={{ width: "100%", padding: "0.5rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 650, appearance: "auto" }}
+                            >
+                              <option value="short">🚛 &lt; 50 ft (Standard Drop)</option>
+                              <option value="medium">🚶 50 - 100 ft</option>
+                              <option value="long">🏃 &gt; 100 ft (Long Walk +$30)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Access & Utilities Checkboxes */}
+                        <div>
+                          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: "0.4rem" }}>Site Logistics & Utilities</span>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.78rem" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "var(--text-primary)", fontWeight: 650 }}>
+                              <input type="checkbox" checked={hasStairs} onChange={(e) => setHasStairs(e.target.checked)} style={{ accentColor: "#D4AF37", width: "16px", height: "16px" }} />
+                              🪜 Stairs Required (+$25)
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "var(--text-primary)", fontWeight: 650 }}>
+                              <input type="checkbox" checked={hasElevator} onChange={(e) => setHasElevator(e.target.checked)} style={{ accentColor: "#D4AF37", width: "16px", height: "16px" }} />
+                              🛗 Elevator Access (+$15)
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "var(--text-primary)", fontWeight: 650 }}>
+                              <input type="checkbox" checked={hasPower} onChange={(e) => setHasPower(e.target.checked)} style={{ accentColor: "#D4AF37", width: "16px", height: "16px" }} />
+                              ⚡ 110V Power within 50ft
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "var(--text-primary)", fontWeight: 650 }}>
+                              <input type="checkbox" checked={hasWater} onChange={(e) => setHasWater(e.target.checked)} style={{ accentColor: "#D4AF37", width: "16px", height: "16px" }} />
+                              💧 Water Spigot within 50ft
+                            </label>
+                          </div>
                         </div>
                       </div>
                       {city === "Other" && (
@@ -1826,18 +2143,36 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                 }}
               >
                 <div>
-                  <div style={{ fontFamily: "var(--font-heading)", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)", opacity: 0.7 }}>
-                    {appliedPromo || deliveryFee > 0 ? (
-                      <span>
-                        Subtotal: ${total.toFixed(2)}
-                        {appliedPromo && ` | Discount: -$${discount.toFixed(2)}`}
-                        {deliveryFee > 0 && ` | Delivery: +$${deliveryFee.toFixed(2)}`}
-                      </span>
-                    ) : "Estimated Total"}
-                  </div>
-                  <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.5rem", color: "var(--text-primary)" }}>
-                    ${netTotal.toFixed(2)}
-                  </div>
+                  {(() => {
+                    const handlingTotal = handlingBreakdown.reduce((sum, h) => sum + h.amount, 0);
+                    const baseDelivery = Math.max(0, deliveryFee - handlingTotal);
+                    return (
+                      <>
+                        <div style={{ fontFamily: "var(--font-heading)", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)", opacity: 0.7 }}>
+                          {(appliedPromo || deliveryFee > 0 || handlingBreakdown.length > 0) ? (
+                            <span>
+                              Subtotal: ${total.toFixed(2)}
+                              {appliedPromo && ` | Discount: -$${discount.toFixed(2)}`}
+                              {baseDelivery > 0 && ` | Base Delivery: +$${baseDelivery.toFixed(2)}`}
+                              {handlingTotal > 0 && ` | Logistics & Setup: +$${handlingTotal.toFixed(2)}`}
+                            </span>
+                          ) : "Estimated Total"}
+                        </div>
+                        <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.5rem", color: "var(--text-primary)" }}>
+                          ${netTotal.toFixed(2)}
+                        </div>
+                        {handlingBreakdown.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.3rem" }}>
+                            {handlingBreakdown.map(h => (
+                              <span key={h.id} style={{ fontSize: "0.62rem", fontWeight: 700, background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.35)", borderRadius: "0.35rem", padding: "0.15rem 0.45rem", color: "#D4AF37", fontFamily: "var(--font-heading)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                                {h.name} +${h.amount}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div style={{ display: "flex", gap: "0.75rem" }}>

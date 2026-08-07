@@ -325,7 +325,1901 @@
       }
     ]
   },
-  "bookings": [],
+  "deliveryConfig": {
+    "activeProfileId": "profile-std",
+    "versionNumber": 3,
+    "profiles": [
+      {
+        "id": "profile-std",
+        "name": "Standard Pricing",
+        "active": true,
+        "notes": "Default year-round pricing profile"
+      },
+      {
+        "id": "profile-summer",
+        "name": "Summer Pricing",
+        "active": false,
+        "notes": "Peak summer rental pricing"
+      },
+      {
+        "id": "profile-winter",
+        "name": "Winter Pricing",
+        "active": false,
+        "notes": "Off-peak winter pricing"
+      },
+      {
+        "id": "profile-holiday",
+        "name": "Holiday Pricing",
+        "active": false,
+        "notes": "Holiday weekend pricing surcharge"
+      },
+      {
+        "id": "profile-corporate",
+        "name": "Corporate Pricing",
+        "active": false,
+        "notes": "Preferred rates for corporate clients"
+      },
+      {
+        "id": "profile-wedding",
+        "name": "Wedding Pricing",
+        "active": false,
+        "notes": "Specialized wedding logistics profile"
+      },
+      {
+        "id": "profile-emergency",
+        "name": "Emergency Pricing",
+        "active": false,
+        "notes": "Short-notice emergency delivery rates"
+      }
+    ],
+    "rules": [
+      {
+        "id": "rule-1",
+        "name": "Rule 1: Free Delivery ($2,000+ & <15 mi)",
+        "priority": 1,
+        "enabled": true,
+        "strategyType": "free",
+        "conditions": {
+          "logic": "AND",
+          "conditions": [
+            {
+              "field": "orderTotal",
+              "operator": "greater_than",
+              "value": 2000
+            },
+            {
+              "field": "deliveryDistance",
+              "operator": "less_than",
+              "value": 15
+            }
+          ]
+        }
+      },
+      {
+        "id": "rule-2",
+        "name": "Rule 2: Small Order Fixed Delivery (<10 items)",
+        "priority": 2,
+        "enabled": true,
+        "strategyType": "fixed",
+        "conditions": {
+          "logic": "AND",
+          "conditions": [
+            {
+              "field": "itemCount",
+              "operator": "less_than",
+              "value": 10
+            }
+          ]
+        }
+      },
+      {
+        "id": "rule-3",
+        "name": "Rule 3: Dynamic Delivery Engine Default",
+        "priority": 3,
+        "enabled": true,
+        "strategyType": "dynamic",
+        "conditions": {
+          "logic": "AND",
+          "conditions": []
+        }
+      },
+      {
+        "id": "rule-4",
+        "name": "Rule 4: Long Distance Manual Quote (>60 mi)",
+        "priority": 0,
+        "enabled": true,
+        "strategyType": "manual",
+        "conditions": {
+          "logic": "AND",
+          "conditions": [
+            {
+              "field": "deliveryDistance",
+              "operator": "greater_than",
+              "value": 60
+            }
+          ]
+        }
+      }
+    ],
+    "strategies": [
+      {
+        "id": "strat-fixed",
+        "type": "fixed",
+        "name": "Fixed Delivery",
+        "description": "Standard flat delivery rate for all bookings",
+        "enabled": true,
+        "config": {
+          "deliveryPrice": 45,
+          "freePickupOption": true,
+          "maxRadius": 30,
+          "maxOrderValue": 5000,
+          "maxItemCount": 100
+        }
+      },
+      {
+        "id": "strat-free",
+        "type": "free",
+        "name": "Free Delivery",
+        "description": "Free delivery for orders above minimum total",
+        "enabled": true,
+        "config": {
+          "minOrderAmount": 2000,
+          "maxDistance": 15,
+          "eligibleCategories": [],
+          "vipOnly": false
+        }
+      },
+      {
+        "id": "strat-distance",
+        "type": "distance",
+        "name": "Distance Based Pricing",
+        "description": "Base rate + mileage and travel time fee",
+        "enabled": true,
+        "config": {
+          "mode": "hybrid",
+          "baseFee": 25,
+          "costPerMile": 1.5,
+          "costPerMinute": 0.5,
+          "maxRadius": 60,
+          "freeRadius": 5,
+          "minCharge": 35
+        }
+      },
+      {
+        "id": "strat-zones",
+        "type": "zones",
+        "name": "Delivery Zones",
+        "description": "Tiered pricing based on geographic ZIP zones",
+        "enabled": true,
+        "config": {}
+      },
+      {
+        "id": "strat-dynamic",
+        "type": "dynamic",
+        "name": "Dynamic Delivery Engine",
+        "description": "Calculates operational costs based on Vehicle + Labor + Travel + Handling",
+        "enabled": true,
+        "config": {}
+      },
+      {
+        "id": "strat-manual",
+        "type": "manual",
+        "name": "Manual Quote Required",
+        "description": "Requires staff to provide custom quote",
+        "enabled": true,
+        "config": {}
+      }
+    ],
+    "vehicles": [
+      {
+        "id": "veh-van",
+        "name": "Cargo Van",
+        "enabled": true,
+        "priority": 1,
+        "baseCost": 45,
+        "maxPoints": 75,
+        "maxWeight": 1500,
+        "maxCubicFeet": 250,
+        "maxItemCount": 50,
+        "maxTentSize": 400,
+        "maxChairCount": 100,
+        "maxTableCount": 15,
+        "requiresCDL": false,
+        "notes": "Ideal for small/medium party drops"
+      },
+      {
+        "id": "veh-box16",
+        "name": "16ft Box Truck",
+        "enabled": true,
+        "priority": 2,
+        "baseCost": 95,
+        "maxPoints": 200,
+        "maxWeight": 4500,
+        "maxCubicFeet": 800,
+        "maxItemCount": 150,
+        "maxTentSize": 1200,
+        "maxChairCount": 300,
+        "maxTableCount": 40,
+        "requiresCDL": false,
+        "notes": "For large inflatables and tent packages"
+      },
+      {
+        "id": "veh-flatbed",
+        "name": "24ft Flatbed Truck",
+        "enabled": true,
+        "priority": 3,
+        "baseCost": 160,
+        "maxPoints": 500,
+        "maxWeight": 10000,
+        "maxCubicFeet": 1600,
+        "maxItemCount": 500,
+        "maxTentSize": 3000,
+        "maxChairCount": 800,
+        "maxTableCount": 100,
+        "requiresCDL": true,
+        "notes": "Enterprise-grade multi-tent and large staging setups"
+      }
+    ],
+    "labor": {
+      "hourlyRate": 25,
+      "minCharge": 40,
+      "minHours": 1,
+      "loadingMinutesPerPoint": 0.5,
+      "unloadMinutesPerPoint": 0.5,
+      "pickupMinutesPerPoint": 0.5,
+      "setupMinutes": 15,
+      "breakdownMinutes": 15,
+      "additionalWorkerCost": 20,
+      "weekendMultiplier": 1.2,
+      "holidayMultiplier": 1.5,
+      "emergencyMultiplier": 1.5
+    },
+    "travel": {
+      "calculationMethod": "hybrid",
+      "baseFee": 15,
+      "costPerMile": 1.5,
+      "costPerMinute": 0.4,
+      "minCharge": 25,
+      "maxRadius": 60,
+      "trafficMultiplier": 1.15,
+      "rushHourMultiplier": 1.25,
+      "bridgeToll": 0,
+      "tunnelToll": 0,
+      "congestionCharge": 0,
+      "fuelSurcharge": 5
+    },
+    "handling": [
+      {
+        "id": "hand-stairs",
+        "name": "Stair Carry (Per Flight)",
+        "feeType": "flat",
+        "amount": 25,
+        "enabled": true
+      },
+      {
+        "id": "hand-elevator",
+        "name": "Elevator Access",
+        "feeType": "flat",
+        "amount": 15,
+        "enabled": true
+      },
+      {
+        "id": "hand-longwalk",
+        "name": "Long Walk (>100ft)",
+        "feeType": "flat",
+        "amount": 30,
+        "enabled": true
+      },
+      {
+        "id": "hand-beach",
+        "name": "Beach / Sand Setup",
+        "feeType": "flat",
+        "amount": 50,
+        "enabled": true
+      },
+      {
+        "id": "hand-grass",
+        "name": "Grass Setup / Staking",
+        "feeType": "flat",
+        "amount": 20,
+        "enabled": true
+      },
+      {
+        "id": "hand-rooftop",
+        "name": "Rooftop Delivery",
+        "feeType": "flat",
+        "amount": 45,
+        "enabled": true
+      },
+      {
+        "id": "hand-night",
+        "name": "Night / After-Hours Delivery",
+        "feeType": "flat",
+        "amount": 60,
+        "enabled": true
+      }
+    ],
+    "zones": [
+      {
+        "id": "zone-local",
+        "name": "Zone 1: Local Metro",
+        "zipCodes": [
+          "23451",
+          "23452",
+          "23453",
+          "23454",
+          "23455",
+          "23456",
+          "23502",
+          "23503",
+          "23504",
+          "23505"
+        ],
+        "price": 35,
+        "enabled": true,
+        "priority": 1
+      },
+      {
+        "id": "zone-suburb",
+        "name": "Zone 2: Suburbs & Outer Ring",
+        "zipCodes": [
+          "23320",
+          "23321",
+          "23322",
+          "23701",
+          "23702",
+          "23703",
+          "23666",
+          "23669"
+        ],
+        "price": 65,
+        "enabled": true,
+        "priority": 2
+      },
+      {
+        "id": "zone-extended",
+        "name": "Zone 3: Regional / Extended",
+        "zipCodes": [
+          "23185",
+          "23188",
+          "23801",
+          "23803"
+        ],
+        "price": 110,
+        "enabled": true,
+        "priority": 3
+      }
+    ],
+    "pricingMode": "smart",
+    "fixedDeliveryPrice": 80
+  },
+  "deliveryAuditLogs": [
+    {
+      "id": "audit-1786081205610-erv2x",
+      "user": "Admin CMS",
+      "action": "UPDATE_DELIVERY_CONFIG",
+      "oldValue": {
+        "activeProfileId": "profile-std",
+        "versionNumber": 2,
+        "profiles": [
+          {
+            "id": "profile-std",
+            "name": "Standard Pricing",
+            "active": true,
+            "notes": "Default year-round pricing profile"
+          },
+          {
+            "id": "profile-summer",
+            "name": "Summer Pricing",
+            "active": false,
+            "notes": "Peak summer rental pricing"
+          },
+          {
+            "id": "profile-winter",
+            "name": "Winter Pricing",
+            "active": false,
+            "notes": "Off-peak winter pricing"
+          },
+          {
+            "id": "profile-holiday",
+            "name": "Holiday Pricing",
+            "active": false,
+            "notes": "Holiday weekend pricing surcharge"
+          },
+          {
+            "id": "profile-corporate",
+            "name": "Corporate Pricing",
+            "active": false,
+            "notes": "Preferred rates for corporate clients"
+          },
+          {
+            "id": "profile-wedding",
+            "name": "Wedding Pricing",
+            "active": false,
+            "notes": "Specialized wedding logistics profile"
+          },
+          {
+            "id": "profile-emergency",
+            "name": "Emergency Pricing",
+            "active": false,
+            "notes": "Short-notice emergency delivery rates"
+          }
+        ],
+        "rules": [
+          {
+            "id": "rule-1",
+            "name": "Rule 1: Free Delivery ($2,000+ & <15 mi)",
+            "priority": 1,
+            "enabled": true,
+            "strategyType": "free",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "orderTotal",
+                  "operator": "greater_than",
+                  "value": 2000
+                },
+                {
+                  "field": "deliveryDistance",
+                  "operator": "less_than",
+                  "value": 15
+                }
+              ]
+            }
+          },
+          {
+            "id": "rule-2",
+            "name": "Rule 2: Small Order Fixed Delivery (<10 items)",
+            "priority": 2,
+            "enabled": true,
+            "strategyType": "fixed",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "itemCount",
+                  "operator": "less_than",
+                  "value": 10
+                }
+              ]
+            }
+          },
+          {
+            "id": "rule-3",
+            "name": "Rule 3: Dynamic Delivery Engine Default",
+            "priority": 3,
+            "enabled": true,
+            "strategyType": "dynamic",
+            "conditions": {
+              "logic": "AND",
+              "conditions": []
+            }
+          },
+          {
+            "id": "rule-4",
+            "name": "Rule 4: Long Distance Manual Quote (>60 mi)",
+            "priority": 0,
+            "enabled": true,
+            "strategyType": "manual",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "deliveryDistance",
+                  "operator": "greater_than",
+                  "value": 60
+                }
+              ]
+            }
+          }
+        ],
+        "strategies": [
+          {
+            "id": "strat-fixed",
+            "type": "fixed",
+            "name": "Fixed Delivery",
+            "description": "Standard flat delivery rate for all bookings",
+            "enabled": true,
+            "config": {
+              "deliveryPrice": 45,
+              "freePickupOption": true,
+              "maxRadius": 30,
+              "maxOrderValue": 5000,
+              "maxItemCount": 100
+            }
+          },
+          {
+            "id": "strat-free",
+            "type": "free",
+            "name": "Free Delivery",
+            "description": "Free delivery for orders above minimum total",
+            "enabled": true,
+            "config": {
+              "minOrderAmount": 2000,
+              "maxDistance": 15,
+              "eligibleCategories": [],
+              "vipOnly": false
+            }
+          },
+          {
+            "id": "strat-distance",
+            "type": "distance",
+            "name": "Distance Based Pricing",
+            "description": "Base rate + mileage and travel time fee",
+            "enabled": true,
+            "config": {
+              "mode": "hybrid",
+              "baseFee": 25,
+              "costPerMile": 1.5,
+              "costPerMinute": 0.5,
+              "maxRadius": 60,
+              "freeRadius": 5,
+              "minCharge": 35
+            }
+          },
+          {
+            "id": "strat-zones",
+            "type": "zones",
+            "name": "Delivery Zones",
+            "description": "Tiered pricing based on geographic ZIP zones",
+            "enabled": true,
+            "config": {}
+          },
+          {
+            "id": "strat-dynamic",
+            "type": "dynamic",
+            "name": "Dynamic Delivery Engine",
+            "description": "Calculates operational costs based on Vehicle + Labor + Travel + Handling",
+            "enabled": true,
+            "config": {}
+          },
+          {
+            "id": "strat-manual",
+            "type": "manual",
+            "name": "Manual Quote Required",
+            "description": "Requires staff to provide custom quote",
+            "enabled": true,
+            "config": {}
+          }
+        ],
+        "vehicles": [
+          {
+            "id": "veh-van",
+            "name": "Cargo Van",
+            "enabled": true,
+            "priority": 1,
+            "baseCost": 45,
+            "maxPoints": 75,
+            "maxWeight": 1500,
+            "maxCubicFeet": 250,
+            "maxItemCount": 50,
+            "maxTentSize": 400,
+            "maxChairCount": 100,
+            "maxTableCount": 15,
+            "requiresCDL": false,
+            "notes": "Ideal for small/medium party drops"
+          },
+          {
+            "id": "veh-box16",
+            "name": "16ft Box Truck",
+            "enabled": true,
+            "priority": 2,
+            "baseCost": 95,
+            "maxPoints": 200,
+            "maxWeight": 4500,
+            "maxCubicFeet": 800,
+            "maxItemCount": 150,
+            "maxTentSize": 1200,
+            "maxChairCount": 300,
+            "maxTableCount": 40,
+            "requiresCDL": false,
+            "notes": "For large inflatables and tent packages"
+          },
+          {
+            "id": "veh-flatbed",
+            "name": "24ft Flatbed Truck",
+            "enabled": true,
+            "priority": 3,
+            "baseCost": 160,
+            "maxPoints": 500,
+            "maxWeight": 10000,
+            "maxCubicFeet": 1600,
+            "maxItemCount": 500,
+            "maxTentSize": 3000,
+            "maxChairCount": 800,
+            "maxTableCount": 100,
+            "requiresCDL": true,
+            "notes": "Enterprise-grade multi-tent and large staging setups"
+          }
+        ],
+        "labor": {
+          "hourlyRate": 25,
+          "minCharge": 40,
+          "minHours": 1,
+          "loadingMinutesPerPoint": 0.5,
+          "unloadMinutesPerPoint": 0.5,
+          "pickupMinutesPerPoint": 0.5,
+          "setupMinutes": 15,
+          "breakdownMinutes": 15,
+          "additionalWorkerCost": 20,
+          "weekendMultiplier": 1.2,
+          "holidayMultiplier": 1.5,
+          "emergencyMultiplier": 1.5
+        },
+        "travel": {
+          "calculationMethod": "hybrid",
+          "baseFee": 15,
+          "costPerMile": 1.5,
+          "costPerMinute": 0.4,
+          "minCharge": 25,
+          "maxRadius": 60,
+          "trafficMultiplier": 1.15,
+          "rushHourMultiplier": 1.25,
+          "bridgeToll": 0,
+          "tunnelToll": 0,
+          "congestionCharge": 0,
+          "fuelSurcharge": 5
+        },
+        "handling": [
+          {
+            "id": "hand-stairs",
+            "name": "Stair Carry (Per Flight)",
+            "feeType": "flat",
+            "amount": 25,
+            "enabled": true
+          },
+          {
+            "id": "hand-elevator",
+            "name": "Elevator Access",
+            "feeType": "flat",
+            "amount": 15,
+            "enabled": true
+          },
+          {
+            "id": "hand-longwalk",
+            "name": "Long Walk (>100ft)",
+            "feeType": "flat",
+            "amount": 30,
+            "enabled": true
+          },
+          {
+            "id": "hand-beach",
+            "name": "Beach / Sand Setup",
+            "feeType": "flat",
+            "amount": 50,
+            "enabled": true
+          },
+          {
+            "id": "hand-grass",
+            "name": "Grass Setup / Staking",
+            "feeType": "flat",
+            "amount": 20,
+            "enabled": true
+          },
+          {
+            "id": "hand-rooftop",
+            "name": "Rooftop Delivery",
+            "feeType": "flat",
+            "amount": 45,
+            "enabled": true
+          },
+          {
+            "id": "hand-night",
+            "name": "Night / After-Hours Delivery",
+            "feeType": "flat",
+            "amount": 60,
+            "enabled": true
+          }
+        ],
+        "zones": [
+          {
+            "id": "zone-local",
+            "name": "Zone 1: Local Metro",
+            "zipCodes": [
+              "23451",
+              "23452",
+              "23453",
+              "23454",
+              "23455",
+              "23456",
+              "23502",
+              "23503",
+              "23504",
+              "23505"
+            ],
+            "price": 35,
+            "enabled": true,
+            "priority": 1
+          },
+          {
+            "id": "zone-suburb",
+            "name": "Zone 2: Suburbs & Outer Ring",
+            "zipCodes": [
+              "23320",
+              "23321",
+              "23322",
+              "23701",
+              "23702",
+              "23703",
+              "23666",
+              "23669"
+            ],
+            "price": 65,
+            "enabled": true,
+            "priority": 2
+          },
+          {
+            "id": "zone-extended",
+            "name": "Zone 3: Regional / Extended",
+            "zipCodes": [
+              "23185",
+              "23188",
+              "23801",
+              "23803"
+            ],
+            "price": 110,
+            "enabled": true,
+            "priority": 3
+          }
+        ],
+        "pricingMode": "fixed",
+        "fixedDeliveryPrice": 80
+      },
+      "newValue": {
+        "activeProfileId": "profile-std",
+        "versionNumber": 3,
+        "profiles": [
+          {
+            "id": "profile-std",
+            "name": "Standard Pricing",
+            "active": true,
+            "notes": "Default year-round pricing profile"
+          },
+          {
+            "id": "profile-summer",
+            "name": "Summer Pricing",
+            "active": false,
+            "notes": "Peak summer rental pricing"
+          },
+          {
+            "id": "profile-winter",
+            "name": "Winter Pricing",
+            "active": false,
+            "notes": "Off-peak winter pricing"
+          },
+          {
+            "id": "profile-holiday",
+            "name": "Holiday Pricing",
+            "active": false,
+            "notes": "Holiday weekend pricing surcharge"
+          },
+          {
+            "id": "profile-corporate",
+            "name": "Corporate Pricing",
+            "active": false,
+            "notes": "Preferred rates for corporate clients"
+          },
+          {
+            "id": "profile-wedding",
+            "name": "Wedding Pricing",
+            "active": false,
+            "notes": "Specialized wedding logistics profile"
+          },
+          {
+            "id": "profile-emergency",
+            "name": "Emergency Pricing",
+            "active": false,
+            "notes": "Short-notice emergency delivery rates"
+          }
+        ],
+        "rules": [
+          {
+            "id": "rule-1",
+            "name": "Rule 1: Free Delivery ($2,000+ & <15 mi)",
+            "priority": 1,
+            "enabled": true,
+            "strategyType": "free",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "orderTotal",
+                  "operator": "greater_than",
+                  "value": 2000
+                },
+                {
+                  "field": "deliveryDistance",
+                  "operator": "less_than",
+                  "value": 15
+                }
+              ]
+            }
+          },
+          {
+            "id": "rule-2",
+            "name": "Rule 2: Small Order Fixed Delivery (<10 items)",
+            "priority": 2,
+            "enabled": true,
+            "strategyType": "fixed",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "itemCount",
+                  "operator": "less_than",
+                  "value": 10
+                }
+              ]
+            }
+          },
+          {
+            "id": "rule-3",
+            "name": "Rule 3: Dynamic Delivery Engine Default",
+            "priority": 3,
+            "enabled": true,
+            "strategyType": "dynamic",
+            "conditions": {
+              "logic": "AND",
+              "conditions": []
+            }
+          },
+          {
+            "id": "rule-4",
+            "name": "Rule 4: Long Distance Manual Quote (>60 mi)",
+            "priority": 0,
+            "enabled": true,
+            "strategyType": "manual",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "deliveryDistance",
+                  "operator": "greater_than",
+                  "value": 60
+                }
+              ]
+            }
+          }
+        ],
+        "strategies": [
+          {
+            "id": "strat-fixed",
+            "type": "fixed",
+            "name": "Fixed Delivery",
+            "description": "Standard flat delivery rate for all bookings",
+            "enabled": true,
+            "config": {
+              "deliveryPrice": 45,
+              "freePickupOption": true,
+              "maxRadius": 30,
+              "maxOrderValue": 5000,
+              "maxItemCount": 100
+            }
+          },
+          {
+            "id": "strat-free",
+            "type": "free",
+            "name": "Free Delivery",
+            "description": "Free delivery for orders above minimum total",
+            "enabled": true,
+            "config": {
+              "minOrderAmount": 2000,
+              "maxDistance": 15,
+              "eligibleCategories": [],
+              "vipOnly": false
+            }
+          },
+          {
+            "id": "strat-distance",
+            "type": "distance",
+            "name": "Distance Based Pricing",
+            "description": "Base rate + mileage and travel time fee",
+            "enabled": true,
+            "config": {
+              "mode": "hybrid",
+              "baseFee": 25,
+              "costPerMile": 1.5,
+              "costPerMinute": 0.5,
+              "maxRadius": 60,
+              "freeRadius": 5,
+              "minCharge": 35
+            }
+          },
+          {
+            "id": "strat-zones",
+            "type": "zones",
+            "name": "Delivery Zones",
+            "description": "Tiered pricing based on geographic ZIP zones",
+            "enabled": true,
+            "config": {}
+          },
+          {
+            "id": "strat-dynamic",
+            "type": "dynamic",
+            "name": "Dynamic Delivery Engine",
+            "description": "Calculates operational costs based on Vehicle + Labor + Travel + Handling",
+            "enabled": true,
+            "config": {}
+          },
+          {
+            "id": "strat-manual",
+            "type": "manual",
+            "name": "Manual Quote Required",
+            "description": "Requires staff to provide custom quote",
+            "enabled": true,
+            "config": {}
+          }
+        ],
+        "vehicles": [
+          {
+            "id": "veh-van",
+            "name": "Cargo Van",
+            "enabled": true,
+            "priority": 1,
+            "baseCost": 45,
+            "maxPoints": 75,
+            "maxWeight": 1500,
+            "maxCubicFeet": 250,
+            "maxItemCount": 50,
+            "maxTentSize": 400,
+            "maxChairCount": 100,
+            "maxTableCount": 15,
+            "requiresCDL": false,
+            "notes": "Ideal for small/medium party drops"
+          },
+          {
+            "id": "veh-box16",
+            "name": "16ft Box Truck",
+            "enabled": true,
+            "priority": 2,
+            "baseCost": 95,
+            "maxPoints": 200,
+            "maxWeight": 4500,
+            "maxCubicFeet": 800,
+            "maxItemCount": 150,
+            "maxTentSize": 1200,
+            "maxChairCount": 300,
+            "maxTableCount": 40,
+            "requiresCDL": false,
+            "notes": "For large inflatables and tent packages"
+          },
+          {
+            "id": "veh-flatbed",
+            "name": "24ft Flatbed Truck",
+            "enabled": true,
+            "priority": 3,
+            "baseCost": 160,
+            "maxPoints": 500,
+            "maxWeight": 10000,
+            "maxCubicFeet": 1600,
+            "maxItemCount": 500,
+            "maxTentSize": 3000,
+            "maxChairCount": 800,
+            "maxTableCount": 100,
+            "requiresCDL": true,
+            "notes": "Enterprise-grade multi-tent and large staging setups"
+          }
+        ],
+        "labor": {
+          "hourlyRate": 25,
+          "minCharge": 40,
+          "minHours": 1,
+          "loadingMinutesPerPoint": 0.5,
+          "unloadMinutesPerPoint": 0.5,
+          "pickupMinutesPerPoint": 0.5,
+          "setupMinutes": 15,
+          "breakdownMinutes": 15,
+          "additionalWorkerCost": 20,
+          "weekendMultiplier": 1.2,
+          "holidayMultiplier": 1.5,
+          "emergencyMultiplier": 1.5
+        },
+        "travel": {
+          "calculationMethod": "hybrid",
+          "baseFee": 15,
+          "costPerMile": 1.5,
+          "costPerMinute": 0.4,
+          "minCharge": 25,
+          "maxRadius": 60,
+          "trafficMultiplier": 1.15,
+          "rushHourMultiplier": 1.25,
+          "bridgeToll": 0,
+          "tunnelToll": 0,
+          "congestionCharge": 0,
+          "fuelSurcharge": 5
+        },
+        "handling": [
+          {
+            "id": "hand-stairs",
+            "name": "Stair Carry (Per Flight)",
+            "feeType": "flat",
+            "amount": 25,
+            "enabled": true
+          },
+          {
+            "id": "hand-elevator",
+            "name": "Elevator Access",
+            "feeType": "flat",
+            "amount": 15,
+            "enabled": true
+          },
+          {
+            "id": "hand-longwalk",
+            "name": "Long Walk (>100ft)",
+            "feeType": "flat",
+            "amount": 30,
+            "enabled": true
+          },
+          {
+            "id": "hand-beach",
+            "name": "Beach / Sand Setup",
+            "feeType": "flat",
+            "amount": 50,
+            "enabled": true
+          },
+          {
+            "id": "hand-grass",
+            "name": "Grass Setup / Staking",
+            "feeType": "flat",
+            "amount": 20,
+            "enabled": true
+          },
+          {
+            "id": "hand-rooftop",
+            "name": "Rooftop Delivery",
+            "feeType": "flat",
+            "amount": 45,
+            "enabled": true
+          },
+          {
+            "id": "hand-night",
+            "name": "Night / After-Hours Delivery",
+            "feeType": "flat",
+            "amount": 60,
+            "enabled": true
+          }
+        ],
+        "zones": [
+          {
+            "id": "zone-local",
+            "name": "Zone 1: Local Metro",
+            "zipCodes": [
+              "23451",
+              "23452",
+              "23453",
+              "23454",
+              "23455",
+              "23456",
+              "23502",
+              "23503",
+              "23504",
+              "23505"
+            ],
+            "price": 35,
+            "enabled": true,
+            "priority": 1
+          },
+          {
+            "id": "zone-suburb",
+            "name": "Zone 2: Suburbs & Outer Ring",
+            "zipCodes": [
+              "23320",
+              "23321",
+              "23322",
+              "23701",
+              "23702",
+              "23703",
+              "23666",
+              "23669"
+            ],
+            "price": 65,
+            "enabled": true,
+            "priority": 2
+          },
+          {
+            "id": "zone-extended",
+            "name": "Zone 3: Regional / Extended",
+            "zipCodes": [
+              "23185",
+              "23188",
+              "23801",
+              "23803"
+            ],
+            "price": 110,
+            "enabled": true,
+            "priority": 3
+          }
+        ],
+        "pricingMode": "smart",
+        "fixedDeliveryPrice": 80
+      },
+      "reason": "Pricing mode changed to: smart",
+      "timestamp": "2026-08-07T05:40:05.610Z",
+      "ipAddress": "::1",
+      "versionNumber": 3
+    },
+    {
+      "id": "audit-1786081178288-7gwrs",
+      "user": "Admin CMS",
+      "action": "UPDATE_DELIVERY_CONFIG",
+      "oldValue": {
+        "activeProfileId": "profile-std",
+        "versionNumber": 1,
+        "profiles": [
+          {
+            "id": "profile-std",
+            "name": "Standard Pricing",
+            "active": true,
+            "notes": "Default year-round pricing profile"
+          },
+          {
+            "id": "profile-summer",
+            "name": "Summer Pricing",
+            "active": false,
+            "notes": "Peak summer rental pricing"
+          },
+          {
+            "id": "profile-winter",
+            "name": "Winter Pricing",
+            "active": false,
+            "notes": "Off-peak winter pricing"
+          },
+          {
+            "id": "profile-holiday",
+            "name": "Holiday Pricing",
+            "active": false,
+            "notes": "Holiday weekend pricing surcharge"
+          },
+          {
+            "id": "profile-corporate",
+            "name": "Corporate Pricing",
+            "active": false,
+            "notes": "Preferred rates for corporate clients"
+          },
+          {
+            "id": "profile-wedding",
+            "name": "Wedding Pricing",
+            "active": false,
+            "notes": "Specialized wedding logistics profile"
+          },
+          {
+            "id": "profile-emergency",
+            "name": "Emergency Pricing",
+            "active": false,
+            "notes": "Short-notice emergency delivery rates"
+          }
+        ],
+        "rules": [
+          {
+            "id": "rule-1",
+            "name": "Rule 1: Free Delivery ($2,000+ & <15 mi)",
+            "priority": 1,
+            "enabled": true,
+            "strategyType": "free",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "orderTotal",
+                  "operator": "greater_than",
+                  "value": 2000
+                },
+                {
+                  "field": "deliveryDistance",
+                  "operator": "less_than",
+                  "value": 15
+                }
+              ]
+            }
+          },
+          {
+            "id": "rule-2",
+            "name": "Rule 2: Small Order Fixed Delivery (<10 items)",
+            "priority": 2,
+            "enabled": true,
+            "strategyType": "fixed",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "itemCount",
+                  "operator": "less_than",
+                  "value": 10
+                }
+              ]
+            }
+          },
+          {
+            "id": "rule-3",
+            "name": "Rule 3: Dynamic Delivery Engine Default",
+            "priority": 3,
+            "enabled": true,
+            "strategyType": "dynamic",
+            "conditions": {
+              "logic": "AND",
+              "conditions": []
+            }
+          },
+          {
+            "id": "rule-4",
+            "name": "Rule 4: Long Distance Manual Quote (>60 mi)",
+            "priority": 0,
+            "enabled": true,
+            "strategyType": "manual",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "deliveryDistance",
+                  "operator": "greater_than",
+                  "value": 60
+                }
+              ]
+            }
+          }
+        ],
+        "strategies": [
+          {
+            "id": "strat-fixed",
+            "type": "fixed",
+            "name": "Fixed Delivery",
+            "description": "Standard flat delivery rate for all bookings",
+            "enabled": true,
+            "config": {
+              "deliveryPrice": 45,
+              "freePickupOption": true,
+              "maxRadius": 30,
+              "maxOrderValue": 5000,
+              "maxItemCount": 100
+            }
+          },
+          {
+            "id": "strat-free",
+            "type": "free",
+            "name": "Free Delivery",
+            "description": "Free delivery for orders above minimum total",
+            "enabled": true,
+            "config": {
+              "minOrderAmount": 2000,
+              "maxDistance": 15,
+              "eligibleCategories": [],
+              "vipOnly": false
+            }
+          },
+          {
+            "id": "strat-distance",
+            "type": "distance",
+            "name": "Distance Based Pricing",
+            "description": "Base rate + mileage and travel time fee",
+            "enabled": true,
+            "config": {
+              "mode": "hybrid",
+              "baseFee": 25,
+              "costPerMile": 1.5,
+              "costPerMinute": 0.5,
+              "maxRadius": 60,
+              "freeRadius": 5,
+              "minCharge": 35
+            }
+          },
+          {
+            "id": "strat-zones",
+            "type": "zones",
+            "name": "Delivery Zones",
+            "description": "Tiered pricing based on geographic ZIP zones",
+            "enabled": true,
+            "config": {}
+          },
+          {
+            "id": "strat-dynamic",
+            "type": "dynamic",
+            "name": "Dynamic Delivery Engine",
+            "description": "Calculates operational costs based on Vehicle + Labor + Travel + Handling",
+            "enabled": true,
+            "config": {}
+          },
+          {
+            "id": "strat-manual",
+            "type": "manual",
+            "name": "Manual Quote Required",
+            "description": "Requires staff to provide custom quote",
+            "enabled": true,
+            "config": {}
+          }
+        ],
+        "vehicles": [
+          {
+            "id": "veh-van",
+            "name": "Cargo Van",
+            "enabled": true,
+            "priority": 1,
+            "baseCost": 45,
+            "maxPoints": 75,
+            "maxWeight": 1500,
+            "maxCubicFeet": 250,
+            "maxItemCount": 50,
+            "maxTentSize": 400,
+            "maxChairCount": 100,
+            "maxTableCount": 15,
+            "requiresCDL": false,
+            "notes": "Ideal for small/medium party drops"
+          },
+          {
+            "id": "veh-box16",
+            "name": "16ft Box Truck",
+            "enabled": true,
+            "priority": 2,
+            "baseCost": 95,
+            "maxPoints": 200,
+            "maxWeight": 4500,
+            "maxCubicFeet": 800,
+            "maxItemCount": 150,
+            "maxTentSize": 1200,
+            "maxChairCount": 300,
+            "maxTableCount": 40,
+            "requiresCDL": false,
+            "notes": "For large inflatables and tent packages"
+          },
+          {
+            "id": "veh-flatbed",
+            "name": "24ft Flatbed Truck",
+            "enabled": true,
+            "priority": 3,
+            "baseCost": 160,
+            "maxPoints": 500,
+            "maxWeight": 10000,
+            "maxCubicFeet": 1600,
+            "maxItemCount": 500,
+            "maxTentSize": 3000,
+            "maxChairCount": 800,
+            "maxTableCount": 100,
+            "requiresCDL": true,
+            "notes": "Enterprise-grade multi-tent and large staging setups"
+          }
+        ],
+        "labor": {
+          "hourlyRate": 25,
+          "minCharge": 40,
+          "minHours": 1,
+          "loadingMinutesPerPoint": 0.5,
+          "unloadMinutesPerPoint": 0.5,
+          "pickupMinutesPerPoint": 0.5,
+          "setupMinutes": 15,
+          "breakdownMinutes": 15,
+          "additionalWorkerCost": 20,
+          "weekendMultiplier": 1.2,
+          "holidayMultiplier": 1.5,
+          "emergencyMultiplier": 1.5
+        },
+        "travel": {
+          "calculationMethod": "hybrid",
+          "baseFee": 15,
+          "costPerMile": 1.5,
+          "costPerMinute": 0.4,
+          "minCharge": 25,
+          "maxRadius": 60,
+          "trafficMultiplier": 1.15,
+          "rushHourMultiplier": 1.25,
+          "bridgeToll": 0,
+          "tunnelToll": 0,
+          "congestionCharge": 0,
+          "fuelSurcharge": 5
+        },
+        "handling": [
+          {
+            "id": "hand-stairs",
+            "name": "Stair Carry (Per Flight)",
+            "feeType": "flat",
+            "amount": 25,
+            "enabled": true
+          },
+          {
+            "id": "hand-elevator",
+            "name": "Elevator Access",
+            "feeType": "flat",
+            "amount": 15,
+            "enabled": true
+          },
+          {
+            "id": "hand-longwalk",
+            "name": "Long Walk (>100ft)",
+            "feeType": "flat",
+            "amount": 30,
+            "enabled": true
+          },
+          {
+            "id": "hand-beach",
+            "name": "Beach / Sand Setup",
+            "feeType": "flat",
+            "amount": 50,
+            "enabled": true
+          },
+          {
+            "id": "hand-grass",
+            "name": "Grass Setup / Staking",
+            "feeType": "flat",
+            "amount": 20,
+            "enabled": true
+          },
+          {
+            "id": "hand-rooftop",
+            "name": "Rooftop Delivery",
+            "feeType": "flat",
+            "amount": 45,
+            "enabled": true
+          },
+          {
+            "id": "hand-night",
+            "name": "Night / After-Hours Delivery",
+            "feeType": "flat",
+            "amount": 60,
+            "enabled": true
+          }
+        ],
+        "zones": [
+          {
+            "id": "zone-local",
+            "name": "Zone 1: Local Metro",
+            "zipCodes": [
+              "23451",
+              "23452",
+              "23453",
+              "23454",
+              "23455",
+              "23456",
+              "23502",
+              "23503",
+              "23504",
+              "23505"
+            ],
+            "price": 35,
+            "enabled": true,
+            "priority": 1
+          },
+          {
+            "id": "zone-suburb",
+            "name": "Zone 2: Suburbs & Outer Ring",
+            "zipCodes": [
+              "23320",
+              "23321",
+              "23322",
+              "23701",
+              "23702",
+              "23703",
+              "23666",
+              "23669"
+            ],
+            "price": 65,
+            "enabled": true,
+            "priority": 2
+          },
+          {
+            "id": "zone-extended",
+            "name": "Zone 3: Regional / Extended",
+            "zipCodes": [
+              "23185",
+              "23188",
+              "23801",
+              "23803"
+            ],
+            "price": 110,
+            "enabled": true,
+            "priority": 3
+          }
+        ]
+      },
+      "newValue": {
+        "activeProfileId": "profile-std",
+        "versionNumber": 2,
+        "profiles": [
+          {
+            "id": "profile-std",
+            "name": "Standard Pricing",
+            "active": true,
+            "notes": "Default year-round pricing profile"
+          },
+          {
+            "id": "profile-summer",
+            "name": "Summer Pricing",
+            "active": false,
+            "notes": "Peak summer rental pricing"
+          },
+          {
+            "id": "profile-winter",
+            "name": "Winter Pricing",
+            "active": false,
+            "notes": "Off-peak winter pricing"
+          },
+          {
+            "id": "profile-holiday",
+            "name": "Holiday Pricing",
+            "active": false,
+            "notes": "Holiday weekend pricing surcharge"
+          },
+          {
+            "id": "profile-corporate",
+            "name": "Corporate Pricing",
+            "active": false,
+            "notes": "Preferred rates for corporate clients"
+          },
+          {
+            "id": "profile-wedding",
+            "name": "Wedding Pricing",
+            "active": false,
+            "notes": "Specialized wedding logistics profile"
+          },
+          {
+            "id": "profile-emergency",
+            "name": "Emergency Pricing",
+            "active": false,
+            "notes": "Short-notice emergency delivery rates"
+          }
+        ],
+        "rules": [
+          {
+            "id": "rule-1",
+            "name": "Rule 1: Free Delivery ($2,000+ & <15 mi)",
+            "priority": 1,
+            "enabled": true,
+            "strategyType": "free",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "orderTotal",
+                  "operator": "greater_than",
+                  "value": 2000
+                },
+                {
+                  "field": "deliveryDistance",
+                  "operator": "less_than",
+                  "value": 15
+                }
+              ]
+            }
+          },
+          {
+            "id": "rule-2",
+            "name": "Rule 2: Small Order Fixed Delivery (<10 items)",
+            "priority": 2,
+            "enabled": true,
+            "strategyType": "fixed",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "itemCount",
+                  "operator": "less_than",
+                  "value": 10
+                }
+              ]
+            }
+          },
+          {
+            "id": "rule-3",
+            "name": "Rule 3: Dynamic Delivery Engine Default",
+            "priority": 3,
+            "enabled": true,
+            "strategyType": "dynamic",
+            "conditions": {
+              "logic": "AND",
+              "conditions": []
+            }
+          },
+          {
+            "id": "rule-4",
+            "name": "Rule 4: Long Distance Manual Quote (>60 mi)",
+            "priority": 0,
+            "enabled": true,
+            "strategyType": "manual",
+            "conditions": {
+              "logic": "AND",
+              "conditions": [
+                {
+                  "field": "deliveryDistance",
+                  "operator": "greater_than",
+                  "value": 60
+                }
+              ]
+            }
+          }
+        ],
+        "strategies": [
+          {
+            "id": "strat-fixed",
+            "type": "fixed",
+            "name": "Fixed Delivery",
+            "description": "Standard flat delivery rate for all bookings",
+            "enabled": true,
+            "config": {
+              "deliveryPrice": 45,
+              "freePickupOption": true,
+              "maxRadius": 30,
+              "maxOrderValue": 5000,
+              "maxItemCount": 100
+            }
+          },
+          {
+            "id": "strat-free",
+            "type": "free",
+            "name": "Free Delivery",
+            "description": "Free delivery for orders above minimum total",
+            "enabled": true,
+            "config": {
+              "minOrderAmount": 2000,
+              "maxDistance": 15,
+              "eligibleCategories": [],
+              "vipOnly": false
+            }
+          },
+          {
+            "id": "strat-distance",
+            "type": "distance",
+            "name": "Distance Based Pricing",
+            "description": "Base rate + mileage and travel time fee",
+            "enabled": true,
+            "config": {
+              "mode": "hybrid",
+              "baseFee": 25,
+              "costPerMile": 1.5,
+              "costPerMinute": 0.5,
+              "maxRadius": 60,
+              "freeRadius": 5,
+              "minCharge": 35
+            }
+          },
+          {
+            "id": "strat-zones",
+            "type": "zones",
+            "name": "Delivery Zones",
+            "description": "Tiered pricing based on geographic ZIP zones",
+            "enabled": true,
+            "config": {}
+          },
+          {
+            "id": "strat-dynamic",
+            "type": "dynamic",
+            "name": "Dynamic Delivery Engine",
+            "description": "Calculates operational costs based on Vehicle + Labor + Travel + Handling",
+            "enabled": true,
+            "config": {}
+          },
+          {
+            "id": "strat-manual",
+            "type": "manual",
+            "name": "Manual Quote Required",
+            "description": "Requires staff to provide custom quote",
+            "enabled": true,
+            "config": {}
+          }
+        ],
+        "vehicles": [
+          {
+            "id": "veh-van",
+            "name": "Cargo Van",
+            "enabled": true,
+            "priority": 1,
+            "baseCost": 45,
+            "maxPoints": 75,
+            "maxWeight": 1500,
+            "maxCubicFeet": 250,
+            "maxItemCount": 50,
+            "maxTentSize": 400,
+            "maxChairCount": 100,
+            "maxTableCount": 15,
+            "requiresCDL": false,
+            "notes": "Ideal for small/medium party drops"
+          },
+          {
+            "id": "veh-box16",
+            "name": "16ft Box Truck",
+            "enabled": true,
+            "priority": 2,
+            "baseCost": 95,
+            "maxPoints": 200,
+            "maxWeight": 4500,
+            "maxCubicFeet": 800,
+            "maxItemCount": 150,
+            "maxTentSize": 1200,
+            "maxChairCount": 300,
+            "maxTableCount": 40,
+            "requiresCDL": false,
+            "notes": "For large inflatables and tent packages"
+          },
+          {
+            "id": "veh-flatbed",
+            "name": "24ft Flatbed Truck",
+            "enabled": true,
+            "priority": 3,
+            "baseCost": 160,
+            "maxPoints": 500,
+            "maxWeight": 10000,
+            "maxCubicFeet": 1600,
+            "maxItemCount": 500,
+            "maxTentSize": 3000,
+            "maxChairCount": 800,
+            "maxTableCount": 100,
+            "requiresCDL": true,
+            "notes": "Enterprise-grade multi-tent and large staging setups"
+          }
+        ],
+        "labor": {
+          "hourlyRate": 25,
+          "minCharge": 40,
+          "minHours": 1,
+          "loadingMinutesPerPoint": 0.5,
+          "unloadMinutesPerPoint": 0.5,
+          "pickupMinutesPerPoint": 0.5,
+          "setupMinutes": 15,
+          "breakdownMinutes": 15,
+          "additionalWorkerCost": 20,
+          "weekendMultiplier": 1.2,
+          "holidayMultiplier": 1.5,
+          "emergencyMultiplier": 1.5
+        },
+        "travel": {
+          "calculationMethod": "hybrid",
+          "baseFee": 15,
+          "costPerMile": 1.5,
+          "costPerMinute": 0.4,
+          "minCharge": 25,
+          "maxRadius": 60,
+          "trafficMultiplier": 1.15,
+          "rushHourMultiplier": 1.25,
+          "bridgeToll": 0,
+          "tunnelToll": 0,
+          "congestionCharge": 0,
+          "fuelSurcharge": 5
+        },
+        "handling": [
+          {
+            "id": "hand-stairs",
+            "name": "Stair Carry (Per Flight)",
+            "feeType": "flat",
+            "amount": 25,
+            "enabled": true
+          },
+          {
+            "id": "hand-elevator",
+            "name": "Elevator Access",
+            "feeType": "flat",
+            "amount": 15,
+            "enabled": true
+          },
+          {
+            "id": "hand-longwalk",
+            "name": "Long Walk (>100ft)",
+            "feeType": "flat",
+            "amount": 30,
+            "enabled": true
+          },
+          {
+            "id": "hand-beach",
+            "name": "Beach / Sand Setup",
+            "feeType": "flat",
+            "amount": 50,
+            "enabled": true
+          },
+          {
+            "id": "hand-grass",
+            "name": "Grass Setup / Staking",
+            "feeType": "flat",
+            "amount": 20,
+            "enabled": true
+          },
+          {
+            "id": "hand-rooftop",
+            "name": "Rooftop Delivery",
+            "feeType": "flat",
+            "amount": 45,
+            "enabled": true
+          },
+          {
+            "id": "hand-night",
+            "name": "Night / After-Hours Delivery",
+            "feeType": "flat",
+            "amount": 60,
+            "enabled": true
+          }
+        ],
+        "zones": [
+          {
+            "id": "zone-local",
+            "name": "Zone 1: Local Metro",
+            "zipCodes": [
+              "23451",
+              "23452",
+              "23453",
+              "23454",
+              "23455",
+              "23456",
+              "23502",
+              "23503",
+              "23504",
+              "23505"
+            ],
+            "price": 35,
+            "enabled": true,
+            "priority": 1
+          },
+          {
+            "id": "zone-suburb",
+            "name": "Zone 2: Suburbs & Outer Ring",
+            "zipCodes": [
+              "23320",
+              "23321",
+              "23322",
+              "23701",
+              "23702",
+              "23703",
+              "23666",
+              "23669"
+            ],
+            "price": 65,
+            "enabled": true,
+            "priority": 2
+          },
+          {
+            "id": "zone-extended",
+            "name": "Zone 3: Regional / Extended",
+            "zipCodes": [
+              "23185",
+              "23188",
+              "23801",
+              "23803"
+            ],
+            "price": 110,
+            "enabled": true,
+            "priority": 3
+          }
+        ],
+        "pricingMode": "fixed",
+        "fixedDeliveryPrice": 80
+      },
+      "reason": "Pricing mode changed to: fixed (Fixed: $80)",
+      "timestamp": "2026-08-07T05:39:38.289Z",
+      "ipAddress": "::1",
+      "versionNumber": 2
+    }
+  ],
+  "bookings": [
+    {
+      "id": "PSR-MPWQUZFT",
+      "customer": {
+        "name": "Kadine Wright",
+        "email": "socialkon10@gmail.com",
+        "phone": "(757) 665-5544"
+      },
+      "event": {
+        "type": "Birthday Party",
+        "date": "2026-09-20",
+        "location": "56 Excelsior A Road, War, VA 24892",
+        "guestCount": 50
+      },
+      "delivery": {
+        "address": "56 Excelsior A Road",
+        "city": "War",
+        "zipCode": "24892",
+        "method": "delivery",
+        "fee": 45
+      },
+      "items": {
+        "1": 1,
+        "4": 1
+      },
+      "itemCount": 2,
+      "estimatedTotal": 790,
+      "discount": 0,
+      "paymentMethod": "Pay Online Now",
+      "status": "pending",
+      "notes": "[Venue Logistics]: Type: RESIDENTIAL | Surface: GRASS | Truck Dist: short | Stairs: Yes | Elevator: Yes | Power <50ft: Yes | Water <50ft: Yes",
+      "submittedAt": "2026-08-07T05:01:38.388Z",
+      "amountPaid": 0,
+      "paymentStatus": "unpaid",
+      "payments": []
+    }
+  ],
   "users": [
     {
       "email": "socialkon10@gmail.com",

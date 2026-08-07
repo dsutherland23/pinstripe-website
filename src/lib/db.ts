@@ -1,5 +1,6 @@
 import mysql from "mysql2/promise";
 import { mockInventory, RentalItem } from "@/data/mockInventory";
+import { DeliveryEngineConfig, DeliveryAuditLog } from "@/types/delivery";
 import { config } from "dotenv";
 import path from "path";
 import fs from "fs";
@@ -579,6 +580,131 @@ const DEFAULT_SITE_CONTENT: SiteContent = {
   },
 };
 
+export const DEFAULT_DELIVERY_ENGINE_CONFIG: DeliveryEngineConfig = {
+  pricingMode: "smart",       // 'smart' = full rules engine  |  'fixed' = flat rate for everyone
+  fixedDeliveryPrice: 45,     // used only when pricingMode === 'fixed'
+  activeProfileId: "profile-std",
+  versionNumber: 1,
+  profiles: [
+    { id: "profile-std", name: "Standard Pricing", active: true, notes: "Default year-round pricing profile" },
+    { id: "profile-summer", name: "Summer Pricing", active: false, notes: "Peak summer rental pricing" },
+    { id: "profile-winter", name: "Winter Pricing", active: false, notes: "Off-peak winter pricing" },
+    { id: "profile-holiday", name: "Holiday Pricing", active: false, notes: "Holiday weekend pricing surcharge" },
+    { id: "profile-corporate", name: "Corporate Pricing", active: false, notes: "Preferred rates for corporate clients" },
+    { id: "profile-wedding", name: "Wedding Pricing", active: false, notes: "Specialized wedding logistics profile" },
+    { id: "profile-emergency", name: "Emergency Pricing", active: false, notes: "Short-notice emergency delivery rates" }
+  ],
+  rules: [
+    {
+      id: "rule-1",
+      name: "Rule 1: Free Delivery ($2,000+ & <15 mi)",
+      priority: 1,
+      enabled: true,
+      strategyType: "free",
+      conditions: {
+        logic: "AND",
+        conditions: [
+          { field: "orderTotal", operator: "greater_than", value: 2000 },
+          { field: "deliveryDistance", operator: "less_than", value: 15 }
+        ]
+      }
+    },
+    {
+      id: "rule-2",
+      name: "Rule 2: Small Order Fixed Delivery (<10 items)",
+      priority: 2,
+      enabled: true,
+      strategyType: "fixed",
+      conditions: {
+        logic: "AND",
+        conditions: [
+          { field: "itemCount", operator: "less_than", value: 10 }
+        ]
+      }
+    },
+    {
+      id: "rule-3",
+      name: "Rule 3: Dynamic Delivery Engine Default",
+      priority: 3,
+      enabled: true,
+      strategyType: "dynamic",
+      conditions: {
+        logic: "AND",
+        conditions: []
+      }
+    },
+    {
+      id: "rule-4",
+      name: "Rule 4: Long Distance Manual Quote (>60 mi)",
+      priority: 0,
+      enabled: true,
+      strategyType: "manual",
+      conditions: {
+        logic: "AND",
+        conditions: [
+          { field: "deliveryDistance", operator: "greater_than", value: 60 }
+        ]
+      }
+    }
+  ],
+  strategies: [
+    { id: "strat-fixed", type: "fixed", name: "Fixed Delivery", description: "Standard flat delivery rate for all bookings", enabled: true, config: { deliveryPrice: 45, freePickupOption: true, maxRadius: 30, maxOrderValue: 5000, maxItemCount: 100 } },
+    { id: "strat-free", type: "free", name: "Free Delivery", description: "Free delivery for orders above minimum total", enabled: true, config: { minOrderAmount: 2000, maxDistance: 15, eligibleCategories: [], vipOnly: false } },
+    { id: "strat-distance", type: "distance", name: "Distance Based Pricing", description: "Base rate + mileage and travel time fee", enabled: true, config: { mode: "hybrid", baseFee: 25, costPerMile: 1.5, costPerMinute: 0.5, maxRadius: 60, freeRadius: 5, minCharge: 35 } },
+    { id: "strat-zones", type: "zones", name: "Delivery Zones", description: "Tiered pricing based on geographic ZIP zones", enabled: true, config: {} },
+    { id: "strat-dynamic", type: "dynamic", name: "Dynamic Delivery Engine", description: "Calculates operational costs based on Vehicle + Labor + Travel + Handling", enabled: true, config: {} },
+    { id: "strat-manual", type: "manual", name: "Manual Quote Required", description: "Requires staff to provide custom quote", enabled: true, config: {} }
+  ],
+  vehicles: [
+    { id: "veh-van", name: "Cargo Van", enabled: true, priority: 1, baseCost: 45, maxPoints: 75, maxWeight: 1500, maxCubicFeet: 250, maxItemCount: 50, maxTentSize: 400, maxChairCount: 100, maxTableCount: 15, requiresCDL: false, notes: "Ideal for small/medium party drops" },
+    { id: "veh-box16", name: "16ft Box Truck", enabled: true, priority: 2, baseCost: 95, maxPoints: 200, maxWeight: 4500, maxCubicFeet: 800, maxItemCount: 150, maxTentSize: 1200, maxChairCount: 300, maxTableCount: 40, requiresCDL: false, notes: "For large inflatables and tent packages" },
+    { id: "veh-flatbed", name: "24ft Flatbed Truck", enabled: true, priority: 3, baseCost: 160, maxPoints: 500, maxWeight: 10000, maxCubicFeet: 1600, maxItemCount: 500, maxTentSize: 3000, maxChairCount: 800, maxTableCount: 100, requiresCDL: true, notes: "Enterprise-grade multi-tent and large staging setups" }
+  ],
+  labor: {
+    hourlyRate: 25,
+    minCharge: 40,
+    minHours: 1,
+    loadingMinutesPerPoint: 0.5,
+    unloadMinutesPerPoint: 0.5,
+    pickupMinutesPerPoint: 0.5,
+    setupMinutes: 15,
+    breakdownMinutes: 15,
+    additionalWorkerCost: 20,
+    weekendMultiplier: 1.2,
+    holidayMultiplier: 1.5,
+    emergencyMultiplier: 1.5
+  },
+  travel: {
+    calculationMethod: "hybrid",
+    baseFee: 15,
+    costPerMile: 1.5,
+    costPerMinute: 0.4,
+    minCharge: 25,
+    maxRadius: 60,
+    trafficMultiplier: 1.15,
+    rushHourMultiplier: 1.25,
+    bridgeToll: 0,
+    tunnelToll: 0,
+    congestionCharge: 0,
+    fuelSurcharge: 5
+  },
+  handling: [
+    { id: "hand-stairs", name: "Stair Carry (Per Flight)", feeType: "flat", amount: 25, enabled: true },
+    { id: "hand-elevator", name: "Elevator Access", feeType: "flat", amount: 15, enabled: true },
+    { id: "hand-longwalk", name: "Long Walk (>100ft)", feeType: "flat", amount: 30, enabled: true },
+    { id: "hand-beach", name: "Beach / Sand Setup", feeType: "flat", amount: 50, enabled: true },
+    { id: "hand-concrete", name: "Concrete / Surface Sandbag Weights", feeType: "flat", amount: 25, enabled: true },
+    { id: "hand-grass", name: "Grass Setup / Staking", feeType: "flat", amount: 20, enabled: true },
+    { id: "hand-rooftop", name: "Rooftop Delivery", feeType: "flat", amount: 45, enabled: true },
+    { id: "hand-night", name: "Night / After-Hours Delivery", feeType: "flat", amount: 60, enabled: true }
+  ],
+  zones: [
+    { id: "zone-local", name: "Zone 1: Local Metro", zipCodes: ["23451", "23452", "23453", "23454", "23455", "23456", "23502", "23503", "23504", "23505"], price: 35, enabled: true, priority: 1 },
+    { id: "zone-suburb", name: "Zone 2: Suburbs & Outer Ring", zipCodes: ["23320", "23321", "23322", "23701", "23702", "23703", "23666", "23669"], price: 65, enabled: true, priority: 2 },
+    { id: "zone-extended", name: "Zone 3: Regional / Extended", zipCodes: ["23185", "23188", "23801", "23803"], price: 110, enabled: true, priority: 3 }
+  ]
+};
+
 const fallbackStore = {
   inventory: [...mockInventory],
   categories: [
@@ -608,6 +734,8 @@ const fallbackStore = {
       { code: "ONSITE20", type: "percent" as "percent" | "flat", value: 20 }
     ]
   },
+  deliveryConfig: { ...DEFAULT_DELIVERY_ENGINE_CONFIG },
+  deliveryAuditLogs: [] as DeliveryAuditLog[],
   bookings: [] as Booking[],
   users: [] as User[],
   messages: [] as Message[],
@@ -747,6 +875,8 @@ try {
     if (parsed.messages) fallbackStore.messages = parsed.messages;
     if (parsed.specials) fallbackStore.specials = parsed.specials;
     if (parsed.packages && Array.isArray(parsed.packages) && parsed.packages.length > 0) fallbackStore.packages = parsed.packages;
+    if (parsed.deliveryConfig) fallbackStore.deliveryConfig = parsed.deliveryConfig;
+    if (parsed.deliveryAuditLogs) fallbackStore.deliveryAuditLogs = parsed.deliveryAuditLogs;
     console.log("💾 Loaded fallback database from persistent JSON file:", activeDbPath);
   }
 } catch (err) {
@@ -1123,6 +1253,33 @@ export async function updateBookingPayment(
     }
     saveFallbackStore();
     return true;
+  }
+}
+
+export async function updateBookingDeliveryFee(
+  id: string,
+  fee: number,
+  reason?: string
+): Promise<boolean> {
+  try {
+    const booking = fallbackStore.bookings.find(x => x.id === id);
+    if (!booking) return false;
+
+    const oldFee = booking.delivery?.fee || 0;
+    const diff = fee - oldFee;
+    booking.delivery = {
+      ...booking.delivery,
+      fee
+    };
+    booking.estimatedTotal = Math.max(0, (booking.estimatedTotal || 0) + diff);
+    if (reason) {
+      booking.notes = `${booking.notes ? booking.notes + "\n" : ""}[Staff Delivery Override]: Fee updated from $${oldFee.toFixed(2)} to $${fee.toFixed(2)}. Reason: ${reason}`;
+    }
+    saveFallbackStore();
+    return true;
+  } catch (err) {
+    console.error("Failed to update booking delivery fee:", err);
+    return false;
   }
 }
 
@@ -1876,4 +2033,78 @@ export async function deletePhotoBoothPackage(id: string): Promise<boolean> {
     return affected;
   }
 }
+
+// ─── Delivery Pricing & Rules Engine Persistence ─────────────────────────────
+
+export async function getDeliveryEngineConfig(): Promise<DeliveryEngineConfig> {
+  return fallbackStore.deliveryConfig || DEFAULT_DELIVERY_ENGINE_CONFIG;
+}
+
+export async function updateDeliveryEngineConfig(
+  updates: Partial<DeliveryEngineConfig>,
+  user: string = "Admin",
+  reason: string = "Configuration updated via CMS",
+  ipAddress: string = "127.0.0.1"
+): Promise<DeliveryEngineConfig> {
+  const oldConfig = JSON.parse(JSON.stringify(fallbackStore.deliveryConfig));
+  const newVersion = (oldConfig.versionNumber || 1) + 1;
+
+  const newConfig: DeliveryEngineConfig = {
+    ...oldConfig,
+    ...updates,
+    versionNumber: newVersion
+  };
+
+  fallbackStore.deliveryConfig = newConfig;
+
+  // Log to Audit Trail
+  const logEntry: DeliveryAuditLog = {
+    id: `audit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    user,
+    action: "UPDATE_DELIVERY_CONFIG",
+    oldValue: oldConfig,
+    newValue: newConfig,
+    reason,
+    timestamp: new Date().toISOString(),
+    ipAddress,
+    versionNumber: newVersion
+  };
+
+  if (!fallbackStore.deliveryAuditLogs) {
+    fallbackStore.deliveryAuditLogs = [];
+  }
+  fallbackStore.deliveryAuditLogs.unshift(logEntry);
+
+  saveFallbackStore();
+  return newConfig;
+}
+
+export async function getDeliveryAuditLogs(): Promise<DeliveryAuditLog[]> {
+  return fallbackStore.deliveryAuditLogs || [];
+}
+
+export async function rollbackDeliveryConfig(
+  auditId: string,
+  user: string = "Admin",
+  reason: string = "Rollback triggered",
+  ipAddress: string = "127.0.0.1"
+): Promise<DeliveryEngineConfig> {
+  const auditLog = (fallbackStore.deliveryAuditLogs || []).find(l => l.id === auditId);
+  if (!auditLog || !auditLog.oldValue) {
+    throw new Error("Audit log entry or previous snapshot not found.");
+  }
+
+  const restoredConfig: DeliveryEngineConfig = {
+    ...auditLog.oldValue,
+    versionNumber: (fallbackStore.deliveryConfig.versionNumber || 1) + 1
+  };
+
+  return updateDeliveryEngineConfig(
+    restoredConfig,
+    user,
+    `Rollback to version ${auditLog.versionNumber}: ${reason}`,
+    ipAddress
+  );
+}
+
 

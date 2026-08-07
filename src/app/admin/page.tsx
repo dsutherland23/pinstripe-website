@@ -9,8 +9,9 @@ import {
   X, Save, Star, Package, LayoutGrid, Palette, FileText, BarChart3,
   Phone, Mail, MapPin, Link2, Share2, Menu, Search, Filter,
   ArrowUp, ArrowDown, ToggleLeft, ToggleRight, Image as ImageIcon,
-  CheckCircle, XCircle, Clock, Zap, Download, Copy, Camera,
+  CheckCircle, XCircle, Clock, Zap, Download, Copy, Camera, Truck,
 } from "lucide-react";
+import DeliveryPricingEngineAdmin from "@/components/admin/DeliveryPricingEngineAdmin";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface RentalItem {
@@ -166,7 +167,7 @@ interface PhotoBoothPackage {
   addons: PackageAddon[];
 }
 
-type TabId = "overview" | "inventory" | "categories" | "packages" | "bookings" | "specials" | "content" | "settings";
+type TabId = "overview" | "inventory" | "categories" | "packages" | "bookings" | "specials" | "content" | "settings" | "delivery";
 
 function compressImageFile(file: File, maxWidth = 1000, quality = 0.8): Promise<File> {
   return new Promise((resolve) => {
@@ -266,6 +267,41 @@ export default function AdminDashboard() {
     featured: false,
     order: "0",
   });
+
+  // Delivery Override State
+  const [overrideDeliveryBooking, setOverrideDeliveryBooking] = useState<Booking | null>(null);
+  const [overrideDeliveryFeeVal, setOverrideDeliveryFeeVal] = useState("");
+  const [overrideDeliveryReasonVal, setOverrideDeliveryReasonVal] = useState("");
+  const [savingDeliveryOverride, setSavingDeliveryOverride] = useState(false);
+
+  async function handleSaveDeliveryOverride(e: React.FormEvent) {
+    e.preventDefault();
+    if (!overrideDeliveryBooking) return;
+    setSavingDeliveryOverride(true);
+    try {
+      const res = await fetch("/api/admin/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update-delivery-override",
+          id: overrideDeliveryBooking.id,
+          deliveryFee: parseFloat(overrideDeliveryFeeVal) || 0,
+          reason: overrideDeliveryReasonVal || "Manual staff override"
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOverrideDeliveryBooking(null);
+        loadAll();
+      } else {
+        alert(data.error || "Failed to update delivery fee.");
+      }
+    } catch (err: any) {
+      alert(err.message || "Network error updating delivery fee.");
+    } finally {
+      setSavingDeliveryOverride(false);
+    }
+  }
 
   // Packages state
   const [packages, setPackages]           = useState<PhotoBoothPackage[]>([]);
@@ -1075,6 +1111,7 @@ export default function AdminDashboard() {
     { id: "packages",   label: "Packages & Add-ons", icon: <Camera size={18} />, badge: packages.length },
     { id: "specials",   label: "Specials",     icon: <Zap size={18} />,      badge: specials.length },
     { id: "bookings",   label: "Bookings",     icon: <Calendar size={18} />, badge: pendingBookings > 0 ? pendingBookings : undefined },
+    { id: "delivery",   label: "Delivery Pricing", icon: <Truck size={18} /> },
     { id: "content",    label: "Site Content", icon: <Globe size={18} /> },
     { id: "settings",   label: "Settings",     icon: <Settings size={18} /> },
   ];
@@ -2130,6 +2167,29 @@ export default function AdminDashboard() {
                               </>
                             )}
                           </p>
+                          <button
+                            onClick={() => {
+                              setOverrideDeliveryBooking(booking);
+                              setOverrideDeliveryFeeVal(String(booking.delivery?.fee || 0));
+                              setOverrideDeliveryReasonVal("");
+                            }}
+                            style={{
+                              marginTop: "0.4rem",
+                              fontSize: "0.72rem",
+                              background: "rgba(212,175,55,0.12)",
+                              border: "1px solid rgba(212,175,55,0.4)",
+                              color: "#D4AF37",
+                              borderRadius: "6px",
+                              padding: "0.25rem 0.6rem",
+                              cursor: "pointer",
+                              fontWeight: 600,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "0.3rem"
+                            }}
+                          >
+                            <Edit size={11} /> Override Delivery Fee
+                          </button>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "flex-start" : "flex-end", justifyContent: "center", gap: "0.25rem" }}>
                           <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", margin: 0, textAlign: "right" }}>
@@ -2250,6 +2310,43 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {overrideDeliveryBooking && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
+            <div style={{ background: "#18181c", border: "1px solid #D4AF37", borderRadius: "14px", padding: "1.5rem", width: "100%", maxWidth: "450px" }}>
+              <h4 style={{ margin: "0 0 0.5rem 0", color: "#D4AF37", fontSize: "1.1rem" }}>Override Delivery Fee</h4>
+              <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", marginBottom: "1rem" }}>
+                Booking: <strong style={{ color: "#fff" }}>{overrideDeliveryBooking.id}</strong> ({overrideDeliveryBooking.customer.name})
+              </p>
+
+              <form onSubmit={handleSaveDeliveryOverride} style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.85rem" }}>
+                <label>Delivery Fee ($):
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={overrideDeliveryFeeVal}
+                    onChange={e => setOverrideDeliveryFeeVal(e.target.value)}
+                    style={{ width: "100%", padding: "0.6rem", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", marginTop: "0.2rem" }}
+                  />
+                </label>
+                <label>Override Reason (Recorded in Audit & Notes):
+                  <input
+                    type="text"
+                    placeholder="e.g. Special customer discount or manual mileage adjustment"
+                    value={overrideDeliveryReasonVal}
+                    onChange={e => setOverrideDeliveryReasonVal(e.target.value)}
+                    style={{ width: "100%", padding: "0.6rem", borderRadius: "6px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", marginTop: "0.2rem" }}
+                  />
+                </label>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
+                  <button type="button" onClick={() => setOverrideDeliveryBooking(null)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", borderRadius: "6px", padding: "0.5rem 1rem", cursor: "pointer" }}>Cancel</button>
+                  <button type="submit" disabled={savingDeliveryOverride} style={{ background: "#D4AF37", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", fontWeight: "700", cursor: "pointer" }}>Save Delivery Fee</button>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -2538,6 +2635,11 @@ export default function AdminDashboard() {
                 </button>
               </form>
             </div>
+          )}
+
+          {/* ── DELIVERY PRICING TAB ─────────────────────────────────────── */}
+          {activeTab === "delivery" && (
+            <DeliveryPricingEngineAdmin inventoryItems={inventory} />
           )}
 
           {/* ── SPECIALS TAB ─────────────────────────────────────────────── */}

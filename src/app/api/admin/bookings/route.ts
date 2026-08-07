@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBookings, deleteBooking, updateBookingStatus, addBooking, getInventory, updateBookingPayment } from "@/lib/db";
+import { getBookings, deleteBooking, updateBookingStatus, addBooking, getInventory, updateBookingPayment, updateBookingDeliveryFee } from "@/lib/db";
 import { isAdminAuthorized } from "@/lib/auth-security";
 
 export async function GET(req: NextRequest) {
@@ -41,6 +41,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid payment amount" }, { status: 400 });
       }
       const updated = await updateBookingPayment(id, amountNum, body.method, body.paymentId);
+      if (!updated) {
+        return NextResponse.json({ error: "Booking not found or update failed" }, { status: 404 });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "update-delivery-override" && id && body.deliveryFee !== undefined) {
+      const feeNum = parseFloat(body.deliveryFee);
+      if (isNaN(feeNum) || feeNum < 0) {
+        return NextResponse.json({ error: "Invalid delivery fee" }, { status: 400 });
+      }
+      const updated = await updateBookingDeliveryFee(id, feeNum, body.reason);
       if (!updated) {
         return NextResponse.json({ error: "Booking not found or update failed" }, { status: 404 });
       }
