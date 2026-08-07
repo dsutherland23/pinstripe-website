@@ -12,6 +12,7 @@ import {
   CheckCircle, XCircle, Clock, Zap, Download, Copy, Camera, Truck,
 } from "lucide-react";
 import DeliveryPricingEngineAdmin from "@/components/admin/DeliveryPricingEngineAdmin";
+import AdminHelpGuide from "@/components/admin/AdminHelpGuide";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface RentalItem {
@@ -167,7 +168,7 @@ interface PhotoBoothPackage {
   addons: PackageAddon[];
 }
 
-type TabId = "overview" | "inventory" | "categories" | "packages" | "bookings" | "specials" | "content" | "settings" | "delivery";
+type TabId = "overview" | "inventory" | "categories" | "packages" | "bookings" | "specials" | "content" | "settings" | "delivery" | "help";
 
 function compressImageFile(file: File, maxWidth = 1000, quality = 0.8): Promise<File> {
   return new Promise((resolve) => {
@@ -1114,6 +1115,7 @@ export default function AdminDashboard() {
     { id: "delivery",   label: "Delivery Pricing", icon: <Truck size={18} /> },
     { id: "content",    label: "Site Content", icon: <Globe size={18} /> },
     { id: "settings",   label: "Settings",     icon: <Settings size={18} /> },
+    { id: "help",       label: "Help & Guide",  icon: <FileText size={18} /> },
   ];
 
   // ── MAIN DASHBOARD ────────────────────────────────────────────────────────
@@ -2640,6 +2642,11 @@ export default function AdminDashboard() {
           {/* ── DELIVERY PRICING TAB ─────────────────────────────────────── */}
           {activeTab === "delivery" && (
             <DeliveryPricingEngineAdmin inventoryItems={inventory} />
+          )}
+
+          {/* ── HELP & GUIDE TAB ─────────────────────────────────────────── */}
+          {activeTab === "help" && (
+            <AdminHelpGuide />
           )}
 
           {/* ── SPECIALS TAB ─────────────────────────────────────────────── */}
