@@ -15,3 +15,15 @@ services:
         value: 20.x
       - key: HOSTNAME
         value: 0.0.0.0
+      - key: DB_HOST
+        value: 31.97.208.144
+      - key: DB_PORT
+        value: 3306
+      - key: DB_NAME
+        value: u451443576_pinsdb
+      - key: DB_USER
+        value: u451443576_pinsusr
+      - key: DB_PASS
+        value: P1nstripes2026LiveDb99
+      - key: ADMIN_PASSCODE
+        value: 01717381932
