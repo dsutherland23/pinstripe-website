@@ -44,7 +44,7 @@ export default function GlobalError({
               fontWeight: 800,
               letterSpacing: '0.2em',
               textTransform: 'uppercase' as const,
-              color: '#D4AF37',
+              color: 'var(--accent-color)',
               marginBottom: '0.75rem',
             }}
           >
@@ -58,7 +58,7 @@ export default function GlobalError({
               fontWeight: 800,
               letterSpacing: '-0.02em',
               lineHeight: 1.2,
-              color: '#D4AF37',
+              color: 'var(--accent-color)',
               margin: '0 0 0.75rem 0',
             }}
           >
@@ -84,13 +84,13 @@ export default function GlobalError({
             <p
               style={{
                 display: 'inline-block',
-                background: 'rgba(212,175,55,0.08)',
-                border: '1px solid rgba(212,175,55,0.15)',
+                background: 'rgba(var(--accent-rgb),0.08)',
+                border: '1px solid rgba(var(--accent-rgb),0.15)',
                 borderRadius: '8px',
                 padding: '0.4rem 1rem',
                 marginBottom: '2rem',
                 fontSize: '0.7rem',
-                color: 'rgba(212,175,55,0.6)',
+                color: 'rgba(var(--accent-rgb),0.6)',
                 fontFamily: 'monospace',
                 letterSpacing: '0.03em',
               }}
@@ -115,7 +115,7 @@ export default function GlobalError({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                background: '#D4AF37',
+                background: 'var(--accent-color)',
                 color: '#0f0f0f',
                 padding: '0.875rem 2rem',
                 borderRadius: '9999px',
@@ -125,7 +125,7 @@ export default function GlobalError({
                 textTransform: 'uppercase' as const,
                 cursor: 'pointer',
                 border: 'none',
-                boxShadow: '0 4px 16px rgba(212,175,55,0.35)',
+                boxShadow: '0 4px 16px rgba(var(--accent-rgb),0.35)',
                 fontFamily: "'Montserrat', system-ui, sans-serif",
               }}
             >
@@ -161,7 +161,7 @@ export default function GlobalError({
             style={{
               marginTop: '2.5rem',
               height: '1px',
-              background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.25), transparent)',
+              background: 'linear-gradient(90deg, transparent, rgba(var(--accent-rgb),0.25), transparent)',
             }}
           />
 

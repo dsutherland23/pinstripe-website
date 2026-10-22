@@ -57,7 +57,7 @@ export default function MobileBottomNav({
         background: "rgba(10, 10, 12, 0.88)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        borderTop: "1.5px solid rgba(212, 175, 55, 0.3)",
+        borderTop: "1.5px solid rgba(var(--accent-rgb), 0.3)",
         boxShadow: "0 -8px 32px rgba(0, 0, 0, 0.6)",
         height: "calc(4.8rem + env(safe-area-inset-bottom, 0px))",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -76,13 +76,13 @@ export default function MobileBottomNav({
             width: "60px", 
             background: "none", 
             border: "none",
-            color: activeTab === "home" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)"
+            color: activeTab === "home" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)"
           }}
         >
-          <Home size={18} style={{ stroke: activeTab === "home" ? "#D4AF37" : "rgba(255, 255, 255, 0.7)" }} />
+          <Home size={18} style={{ stroke: activeTab === "home" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.7)" }} />
           <span 
             className="font-heading text-[0.58rem] font-extrabold uppercase tracking-wider transition-colors duration-200"
-            style={{ color: activeTab === "home" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)" }}
+            style={{ color: activeTab === "home" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)" }}
           >
             Home
           </span>
@@ -96,13 +96,13 @@ export default function MobileBottomNav({
             width: "60px", 
             background: "none", 
             border: "none",
-            color: activeTab === "rentals" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)"
+            color: activeTab === "rentals" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)"
           }}
         >
-          <ShoppingBag size={18} style={{ stroke: activeTab === "rentals" ? "#D4AF37" : "rgba(255, 255, 255, 0.7)" }} />
+          <ShoppingBag size={18} style={{ stroke: activeTab === "rentals" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.7)" }} />
           <span 
             className="font-heading text-[0.58rem] font-extrabold uppercase tracking-wider transition-colors duration-200"
-            style={{ color: activeTab === "rentals" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)" }}
+            style={{ color: activeTab === "rentals" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)" }}
           >
             Rentals
           </span>
@@ -119,13 +119,13 @@ export default function MobileBottomNav({
             width: "60px", 
             background: "none", 
             border: "none",
-            color: activeTab === "quote" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)"
+            color: activeTab === "quote" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)"
           }}
         >
-          <Calendar size={18} style={{ stroke: activeTab === "quote" ? "#D4AF37" : "rgba(255, 255, 255, 0.7)" }} />
+          <Calendar size={18} style={{ stroke: activeTab === "quote" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.7)" }} />
           <span 
             className="font-heading text-[0.58rem] font-extrabold uppercase tracking-wider transition-colors duration-200"
-            style={{ color: activeTab === "quote" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)" }}
+            style={{ color: activeTab === "quote" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)" }}
           >
             Quote
           </span>
@@ -140,13 +140,13 @@ export default function MobileBottomNav({
               width: "60px", 
               background: "none", 
               border: "none",
-              color: activeTab === "planner" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)"
+              color: activeTab === "planner" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)"
             }}
           >
-            <LayoutGrid size={18} style={{ stroke: activeTab === "planner" ? "#D4AF37" : "rgba(255, 255, 255, 0.7)" }} />
+            <LayoutGrid size={18} style={{ stroke: activeTab === "planner" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.7)" }} />
             <span 
               className="font-heading text-[0.58rem] font-extrabold uppercase tracking-wider transition-colors duration-200"
-              style={{ color: activeTab === "planner" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)" }}
+              style={{ color: activeTab === "planner" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)" }}
             >
               Planner
             </span>
@@ -164,13 +164,13 @@ export default function MobileBottomNav({
             width: "60px", 
             background: "none", 
             border: "none",
-            color: activeTab === "about" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)"
+            color: activeTab === "about" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)"
           }}
         >
-          <User size={18} style={{ stroke: activeTab === "about" ? "#D4AF37" : "rgba(255, 255, 255, 0.7)" }} />
+          <User size={18} style={{ stroke: activeTab === "about" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.7)" }} />
           <span 
             className="font-heading text-[0.58rem] font-extrabold uppercase tracking-wider transition-colors duration-200"
-            style={{ color: activeTab === "about" ? "#D4AF37" : "rgba(255, 255, 255, 0.55)" }}
+            style={{ color: activeTab === "about" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.55)" }}
           >
             About
           </span>

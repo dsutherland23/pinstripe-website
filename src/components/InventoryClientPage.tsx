@@ -206,8 +206,8 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
     <main className="pb-18 lg:pb-0" style={{ fontFamily: "var(--font-body)", background: "var(--bg-primary)", color: "var(--text-primary)", minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
       
       {/* Decorative ambient blurred radial spots */}
-      <div style={{ position: "absolute", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)", top: "5%", left: "-100px", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
-      <div style={{ position: "absolute", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 70%)", top: "45%", right: "-150px", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "absolute", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(var(--accent-rgb),0.06) 0%, transparent 70%)", top: "5%", left: "-100px", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "absolute", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(var(--accent-rgb),0.04) 0%, transparent 70%)", top: "45%", right: "-150px", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
 
       <Navbar
         onOpenQuote={() => handleOpenQuote()}
@@ -218,7 +218,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
       {/* Hero Header with Grid overlay and Search */}
       <section
         style={{
-          background: "linear-gradient(180deg, var(--bg-secondary) 0%, rgba(212,175,55,0.02) 60%, var(--bg-primary) 100%)",
+          background: "linear-gradient(180deg, var(--bg-secondary) 0%, rgba(var(--accent-rgb),0.02) 60%, var(--bg-primary) 100%)",
           backgroundImage: "radial-gradient(var(--border-secondary) 1px, transparent 1px)",
           backgroundSize: "24px 24px",
           padding: "9rem 1.5rem 4.5rem",
@@ -233,7 +233,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
             const activeSection = sectionsConfig.length === 1 ? sectionsConfig[0] : rawSections.find((s) => s.id === targetSlug || s.categoryName.toLowerCase() === targetCategory?.toLowerCase());
             return (
               <>
-                <div className="section-label" style={{ justifyContent: "center", display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.4rem 1rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                <div className="section-label" style={{ justifyContent: "center", display: "inline-flex", background: "rgba(var(--accent-rgb),0.06)", border: "1px solid rgba(var(--accent-rgb),0.2)", padding: "0.4rem 1rem", borderRadius: "9999px", color: "var(--accent-color)", fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>
                   ★ {activeSection ? activeSection.title : "Commercial-Grade Rentals"} ★
                 </div>
                 <h1 className="section-title text-gradient" style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "1.25rem", marginTop: "1rem" }}>
@@ -254,11 +254,11 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
               position: "relative", 
               boxShadow: "0 12px 36px rgba(0,0,0,0.1)",
               borderRadius: "1rem",
-              border: "1px solid rgba(212,175,55,0.2)",
+              border: "1px solid rgba(var(--accent-rgb),0.2)",
               background: "var(--card-bg)"
             }}
           >
-            <span style={{ position: "absolute", left: "1.25rem", top: "50%", transform: "translateY(-50%)", color: "#D4AF37", display: "flex" }}>
+            <span style={{ position: "absolute", left: "1.25rem", top: "50%", transform: "translateY(-50%)", color: "var(--accent-color)", display: "flex" }}>
               <Search size={18} />
             </span>
             <input 
@@ -283,7 +283,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
               <a
                 href="/inventory"
                 style={{
-                  color: "#D4AF37",
+                  color: "var(--accent-color)",
                   fontSize: "0.85rem",
                   textDecoration: "none",
                   fontWeight: 700,
@@ -340,14 +340,14 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                 style={{
                   padding: "0.6rem 1.15rem",
                   borderRadius: "9999px",
-                  background: "rgba(212,175,55,0.04)",
-                  border: "1px solid rgba(212,175,55,0.15)",
+                  background: "rgba(var(--accent-rgb),0.04)",
+                  border: "1px solid rgba(var(--accent-rgb),0.15)",
                   fontFamily: "var(--font-heading)",
                   fontSize: "0.68rem",
                   fontWeight: 800,
                   letterSpacing: "0.06em",
                   textTransform: "uppercase",
-                  color: "#D4AF37",
+                  color: "var(--accent-color)",
                   cursor: "pointer",
                   transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                   display: "flex",
@@ -357,13 +357,13 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                 }}
                 onMouseEnter={(e) => {
                   if (!hasItems && !!searchQuery) return;
-                  e.currentTarget.style.background = "#D4AF37";
+                  e.currentTarget.style.background = "var(--accent-color)";
                   e.currentTarget.style.color = "#0f0f0f";
-                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(212,175,55,0.3)";
+                  e.currentTarget.style.boxShadow = "0 4px 14px rgba(var(--accent-rgb),0.3)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(212,175,55,0.04)";
-                  e.currentTarget.style.color = "#D4AF37";
+                  e.currentTarget.style.background = "rgba(var(--accent-rgb),0.04)";
+                  e.currentTarget.style.color = "var(--accent-color)";
                   e.currentTarget.style.boxShadow = "none";
                 }}
               >
@@ -395,7 +395,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
               <Reveal>
                 <div style={{ marginBottom: "2.5rem" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-                    <div style={{ width: "38px", height: "38px", borderRadius: "0.75rem", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#D4AF37" }}>
+                    <div style={{ width: "38px", height: "38px", borderRadius: "0.75rem", background: "rgba(var(--accent-rgb),0.08)", border: "1px solid rgba(var(--accent-rgb),0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-color)" }}>
                       {sec.icon}
                     </div>
                     <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.6rem", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
@@ -472,11 +472,11 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                                 boxShadow: "0 6px 20px rgba(0,0,0,0.2)", 
                                 borderRadius: "0.75rem", 
                                 padding: "0.45rem 0.8rem", 
-                                border: "1px solid rgba(212,175,55,0.3)",
+                                border: "1px solid rgba(var(--accent-rgb),0.3)",
                                 textAlign: "center" 
                               }}
                             >
-                              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.15rem", color: "#D4AF37", lineHeight: 1 }}>
+                              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.15rem", color: "var(--accent-color)", lineHeight: 1 }}>
                                 ${item.price}
                               </div>
                               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.48rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
@@ -576,7 +576,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                               }}
                             >
                               <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", minWidth: 0 }}>
-                                <Maximize2 size={12} color="#D4AF37" style={{ flexShrink: 0 }} />
+                                <Maximize2 size={12} color="var(--accent-color)" style={{ flexShrink: 0 }} />
                                 <span 
                                   style={{ 
                                     fontFamily: "var(--font-heading)", 
@@ -595,7 +595,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                                 </span>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", minWidth: 0 }}>
-                                <Users size={12} color="#D4AF37" style={{ flexShrink: 0 }} />
+                                <Users size={12} color="var(--accent-color)" style={{ flexShrink: 0 }} />
                                 <span 
                                   style={{ 
                                     fontFamily: "var(--font-heading)", 
@@ -639,7 +639,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                                   transition: "all 0.2s" 
                                 }}
                               >
-                                <Info size={12} color="#D4AF37" />
+                                <Info size={12} color="var(--accent-color)" />
                                 Details
                               </button>
                               <button
@@ -651,7 +651,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                                   justifyContent: "center", 
                                   gap: "0.4rem", 
                                   padding: "0.75rem", 
-                                  background: "linear-gradient(135deg, #D4AF37, #f5e8a0)", 
+                                  background: "linear-gradient(135deg, var(--accent-color), var(--accent-light))", 
                                   border: "none", 
                                   borderRadius: "0.75rem", 
                                   fontFamily: "var(--font-heading)", 
@@ -661,11 +661,11 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                                   textTransform: "uppercase", 
                                   color: "#0f0f0f", 
                                   cursor: "pointer", 
-                                  boxShadow: "0 4px 12px rgba(212,175,55,0.25)", 
+                                  boxShadow: "0 4px 12px rgba(var(--accent-rgb),0.25)", 
                                   transition: "all 0.2s" 
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = "#bda030"; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, #D4AF37, #f5e8a0)"; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-hover)"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, var(--accent-color), var(--accent-light))"; }}
                               >
                                 <Calendar size={12} />
                                 Reserve
@@ -687,7 +687,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
                 <div style={{ marginBottom: "2rem" }}>
                   <Reveal>
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>
+                      <span className="section-label" style={{ display: "inline-flex", background: "rgba(var(--accent-rgb),0.06)", border: "1px solid rgba(var(--accent-rgb),0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "var(--accent-color)", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem" }}>
                         Curated Packages
                       </span>
                       <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
@@ -719,7 +719,7 @@ export default function InventoryClientPage({ selectedCategorySlug }: InventoryC
               style={{
                 padding: "0.5rem 1.25rem",
                 borderRadius: "0.5rem",
-                background: "#D4AF37",
+                background: "var(--accent-color)",
                 color: "#0f0f0f",
                 fontFamily: "var(--font-heading)",
                 fontWeight: 800,

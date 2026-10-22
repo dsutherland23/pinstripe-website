@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import DeliveryPricingEngineAdmin from "@/components/admin/DeliveryPricingEngineAdmin";
 import AdminHelpGuide from "@/components/admin/AdminHelpGuide";
+import { COLOR_PRESETS, generateAccentVariables } from "@/lib/theme";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface RentalItem {
@@ -79,7 +80,7 @@ const inputStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   display: "block", fontSize: "0.68rem", fontWeight: 700,
   textTransform: "uppercase", letterSpacing: "0.1em",
-  color: "#D4AF37", marginBottom: "0.4rem",
+  color: "var(--accent-color, #D4AF37)", marginBottom: "0.4rem",
 };
 
 const cardStyle: React.CSSProperties = {
@@ -95,7 +96,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       style={{
         position: "relative", width: "48px", height: "26px",
         borderRadius: "13px", border: "none", cursor: "pointer",
-        background: checked ? "#D4AF37" : "rgba(255,255,255,0.12)",
+        background: checked ? "var(--accent-color, #D4AF37)" : "rgba(255,255,255,0.12)",
         transition: "background 0.2s", flexShrink: 0,
       }}
     >
@@ -111,7 +112,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 
 function Badge({ label, color = "gold" }: { label: string; color?: "gold" | "green" | "red" | "blue" | "purple" | "gray" }) {
   const colors: Record<string, { bg: string; text: string }> = {
-    gold:   { bg: "rgba(212,175,55,0.15)",  text: "#D4AF37" },
+    gold:   { bg: "rgba(var(--accent-rgb),0.15)",  text: "var(--accent-color)" },
     green:  { bg: "rgba(16,185,129,0.15)",  text: "#10b981" },
     red:    { bg: "rgba(239,68,68,0.15)",   text: "#ef4444" },
     blue:   { bg: "rgba(59,130,246,0.15)",  text: "#60a5fa" },
@@ -246,6 +247,7 @@ export default function AdminDashboard() {
     depositEnabled: true, 
     depositPercentage: 50,
     specialsEnabled: true,
+    accentColor: "#D4AF37",
     promoCodes: [] as Array<{ code: string; type: "percent" | "flat"; value: number }>
   });
 
@@ -316,7 +318,7 @@ export default function AdminDashboard() {
     price: "250",
     duration: "4 hrs",
     extraHourPrice: "65",
-    color: "#D4AF37",
+    color: "var(--accent-color)",
     popular: false,
     order: "1",
     items: [] as string[],
@@ -475,7 +477,7 @@ export default function AdminDashboard() {
       if (catRes.ok)  { const d = await catRes.json();     setCategories(d.categories || []); }
       if (pkgRes.ok)  { const d = await pkgRes.json();      setPackages(d.packages || []); }
       if (contentRes.ok) { const d = await contentRes.json(); setSiteContent(d.content); setContentForm(d.content); }
-      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true, categoriesEnabled: d.categoriesEnabled ?? true, featuredRentalsEnabled: d.featuredRentalsEnabled ?? true, depositEnabled: d.depositEnabled ?? true, depositPercentage: d.depositPercentage ?? 50, promoCodes: d.promoCodes ?? [], specialsEnabled: d.specialsEnabled ?? true }); }
+      if (settingsRes.ok){ const d = await settingsRes.json(); setSettings({ tentPlannerEnabled: d.tentPlannerEnabled, maintenanceMode: d.maintenanceMode ?? false, analyticsId: d.analyticsId ?? "", payInPersonEnabled: d.payInPersonEnabled ?? true, galleryEnabled: d.galleryEnabled ?? true, categoriesEnabled: d.categoriesEnabled ?? true, featuredRentalsEnabled: d.featuredRentalsEnabled ?? true, depositEnabled: d.depositEnabled ?? true, depositPercentage: d.depositPercentage ?? 50, promoCodes: d.promoCodes ?? [], specialsEnabled: d.specialsEnabled ?? true, accentColor: d.accentColor || "#D4AF37" }); }
       if (specialsRes.ok) { const d = await specialsRes.json(); setSpecials(d.items || []); }
     } catch { setErrorMsg("Network error loading data."); }
     finally { setLoading(false); }
@@ -717,7 +719,7 @@ export default function AdminDashboard() {
       price: "250",
       duration: "4 hrs",
       extraHourPrice: "65",
-      color: "#D4AF37",
+      color: "var(--accent-color)",
       popular: false,
       order: String(packages.length + 1),
       items: [
@@ -744,7 +746,7 @@ export default function AdminDashboard() {
       price: String(pkg.price),
       duration: pkg.duration || "4 hrs",
       extraHourPrice: String(pkg.extraHourPrice || 65),
-      color: pkg.color || "#D4AF37",
+      color: pkg.color || "var(--accent-color)",
       popular: pkg.popular,
       order: String(pkg.order),
       items: [...(pkg.items || [])],
@@ -1031,6 +1033,25 @@ export default function AdminDashboard() {
   };
 
   // ── System Settings ───────────────────────────────────────────────────────
+  const updateAccentColor = (newColor: string) => {
+    setSettings(s => ({ ...s, accentColor: newColor }));
+    if (typeof window !== "undefined") {
+      const vars = generateAccentVariables(newColor);
+      const root = document.documentElement;
+      root.style.setProperty("--accent-color", vars.accent);
+      root.style.setProperty("--accent-hover", vars.hover);
+      root.style.setProperty("--accent-light", vars.light);
+      root.style.setProperty("--accent-rgb", vars.rgb);
+      root.style.setProperty("--accent-glow", vars.glow);
+      root.style.setProperty("--accent-shadow", vars.shadow);
+      root.style.setProperty("--color-gold", vars.accent);
+      root.style.setProperty("--color-gold-hover", vars.hover);
+      root.style.setProperty("--color-gold-light", vars.light);
+      root.style.setProperty("--color-accent", vars.accent);
+      window.dispatchEvent(new CustomEvent("site-accent-color-change", { detail: { color: newColor } }));
+    }
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault(); setSavingSettings(true);
     try {
@@ -1082,7 +1103,7 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          <div style={{ background: "#111111", border: "1px solid rgba(212,175,55,0.2)", borderRadius: "1.25rem", padding: "2rem", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
+          <div style={{ background: "#111111", border: "1px solid rgba(var(--accent-rgb),0.2)", borderRadius: "1.25rem", padding: "2rem", boxShadow: "0 24px 60px rgba(0,0,0,0.5)" }}>
             <form onSubmit={(e) => { e.preventDefault(); verifyPasscode(passcode); }} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               <div>
                 <label style={labelStyle}>Admin Passcode</label>
@@ -1090,12 +1111,12 @@ export default function AdminDashboard() {
                   required type="password" placeholder="Enter passcode…"
                   value={passcode} onChange={e => setPasscode(e.target.value)}
                   style={{ ...inputStyle, fontSize: "1rem" }}
-                  onFocus={e => { e.target.style.borderColor = "#D4AF37"; }}
+                  onFocus={e => { e.target.style.borderColor = "var(--accent-color)"; }}
                   onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; }}
                 />
               </div>
               {authError && <p style={{ color: "#ef4444", fontSize: "0.82rem", textAlign: "center", margin: 0 }}>{authError}</p>}
-              <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.9rem", borderRadius: "0.75rem", background: "linear-gradient(135deg, #D4AF37 0%, #f5e8a0 50%, #D4AF37 100%)", border: "none", color: "#000000", fontWeight: 800, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+              <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.9rem", borderRadius: "0.75rem", background: "linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 50%, var(--accent-color) 100%)", border: "none", color: "#000000", fontWeight: 800, fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
                 {loading ? <RefreshCw size={16} className="animate-spin" /> : "Access Dashboard"}
               </button>
             </form>
@@ -1166,7 +1187,7 @@ export default function AdminDashboard() {
                 style={{ height: "32px", width: "auto", objectFit: "contain" }}
               />
               <div>
-                <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "#D4AF37", letterSpacing: "0.05em", textTransform: "uppercase" }}>Pinstripes</div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "var(--accent-color)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Pinstripes</div>
                 <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Admin CMS</div>
               </div>
             </div>
@@ -1197,8 +1218,8 @@ export default function AdminDashboard() {
                   display: "flex", alignItems: "center", gap: "0.75rem",
                   width: "100%", padding: "0.75rem",
                   borderRadius: "0.75rem", border: "none",
-                  background: isTabActive ? "rgba(212,175,55,0.12)" : "transparent",
-                  color: isTabActive ? "#D4AF37" : "rgba(255,255,255,0.55)",
+                  background: isTabActive ? "rgba(var(--accent-rgb),0.12)" : "transparent",
+                  color: isTabActive ? "var(--accent-color)" : "rgba(255,255,255,0.55)",
                   fontWeight: isTabActive ? 700 : 500,
                   fontSize: "0.85rem", cursor: "pointer",
                   marginBottom: "0.25rem",
@@ -1213,7 +1234,7 @@ export default function AdminDashboard() {
                 <span style={{ flexShrink: 0 }}>{item.icon}</span>
                 {(isMobile || sidebarOpen) && <span>{item.label}</span>}
                 {(isMobile || sidebarOpen) && item.badge !== undefined && (
-                  <span style={{ marginLeft: "auto", background: isTabActive ? "rgba(212,175,55,0.3)" : "rgba(255,255,255,0.1)", borderRadius: "9999px", padding: "0.1rem 0.5rem", fontSize: "0.62rem", fontWeight: 700 }}>
+                  <span style={{ marginLeft: "auto", background: isTabActive ? "rgba(var(--accent-rgb),0.3)" : "rgba(255,255,255,0.1)", borderRadius: "9999px", padding: "0.1rem 0.5rem", fontSize: "0.62rem", fontWeight: 700 }}>
                     {item.badge}
                   </span>
                 )}
@@ -1301,7 +1322,7 @@ export default function AdminDashboard() {
               {/* Stat Cards */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
                 {[
-                  { label: "Total Revenue", value: fmt(totalRevenue), sub: `${bookings.length} quote requests`, color: "#D4AF37", icon: <BarChart3 size={20} /> },
+                  { label: "Total Revenue", value: fmt(totalRevenue), sub: `${bookings.length} quote requests`, color: "var(--accent-color)", icon: <BarChart3 size={20} /> },
                   { label: "Rental Items", value: String(inventory.length), sub: `${inventory.filter(i => i.availability).length} active`, color: "#60a5fa", icon: <Package size={20} /> },
                   { label: "Pending Bookings", value: String(pendingBookings), sub: "Awaiting confirmation", color: "#f59e0b", icon: <Clock size={20} /> },
                   { 
@@ -1405,9 +1426,9 @@ export default function AdminDashboard() {
                               startEdit(item);
                             }}
                             style={{
-                              background: "rgba(212,175,55,0.15)",
-                              border: "1px solid rgba(212,175,55,0.3)",
-                              color: "#D4AF37",
+                              background: "rgba(var(--accent-rgb),0.15)",
+                              border: "1px solid rgba(var(--accent-rgb),0.3)",
+                              color: "var(--accent-color)",
                               borderRadius: "0.375rem",
                               padding: "0.35rem 0.6rem",
                               fontSize: "0.72rem",
@@ -1429,7 +1450,7 @@ export default function AdminDashboard() {
                 <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "#ffffff", marginBottom: "1rem" }}>Quick Actions</h3>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
                   {[
-                    { label: "Add Rental Item", tab: "inventory" as TabId, color: "#D4AF37", action: startCreate },
+                    { label: "Add Rental Item", tab: "inventory" as TabId, color: "var(--accent-color)", action: startCreate },
                     { label: "Add Category",    tab: "categories" as TabId, color: "#60a5fa", action: startCreateCat },
                     { label: "Edit Hero Text",  tab: "content" as TabId },
                     { label: "Manage Settings", tab: "settings" as TabId },
@@ -1455,7 +1476,7 @@ export default function AdminDashboard() {
                           <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.72rem", margin: 0 }}>{b.event.type} · {b.event.date}</p>
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <p style={{ color: "#D4AF37", fontWeight: 800, fontSize: "0.9rem", margin: 0 }}>{fmt(b.estimatedTotal)}</p>
+                          <p style={{ color: "var(--accent-color)", fontWeight: 800, fontSize: "0.9rem", margin: 0 }}>{fmt(b.estimatedTotal)}</p>
                           <Badge 
                              label={b.status || "pending"} 
                              color={
@@ -1481,7 +1502,7 @@ export default function AdminDashboard() {
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
                   <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#ffffff", margin: 0 }}>Rental Equipment ({filteredInventory.length})</h3>
-                  <button onClick={startCreate} style={{ padding: "0.55rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <button onClick={startCreate} style={{ padding: "0.55rem 1.1rem", borderRadius: "0.5rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <Plus size={14} />Add New Item
                   </button>
                 </div>
@@ -1530,11 +1551,11 @@ export default function AdminDashboard() {
                             <Badge label={item.category} color="gray" />
                             <Badge label={item.availability ? "Active" : "Off"} color={item.availability ? "green" : "red"} />
                           </div>
-                          <p style={{ color: "#D4AF37", fontWeight: 800, fontSize: "0.85rem", margin: 0 }}>{fmt(item.price)} <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem", fontWeight: 400 }}>/ day · Stock: {item.stock ?? "–"}</span></p>
+                          <p style={{ color: "var(--accent-color)", fontWeight: 800, fontSize: "0.85rem", margin: 0 }}>{fmt(item.price)} <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem", fontWeight: 400 }}>/ day · Stock: {item.stock ?? "–"}</span></p>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", justifyContent: "center" }}>
                           <div style={{ display: "flex", gap: "0.35rem" }}>
-                            <button onClick={() => startEdit(item)} style={{ background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)", color: "#D4AF37", borderRadius: "0.375rem", padding: "0.45rem", cursor: "pointer", display: "flex" }} title="Edit">
+                            <button onClick={() => startEdit(item)} style={{ background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.2)", color: "var(--accent-color)", borderRadius: "0.375rem", padding: "0.45rem", cursor: "pointer", display: "flex" }} title="Edit">
                               <Edit size={14} />
                             </button>
                             <label style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", borderRadius: "0.375rem", padding: "0.45rem", cursor: "pointer", display: "flex" }} title="Upload image">
@@ -1579,14 +1600,14 @@ export default function AdminDashboard() {
                               <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
                             </td>
                             <td style={{ padding: "10px" }}><Badge label={item.category} color="gray" /></td>
-                            <td style={{ padding: "10px", fontWeight: 700, color: "#D4AF37", fontSize: "0.88rem" }}>{fmt(item.price)}</td>
+                            <td style={{ padding: "10px", fontWeight: 700, color: "var(--accent-color)", fontSize: "0.88rem" }}>{fmt(item.price)}</td>
                             <td style={{ padding: "10px", color: (item.stock ?? 5) <= 3 ? "#ef4444" : "rgba(255,255,255,0.7)", fontSize: "0.85rem", fontWeight: 600 }}>{item.stock ?? "–"}</td>
                             <td style={{ padding: "10px" }}>
                               <Badge label={item.availability ? "Active" : "Off"} color={item.availability ? "green" : "red"} />
                             </td>
                             <td style={{ padding: "10px" }}>
                               <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
-                                <button onClick={() => startEdit(item)} style={{ background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)", color: "#D4AF37", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }} title="Edit">
+                                <button onClick={() => startEdit(item)} style={{ background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.2)", color: "var(--accent-color)", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }} title="Edit">
                                   <Edit size={14} />
                                 </button>
                                 <label style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", color: "#60a5fa", borderRadius: "0.375rem", padding: "0.35rem", cursor: "pointer", display: "flex" }} title="Upload image">
@@ -1620,14 +1641,14 @@ export default function AdminDashboard() {
               {(editingItem || isCreating) && (
                 <div style={{
                   ...cardStyle,
-                  border: "1px solid rgba(212,175,55,0.25)",
+                  border: "1px solid rgba(var(--accent-rgb),0.25)",
                   position: isMobile ? "static" : "sticky",
                   top: isMobile ? undefined : "80px",
                   maxHeight: isMobile ? undefined : "calc(100vh - 100px)",
                   overflowY: isMobile ? undefined : "auto"
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                    <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>
+                    <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", margin: 0 }}>
                       {isCreating ? "Create New Item" : `Edit #${editingItem?.id}`}
                     </h3>
                     <button onClick={() => { setEditingItem(null); setIsCreating(false); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex" }}><X size={18} /></button>
@@ -1647,7 +1668,7 @@ export default function AdminDashboard() {
                           <img src={itemForm.image || editingItem?.image} alt="" style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "0.375rem" }} onError={e => { (e.target as HTMLImageElement).src = getItemFallbackImage(editingItem?.category || itemForm.category); }} />
                           <div style={{ flex: 1 }}>
                             <input type="text" value={itemForm.image} onChange={e => setItemForm(f => ({ ...f, image: e.target.value }))} placeholder="Image URL or Data URL…" style={{ ...inputStyle, marginBottom: "0.5rem" }} />
-                            <label style={{ padding: "0.4rem 0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(212,175,55,0.3)", background: "rgba(212,175,55,0.08)", color: "#D4AF37", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                            <label style={{ padding: "0.4rem 0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(var(--accent-rgb),0.3)", background: "rgba(var(--accent-rgb),0.08)", color: "var(--accent-color)", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                               <Upload size={12} />Upload File
                               <input type="file" accept="image/*" onChange={e => handleUploadImage(editingItem?.id || "new", e)} style={{ display: "none" }} />
                             </label>
@@ -1719,7 +1740,7 @@ export default function AdminDashboard() {
                       <Toggle checked={itemForm.availability} onChange={v => setItemForm(f => ({ ...f, availability: v }))} />
                     </div>
 
-                    <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.8rem", borderRadius: "0.625rem", background: "linear-gradient(135deg, #D4AF37, #f5e8a0)", border: "none", color: "#000", fontWeight: 800, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                    <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.8rem", borderRadius: "0.625rem", background: "linear-gradient(135deg, var(--accent-color), var(--accent-light))", border: "none", color: "#000", fontWeight: 800, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
                       <Save size={15} />{loading ? "Saving…" : (isCreating ? "Create Item" : "Save Changes")}
                     </button>
                   </form>
@@ -1739,7 +1760,7 @@ export default function AdminDashboard() {
                       Drag or use arrows to reorder. Changes reflect on public site.
                     </p>
                   </div>
-                  <button onClick={startCreateCat} style={{ padding: "0.55rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <button onClick={startCreateCat} style={{ padding: "0.55rem 1.1rem", borderRadius: "0.5rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <Plus size={14} />Add Category
                   </button>
                 </div>
@@ -1748,7 +1769,7 @@ export default function AdminDashboard() {
                   {categories.map((cat, idx) => {
                     const itemCount = inventory.filter(i => i.category === cat.name).length;
                     return (
-                      <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", borderRadius: "0.875rem", background: editingCat?.id === cat.id ? "rgba(212,175,55,0.08)" : "rgba(255,255,255,0.02)", border: `1px solid ${editingCat?.id === cat.id ? "rgba(212,175,55,0.3)" : "rgba(255,255,255,0.05)"}`, transition: "all 0.15s" }}>
+                      <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.25rem", borderRadius: "0.875rem", background: editingCat?.id === cat.id ? "rgba(var(--accent-rgb),0.08)" : "rgba(255,255,255,0.02)", border: `1px solid ${editingCat?.id === cat.id ? "rgba(var(--accent-rgb),0.3)" : "rgba(255,255,255,0.05)"}`, transition: "all 0.15s" }}>
                         {/* Order controls */}
                         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                           <button onClick={() => moveCat(cat.id, "up")} disabled={idx === 0} style={{ background: "transparent", border: "none", color: idx === 0 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.5)", cursor: idx === 0 ? "default" : "pointer", padding: "2px", display: "flex" }}><ArrowUp size={12} /></button>
@@ -1756,7 +1777,7 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* Icon badge */}
-                        <div style={{ width: "40px", height: "40px", borderRadius: "0.75rem", background: "rgba(212,175,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#D4AF37", flexShrink: 0 }}>
+                        <div style={{ width: "40px", height: "40px", borderRadius: "0.75rem", background: "rgba(var(--accent-rgb),0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-color)", flexShrink: 0 }}>
                           <Tag size={18} />
                         </div>
 
@@ -1771,7 +1792,7 @@ export default function AdminDashboard() {
 
                         {/* Actions */}
                         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                          <button onClick={() => startEditCat(cat)} style={{ background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)", color: "#D4AF37", borderRadius: "0.375rem", padding: "0.4rem", cursor: "pointer", display: "flex" }} title="Edit">
+                          <button onClick={() => startEditCat(cat)} style={{ background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.2)", color: "var(--accent-color)", borderRadius: "0.375rem", padding: "0.4rem", cursor: "pointer", display: "flex" }} title="Edit">
                             <Edit size={14} />
                           </button>
                           {catDeleteConfirm === cat.id ? (
@@ -1795,12 +1816,12 @@ export default function AdminDashboard() {
               {(editingCat || isCreatingCat) && (
                 <div style={{
                   ...cardStyle,
-                  border: "1px solid rgba(212,175,55,0.25)",
+                  border: "1px solid rgba(var(--accent-rgb),0.25)",
                   position: isMobile ? "static" : "sticky",
                   top: isMobile ? undefined : "80px"
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                    <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>
+                    <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", margin: 0 }}>
                       {isCreatingCat ? "New Category" : `Edit "${editingCat?.name}"`}
                     </h3>
                     <button onClick={() => { setEditingCat(null); setIsCreatingCat(false); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex" }}><X size={18} /></button>
@@ -1819,14 +1840,14 @@ export default function AdminDashboard() {
                           <button
                             key={ico.key} type="button"
                             onClick={() => setCatForm(f => ({ ...f, icon: ico.key }))}
-                            style={{ padding: "0.5rem 0.25rem", borderRadius: "0.5rem", border: `1px solid ${catForm.icon === ico.key ? "#D4AF37" : "rgba(255,255,255,0.08)"}`, background: catForm.icon === ico.key ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.02)", color: catForm.icon === ico.key ? "#D4AF37" : "rgba(255,255,255,0.55)", fontSize: "0.62rem", fontWeight: 600, cursor: "pointer", textAlign: "center" }}
+                            style={{ padding: "0.5rem 0.25rem", borderRadius: "0.5rem", border: `1px solid ${catForm.icon === ico.key ? "var(--accent-color)" : "rgba(255,255,255,0.08)"}`, background: catForm.icon === ico.key ? "rgba(var(--accent-rgb),0.15)" : "rgba(255,255,255,0.02)", color: catForm.icon === ico.key ? "var(--accent-color)" : "rgba(255,255,255,0.55)", fontSize: "0.62rem", fontWeight: 600, cursor: "pointer", textAlign: "center" }}
                           >
                             <Tag size={14} style={{ display: "block", margin: "0 auto 0.25rem" }} />
                             {ico.label}
                           </button>
                         ))}
                       </div>
-                      <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.68rem" }}>Selected: <strong style={{ color: "#D4AF37" }}>{catForm.icon}</strong></p>
+                      <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.68rem" }}>Selected: <strong style={{ color: "var(--accent-color)" }}>{catForm.icon}</strong></p>
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#1a1a1a", borderRadius: "0.625rem", padding: "0.75rem 1rem", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1837,7 +1858,7 @@ export default function AdminDashboard() {
                       <Toggle checked={catForm.featured} onChange={v => setCatForm(f => ({ ...f, featured: v }))} />
                     </div>
 
-                    <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.8rem", borderRadius: "0.625rem", background: "linear-gradient(135deg, #D4AF37, #f5e8a0)", border: "none", color: "#000", fontWeight: 800, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                    <button type="submit" disabled={loading} style={{ width: "100%", padding: "0.8rem", borderRadius: "0.625rem", background: "linear-gradient(135deg, var(--accent-color), var(--accent-light))", border: "none", color: "#000", fontWeight: 800, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
                       <Save size={15} />{loading ? "Saving…" : (isCreatingCat ? "Create Category" : "Save Changes")}
                     </button>
                   </form>
@@ -1864,21 +1885,21 @@ export default function AdminDashboard() {
                   style={{
                     padding: "0.5rem 1rem",
                     borderRadius: "0.5rem",
-                    background: "rgba(212,175,55,0.1)",
-                    border: "1px solid rgba(212,175,55,0.25)",
-                    color: "#D4AF37",
+                    background: "rgba(var(--accent-rgb),0.1)",
+                    border: "1px solid rgba(var(--accent-rgb),0.25)",
+                    color: "var(--accent-color)",
                     fontSize: "0.78rem",
                     fontWeight: 700,
                     cursor: "pointer",
                     transition: "all 0.2s"
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = "#D4AF37";
+                    e.currentTarget.style.background = "var(--accent-color)";
                     e.currentTarget.style.color = "#000";
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = "rgba(212,175,55,0.1)";
-                    e.currentTarget.style.color = "#D4AF37";
+                    e.currentTarget.style.background = "rgba(var(--accent-rgb),0.1)";
+                    e.currentTarget.style.color = "var(--accent-color)";
                   }}
                 >
                   {isCreatingBooking ? "Close Form" : "Block Dates / Offline Booking"}
@@ -1887,8 +1908,8 @@ export default function AdminDashboard() {
 
               {/* Offline Booking Form */}
               {isCreatingBooking && (
-                <div style={{ ...cardStyle, border: "1px solid rgba(212,175,55,0.25)" }}>
-                  <h4 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#D4AF37", marginBottom: "1.25rem" }}>
+                <div style={{ ...cardStyle, border: "1px solid rgba(var(--accent-rgb),0.25)" }}>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--accent-color)", marginBottom: "1.25rem" }}>
                     Create Offline Booking or Block Equipment
                   </h4>
                   <form onSubmit={handleCreateBooking} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -2027,7 +2048,7 @@ export default function AdminDashboard() {
                       style={{
                         padding: "0.8rem",
                         borderRadius: "0.625rem",
-                        background: "linear-gradient(135deg, #D4AF37, #f5e8a0)",
+                        background: "linear-gradient(135deg, var(--accent-color), var(--accent-light))",
                         border: "none",
                         color: "#000",
                         fontWeight: 800,
@@ -2057,7 +2078,7 @@ export default function AdminDashboard() {
                       {/* Header */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1rem", paddingBottom: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                          <span style={{ fontSize: "0.78rem", color: "#D4AF37", fontWeight: 800 }}>{booking.id}</span>
+                          <span style={{ fontSize: "0.78rem", color: "var(--accent-color)", fontWeight: 800 }}>{booking.id}</span>
                           {/* Status selector */}
                           <select
                             value={booking.status || "pending"}
@@ -2092,7 +2113,7 @@ export default function AdminDashboard() {
                         </div>
                         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                           <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>{new Date(booking.submittedAt).toLocaleDateString()}</span>
-                          <Link href={`/portal/invoice?id=${booking.id}&passcode=${encodeURIComponent(getCode())}`} target="_blank" style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.35rem 0.75rem", border: "1px solid rgba(212,175,55,0.25)", borderRadius: "0.375rem", color: "#D4AF37", fontSize: "0.72rem", textDecoration: "none", fontWeight: 600 }}>
+                          <Link href={`/portal/invoice?id=${booking.id}&passcode=${encodeURIComponent(getCode())}`} target="_blank" style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.35rem 0.75rem", border: "1px solid rgba(var(--accent-rgb),0.25)", borderRadius: "0.375rem", color: "var(--accent-color)", fontSize: "0.72rem", textDecoration: "none", fontWeight: 600 }}>
                             <Eye size={12} />Invoice
                           </Link>
                           <button
@@ -2162,19 +2183,19 @@ export default function AdminDashboard() {
                       {/* Details grid */}
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem" }}>
                         <div>
-                          <p style={{ fontSize: "0.68rem", color: "#D4AF37", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.35rem" }}>Customer</p>
+                          <p style={{ fontSize: "0.68rem", color: "var(--accent-color)", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.35rem" }}>Customer</p>
                           <p style={{ fontWeight: 700, color: "#ffffff", fontSize: "0.88rem", margin: 0 }}>{booking.customer.name}</p>
                           <a href={`mailto:${booking.customer.email}`} style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8rem", display: "block", textDecoration: "none" }}>{booking.customer.email}</a>
                           <a href={`tel:${booking.customer.phone}`} style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8rem", textDecoration: "none" }}>{booking.customer.phone}</a>
                         </div>
                         <div>
-                          <p style={{ fontSize: "0.68rem", color: "#D4AF37", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.35rem" }}>Event</p>
+                          <p style={{ fontSize: "0.68rem", color: "var(--accent-color)", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.35rem" }}>Event</p>
                           <p style={{ fontWeight: 700, color: "#ffffff", fontSize: "0.88rem", margin: 0 }}>{booking.event.type}</p>
                           <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8rem", margin: 0 }}>{booking.event.date} · {booking.event.guestCount} guests</p>
                           <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8rem", margin: 0 }}>{booking.event.location}</p>
                         </div>
                         <div>
-                          <p style={{ fontSize: "0.68rem", color: "#D4AF37", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.35rem" }}>
+                          <p style={{ fontSize: "0.68rem", color: "var(--accent-color)", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.35rem" }}>
                             {booking.delivery.method === "pickup" ? "Fulfillment" : "Delivery"}
                           </p>
                           <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.82rem", margin: 0, lineHeight: 1.5 }}>
@@ -2195,9 +2216,9 @@ export default function AdminDashboard() {
                             style={{
                               marginTop: "0.4rem",
                               fontSize: "0.72rem",
-                              background: "rgba(212,175,55,0.12)",
-                              border: "1px solid rgba(212,175,55,0.4)",
-                              color: "#D4AF37",
+                              background: "rgba(var(--accent-rgb),0.12)",
+                              border: "1px solid rgba(var(--accent-rgb),0.4)",
+                              color: "var(--accent-color)",
                               borderRadius: "6px",
                               padding: "0.25rem 0.6rem",
                               cursor: "pointer",
@@ -2216,7 +2237,7 @@ export default function AdminDashboard() {
                             {booking.delivery.method === "pickup" ? " (Pickup)" : ` (Delivery: +${fmt(booking.delivery.fee || 0)})`}
                             {booking.discount && booking.discount > 0 ? ` (Discount: -${fmt(booking.discount)})` : ""}
                           </p>
-                          <p style={{ fontSize: "1.5rem", color: "#D4AF37", fontWeight: 900, margin: 0 }}>{fmt(booking.estimatedTotal)}</p>
+                          <p style={{ fontSize: "1.5rem", color: "var(--accent-color)", fontWeight: 900, margin: 0 }}>{fmt(booking.estimatedTotal)}</p>
                           <div style={{ margin: "0.1rem 0" }}>
                             <Badge
                               label={
@@ -2236,7 +2257,7 @@ export default function AdminDashboard() {
                       {/* Transaction Ledger & Record Payment */}
                       <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                          <h4 style={{ fontSize: "0.8rem", color: "#D4AF37", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
+                          <h4 style={{ fontSize: "0.8rem", color: "var(--accent-color)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
                             💳 Transaction Ledger
                           </h4>
                           <button
@@ -2311,7 +2332,7 @@ export default function AdminDashboard() {
                               <span style={{ color: "#10b981", fontWeight: 700 }}>{fmt(booking.amountPaid || 0)}</span>
                             </div>
                             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "0.4rem", marginTop: "0.2rem" }}>
-                              <span style={{ color: "#D4AF37", fontWeight: 700 }}>Outstanding Balance:</span>
+                              <span style={{ color: "var(--accent-color)", fontWeight: 700 }}>Outstanding Balance:</span>
                               <span style={{ color: (booking.estimatedTotal - (booking.amountPaid || 0)) <= 0 ? "#10b981" : "#ef4444", fontWeight: 800 }}>
                                 {fmt(Math.max(0, booking.estimatedTotal - (booking.amountPaid || 0)))}
                               </span>
@@ -2321,7 +2342,7 @@ export default function AdminDashboard() {
                       </div>
 
                       {booking.notes && (
-                        <div style={{ marginTop: "0.75rem", padding: "0.625rem 0.875rem", borderLeft: "3px solid #D4AF37", background: "rgba(212,175,55,0.05)", borderRadius: "0 0.375rem 0.375rem 0" }}>
+                        <div style={{ marginTop: "0.75rem", padding: "0.625rem 0.875rem", borderLeft: "3px solid var(--accent-color)", background: "rgba(var(--accent-rgb),0.05)", borderRadius: "0 0.375rem 0.375rem 0" }}>
                           <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)", margin: 0 }}><strong style={{ color: "rgba(255,255,255,0.8)" }}>Notes:</strong> {booking.notes}</p>
                         </div>
                       )}
@@ -2335,8 +2356,8 @@ export default function AdminDashboard() {
 
         {overrideDeliveryBooking && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
-            <div style={{ background: "#18181c", border: "1px solid #D4AF37", borderRadius: "14px", padding: "1.5rem", width: "100%", maxWidth: "450px" }}>
-              <h4 style={{ margin: "0 0 0.5rem 0", color: "#D4AF37", fontSize: "1.1rem" }}>Override Delivery Fee</h4>
+            <div style={{ background: "#18181c", border: "1px solid var(--accent-color)", borderRadius: "14px", padding: "1.5rem", width: "100%", maxWidth: "450px" }}>
+              <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--accent-color)", fontSize: "1.1rem" }}>Override Delivery Fee</h4>
               <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", marginBottom: "1rem" }}>
                 Booking: <strong style={{ color: "#fff" }}>{overrideDeliveryBooking.id}</strong> ({overrideDeliveryBooking.customer.name})
               </p>
@@ -2363,7 +2384,7 @@ export default function AdminDashboard() {
 
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
                   <button type="button" onClick={() => setOverrideDeliveryBooking(null)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", borderRadius: "6px", padding: "0.5rem 1rem", cursor: "pointer" }}>Cancel</button>
-                  <button type="submit" disabled={savingDeliveryOverride} style={{ background: "#D4AF37", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", fontWeight: "700", cursor: "pointer" }}>Save Delivery Fee</button>
+                  <button type="submit" disabled={savingDeliveryOverride} style={{ background: "var(--accent-color)", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", fontWeight: "700", cursor: "pointer" }}>Save Delivery Fee</button>
                 </div>
               </form>
             </div>
@@ -2385,7 +2406,7 @@ export default function AdminDashboard() {
                   style={{
                     padding: "0.6rem 1.25rem",
                     borderRadius: "0.5rem",
-                    background: "linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%)",
+                    background: "linear-gradient(135deg, var(--accent-color) 0%, #AA7C11 100%)",
                     border: "none",
                     color: "#000",
                     fontWeight: 800,
@@ -2405,8 +2426,8 @@ export default function AdminDashboard() {
               {/* Hero */}
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>🦸 Hero Section</h3>
-                  <button onClick={() => handleSaveContent("hero")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "hero" ? 0.6 : 1 }}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", margin: 0 }}>🦸 Hero Section</h3>
+                  <button onClick={() => handleSaveContent("hero")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "hero" ? 0.6 : 1 }}>
                     <Save size={13} />{savingSection === "hero" ? "Saving Hero…" : "Save Hero"}
                   </button>
                 </div>
@@ -2434,8 +2455,8 @@ export default function AdminDashboard() {
               {/* Stats */}
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>📊 Stats Bar</h3>
-                  <button onClick={() => handleSaveContent("stats")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "stats" ? 0.6 : 1 }}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", margin: 0 }}>📊 Stats Bar</h3>
+                  <button onClick={() => handleSaveContent("stats")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "stats" ? 0.6 : 1 }}>
                     <Save size={13} />{savingSection === "stats" ? "Saving Stats…" : "Save Stats"}
                   </button>
                 </div>
@@ -2456,8 +2477,8 @@ export default function AdminDashboard() {
               {/* Footer */}
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>🦶 Footer Info</h3>
-                  <button onClick={() => handleSaveContent("footer")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "footer" ? 0.6 : 1 }}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", margin: 0 }}>🦶 Footer Info</h3>
+                  <button onClick={() => handleSaveContent("footer")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "footer" ? 0.6 : 1 }}>
                     <Save size={13} />{savingSection === "footer" ? "Saving Footer…" : "Save Footer"}
                   </button>
                 </div>
@@ -2480,8 +2501,8 @@ export default function AdminDashboard() {
               {/* Navbar */}
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>🧭 Navbar Text</h3>
-                  <button onClick={() => handleSaveContent("navbar")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "navbar" ? 0.6 : 1 }}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", margin: 0 }}>🧭 Navbar Text</h3>
+                  <button onClick={() => handleSaveContent("navbar")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "navbar" ? 0.6 : 1 }}>
                     <Save size={13} />{savingSection === "navbar" ? "Saving Navbar…" : "Save Navbar"}
                   </button>
                 </div>
@@ -2494,8 +2515,8 @@ export default function AdminDashboard() {
               {/* About Us / Discover Our Vision */}
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>📖 About Us / Discover Our Vision</h3>
-                  <button onClick={() => handleSaveContent("about")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "about" ? 0.6 : 1 }}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", margin: 0 }}>📖 About Us / Discover Our Vision</h3>
+                  <button onClick={() => handleSaveContent("about")} disabled={savingSection !== null} style={{ padding: "0.5rem 1.1rem", borderRadius: "0.5rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: savingSection !== null ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.4rem", opacity: savingSection !== null && savingSection !== "about" ? 0.6 : 1 }}>
                     <Save size={13} />{savingSection === "about" ? "Saving About…" : "Save About"}
                   </button>
                 </div>
@@ -2521,9 +2542,201 @@ export default function AdminDashboard() {
           {activeTab === "settings" && (
             <div style={{ maxWidth: "600px" }}>
               <form onSubmit={handleSaveSettings} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {/* Site Accent & Brand Color */}
+                <div style={cardStyle}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
+                    <Palette size={18} style={{ color: settings.accentColor || "#D4AF37" }} />
+                    <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: settings.accentColor || "#D4AF37", margin: 0 }}>
+                      Site Accent & Brand Color
+                    </h3>
+                  </div>
+                  <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
+                    Customize the primary accent color across the entire site — including buttons, badges, price highlights, category pills, focus states, and decorative glows.
+                  </p>
+
+                  {/* Color Presets */}
+                  <label style={labelStyle}>Quick Presets</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "0.5rem", marginBottom: "1.25rem" }}>
+                    {COLOR_PRESETS.map((preset) => {
+                      const isSelected = (settings.accentColor || "#D4AF37").toLowerCase() === preset.hex.toLowerCase();
+                      return (
+                        <button
+                          key={preset.hex}
+                          type="button"
+                          onClick={() => updateAccentColor(preset.hex)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            padding: "0.5rem 0.75rem",
+                            background: isSelected ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)",
+                            border: isSelected ? `2px solid ${preset.hex}` : "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "0.5rem",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "14px",
+                              height: "14px",
+                              borderRadius: "50%",
+                              backgroundColor: preset.hex,
+                              boxShadow: `0 0 8px ${preset.hex}40`,
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span style={{ fontSize: "0.72rem", fontWeight: isSelected ? 800 : 500, color: isSelected ? "#fff" : "rgba(255,255,255,0.7)" }}>
+                            {preset.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Custom Color Picker & Hex Input */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap", padding: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.75rem", marginBottom: "1.25rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <input
+                        type="color"
+                        value={settings.accentColor || "#D4AF37"}
+                        onChange={(e) => updateAccentColor(e.target.value)}
+                        style={{
+                          width: "44px",
+                          height: "44px",
+                          borderRadius: "0.5rem",
+                          border: "2px solid rgba(255,255,255,0.2)",
+                          cursor: "pointer",
+                          background: "transparent",
+                          padding: 0,
+                        }}
+                        title="Choose custom color"
+                      />
+                      <div>
+                        <label style={{ ...labelStyle, marginBottom: "0.2rem" }}>Custom Hex Code</label>
+                        <input
+                          type="text"
+                          value={settings.accentColor || "#D4AF37"}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val.startsWith("#") || val.length <= 7) {
+                              updateAccentColor(val);
+                            }
+                          }}
+                          placeholder="var(--accent-color)"
+                          style={{
+                            ...inputStyle,
+                            width: "120px",
+                            fontFamily: "monospace",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            padding: "0.45rem 0.65rem",
+                            fontSize: "0.85rem",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => updateAccentColor("#D4AF37")}
+                      style={{
+                        marginLeft: "auto",
+                        padding: "0.45rem 0.85rem",
+                        borderRadius: "0.5rem",
+                        background: "transparent",
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        color: "rgba(255,255,255,0.7)",
+                        fontSize: "0.72rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Reset to Classic Gold
+                    </button>
+                  </div>
+
+                  {/* Live Interactive Preview */}
+                  <div>
+                    <label style={labelStyle}>Live Site Elements Preview</label>
+                    <div
+                      style={{
+                        padding: "1.25rem",
+                        background: "#0c0c0e",
+                        border: `1px solid ${settings.accentColor || "#D4AF37"}33`,
+                        borderRadius: "0.75rem",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "1rem",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem" }}>
+                        <button
+                          type="button"
+                          style={{
+                            background: settings.accentColor || "#D4AF37",
+                            color: "#0f0f0f",
+                            padding: "0.55rem 1.25rem",
+                            borderRadius: "9999px",
+                            fontWeight: 800,
+                            fontSize: "0.7rem",
+                            border: "none",
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                            boxShadow: `0 4px 14px ${settings.accentColor || "#D4AF37"}40`,
+                            cursor: "default",
+                          }}
+                        >
+                          Book Now Button
+                        </button>
+
+                        <span
+                          style={{
+                            background: `${settings.accentColor || "#D4AF37"}15`,
+                            border: `1px solid ${settings.accentColor || "#D4AF37"}40`,
+                            color: settings.accentColor || "#D4AF37",
+                            padding: "0.3rem 0.75rem",
+                            borderRadius: "9999px",
+                            fontWeight: 800,
+                            fontSize: "0.62rem",
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          ★ Top Rated Rental
+                        </span>
+
+                        <span
+                          style={{
+                            fontFamily: "var(--font-heading)",
+                            fontWeight: 900,
+                            fontSize: "1.05rem",
+                            color: settings.accentColor || "#D4AF37",
+                          }}
+                        >
+                          $249.00 / day
+                        </span>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <input
+                          type="checkbox"
+                          checked={true}
+                          readOnly
+                          style={{ accentColor: settings.accentColor || "#D4AF37", width: "16px", height: "16px" }}
+                        />
+                        <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>
+                          Active Selection & Form Accents
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Feature Toggles */}
                 <div style={cardStyle}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", marginBottom: "1.25rem" }}>Feature Toggles</h3>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", marginBottom: "1.25rem" }}>Feature Toggles</h3>
                   {[
                     { key: "categoriesEnabled",  label: "Browse by Category Section", desc: "Show the 'Browse by Category' filter list on the homepage." },
                     { key: "featuredRentalsEnabled", label: "Top Rental Equipment Section", desc: "Show the 'Top Rental Equipment' cards section on the homepage." },
@@ -2549,7 +2762,7 @@ export default function AdminDashboard() {
 
                 {/* Deposit Configuration */}
                 <div style={cardStyle}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", marginBottom: "1.25rem" }}>Deposit Configuration</h3>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", marginBottom: "1.25rem" }}>Deposit Configuration</h3>
                   <div>
                     <label style={labelStyle}>Deposit Percentage (%)</label>
                     <input 
@@ -2576,7 +2789,7 @@ export default function AdminDashboard() {
 
                 {/* Analytics */}
                 <div style={cardStyle}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", marginBottom: "1rem" }}>Analytics</h3>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", marginBottom: "1rem" }}>Analytics</h3>
                   <div>
                     <label style={labelStyle}>Google Analytics ID (G-XXXXXXXXXX)</label>
                     <input type="text" value={settings.analyticsId} onChange={e => setSettings(s => ({ ...s, analyticsId: e.target.value }))} placeholder="G-XXXXXXXXXX" style={inputStyle} />
@@ -2585,7 +2798,7 @@ export default function AdminDashboard() {
 
                 {/* Promo Codes Configuration */}
                 <div style={cardStyle}>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Active Promo Codes</span>
                     <button
                       type="button"
@@ -2611,7 +2824,7 @@ export default function AdminDashboard() {
                           promoCodes: [...s.promoCodes, { code: formattedCode, type, value }]
                         }));
                       }}
-                      style={{ background: "transparent", border: "1px solid rgba(212,175,55,0.4)", borderRadius: "0.25rem", padding: "0.2rem 0.5rem", color: "#D4AF37", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                      style={{ background: "transparent", border: "1px solid rgba(var(--accent-rgb),0.4)", borderRadius: "0.25rem", padding: "0.2rem 0.5rem", color: "var(--accent-color)", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
                     >
                       + Add Promo Code
                     </button>
@@ -2648,7 +2861,7 @@ export default function AdminDashboard() {
 
                 <button
                   type="submit" disabled={savingSettings}
-                  style={{ alignSelf: "flex-start", padding: "0.8rem 2rem", borderRadius: "0.625rem", background: "linear-gradient(135deg, #D4AF37, #f5e8a0)", border: "none", color: "#000", fontWeight: 800, fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 4px 16px rgba(212,175,55,0.25)" }}
+                  style={{ alignSelf: "flex-start", padding: "0.8rem 2rem", borderRadius: "0.625rem", background: "linear-gradient(135deg, var(--accent-color), var(--accent-light))", border: "none", color: "#000", fontWeight: 800, fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 4px 16px rgba(var(--accent-rgb),0.25)" }}
                 >
                   <Save size={15} />{savingSettings ? "Saving…" : "Save All Settings"}
                 </button>
@@ -2673,7 +2886,7 @@ export default function AdminDashboard() {
               <div style={cardStyle}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
                   <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#ffffff", margin: 0 }}>Special Deals ({specials.length})</h3>
-                  <button onClick={startCreateSpecial} style={{ padding: "0.55rem 1.1rem", borderRadius: "0.5rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <button onClick={startCreateSpecial} style={{ padding: "0.55rem 1.1rem", borderRadius: "0.5rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <Plus size={14} />Add Special Deal
                   </button>
                 </div>
@@ -2691,7 +2904,7 @@ export default function AdminDashboard() {
                             <Badge label={spec.enabled ? "Active" : "Off"} color={spec.enabled ? "green" : "red"} />
                             {spec.featured && <Badge label="★ Featured" color="purple" />}
                           </div>
-                          <p style={{ color: "#D4AF37", fontWeight: 800, fontSize: "0.85rem", margin: 0 }}>
+                          <p style={{ color: "var(--accent-color)", fontWeight: 800, fontSize: "0.85rem", margin: 0 }}>
                             ${spec.specialPrice} <span style={{ textDecoration: "line-through", color: "rgba(255,255,255,0.4)", fontSize: "0.72rem", fontWeight: 400 }}>${spec.originalPrice}</span>
                             {spec.promoCode && <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", fontWeight: 400 }}> · Code: {spec.promoCode}</span>}
                           </p>
@@ -2701,7 +2914,7 @@ export default function AdminDashboard() {
                             <button onClick={() => startEditSpecial(spec)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#fff", padding: "0.45rem", borderRadius: "0.375rem", cursor: "pointer", display: "flex" }} title="Edit">
                               <Edit size={14} />
                             </button>
-                            <button onClick={() => handleDuplicateSpecial(spec.id)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#D4AF37", padding: "0.45rem", borderRadius: "0.375rem", cursor: "pointer", display: "flex" }} title="Duplicate">
+                            <button onClick={() => handleDuplicateSpecial(spec.id)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "var(--accent-color)", padding: "0.45rem", borderRadius: "0.375rem", cursor: "pointer", display: "flex" }} title="Duplicate">
                               <Copy size={14} />
                             </button>
                           </div>
@@ -2750,14 +2963,14 @@ export default function AdminDashboard() {
                             <td>
                               <div style={{ fontWeight: 700, color: "#ffffff", fontSize: "0.85rem" }}>{spec.title}</div>
                               {spec.badge && (
-                                <span style={{ display: "inline-block", background: "rgba(212,175,55,0.15)", color: "#D4AF37", fontSize: "0.6rem", fontWeight: 700, padding: "0.1rem 0.4rem", borderRadius: "0.25rem", marginTop: "0.2rem" }}>
+                                <span style={{ display: "inline-block", background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent-color)", fontSize: "0.6rem", fontWeight: 700, padding: "0.1rem 0.4rem", borderRadius: "0.25rem", marginTop: "0.2rem" }}>
                                   {spec.badge}
                                 </span>
                               )}
                             </td>
                             <td>
                               {spec.promoCode ? (
-                                <code style={{ background: "rgba(255,255,255,0.05)", padding: "0.2rem 0.4rem", borderRadius: "0.25rem", fontSize: "0.75rem", color: "#D4AF37" }}>
+                                <code style={{ background: "rgba(255,255,255,0.05)", padding: "0.2rem 0.4rem", borderRadius: "0.25rem", fontSize: "0.75rem", color: "var(--accent-color)" }}>
                                   {spec.promoCode}
                                 </code>
                               ) : (
@@ -2767,7 +2980,7 @@ export default function AdminDashboard() {
                             <td style={{ textAlign: "right", textDecoration: "line-through", color: "rgba(255,255,255,0.3)", fontSize: "0.8rem" }}>
                               ${spec.originalPrice}
                             </td>
-                            <td style={{ textAlign: "right", fontWeight: 700, color: "#D4AF37", fontSize: "0.85rem" }}>
+                            <td style={{ textAlign: "right", fontWeight: 700, color: "var(--accent-color)", fontSize: "0.85rem" }}>
                               ${spec.specialPrice}
                             </td>
                             <td>
@@ -2790,8 +3003,8 @@ export default function AdminDashboard() {
                                 <button
                                   onClick={() => handleToggleSpecialFeatured(spec)}
                                   style={{
-                                    background: spec.featured ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.05)",
-                                    color: spec.featured ? "#D4AF37" : "rgba(255,255,255,0.4)",
+                                    background: spec.featured ? "rgba(var(--accent-rgb),0.15)" : "rgba(255,255,255,0.05)",
+                                    color: spec.featured ? "var(--accent-color)" : "rgba(255,255,255,0.4)",
                                     border: "none",
                                     padding: "0.25rem 0.5rem",
                                     borderRadius: "0.25rem",
@@ -2807,7 +3020,7 @@ export default function AdminDashboard() {
                             <td style={{ textAlign: "right" }}>
                               <div style={{ display: "flex", gap: "0.35rem", justifyContent: "flex-end" }}>
                                 <button onClick={() => startEditSpecial(spec)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#fff", padding: "0.35rem", borderRadius: "0.25rem", cursor: "pointer" }} title="Edit"><Edit size={14} /></button>
-                                <button onClick={() => handleDuplicateSpecial(spec.id)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "#D4AF37", padding: "0.35rem", borderRadius: "0.25rem", cursor: "pointer" }} title="Duplicate"><Copy size={14} /></button>
+                                <button onClick={() => handleDuplicateSpecial(spec.id)} style={{ background: "rgba(255,255,255,0.05)", border: "none", color: "var(--accent-color)", padding: "0.35rem", borderRadius: "0.25rem", cursor: "pointer" }} title="Duplicate"><Copy size={14} /></button>
                                 <button
                                   onClick={() => setSpecialDeleteConfirmId(spec.id)}
                                   style={{
@@ -2839,14 +3052,14 @@ export default function AdminDashboard() {
               {(editingSpecial || isCreatingSpecial) && (
                 <div style={{
                   ...cardStyle,
-                  border: "1px solid rgba(212,175,55,0.25)",
+                  border: "1px solid rgba(var(--accent-rgb),0.25)",
                   position: isMobile ? "static" : "sticky",
                   top: isMobile ? undefined : "80px",
                   maxHeight: isMobile ? undefined : "calc(100vh - 100px)",
                   overflowY: isMobile ? undefined : "auto"
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                    <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>
+                    <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", margin: 0 }}>
                       {isCreatingSpecial ? "Create Special" : `Edit #${editingSpecial?.id}`}
                     </h3>
                     <button onClick={() => { setEditingSpecial(null); setIsCreatingSpecial(false); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex" }}><X size={18} /></button>
@@ -2942,7 +3155,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-                      <button type="submit" style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                      <button type="submit" style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
                         Save Special
                       </button>
                       <button type="button" onClick={() => { setEditingSpecial(null); setIsCreatingSpecial(false); }} style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
@@ -2986,10 +3199,10 @@ export default function AdminDashboard() {
                 <button
                   onClick={startCreatePackage}
                   style={{
-                    background: "linear-gradient(135deg, #D4AF37 0%, #f5e8a0 50%, #D4AF37 100%)",
+                    background: "linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 50%, var(--accent-color) 100%)",
                     border: "none", color: "#000", fontWeight: 800, padding: "0.6rem 1.1rem",
                     borderRadius: "0.5rem", fontSize: "0.82rem", cursor: "pointer", display: "flex",
-                    alignItems: "center", gap: "0.4rem", boxShadow: "0 4px 15px rgba(212,175,55,0.2)"
+                    alignItems: "center", gap: "0.4rem", boxShadow: "0 4px 15px rgba(var(--accent-rgb),0.2)"
                   }}
                 >
                   <Plus size={16} /> Create New Package
@@ -3004,7 +3217,7 @@ export default function AdminDashboard() {
                       key={pkg.id}
                       style={{
                         ...cardStyle,
-                        border: `1px solid ${pkg.color || "#D4AF37"}33`,
+                        border: `1px solid ${pkg.color || "var(--accent-color)"}33`,
                         position: "relative",
                         display: "flex",
                         flexDirection: "column",
@@ -3012,7 +3225,7 @@ export default function AdminDashboard() {
                       }}
                     >
                       {/* Color bar top indicator */}
-                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "4px", background: pkg.color || "#D4AF37", borderRadius: "1rem 1rem 0 0" }} />
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "4px", background: pkg.color || "var(--accent-color)", borderRadius: "1rem 1rem 0 0" }} />
 
                       {/* Header */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingTop: "0.5rem" }}>
@@ -3020,12 +3233,12 @@ export default function AdminDashboard() {
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                             <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>{pkg.name}</h3>
                             {pkg.popular && (
-                              <span style={{ background: "rgba(212,175,55,0.2)", border: "1px solid rgba(212,175,55,0.4)", color: "#D4AF37", fontSize: "0.6rem", fontWeight: 800, padding: "0.15rem 0.5rem", borderRadius: "9999px", textTransform: "uppercase" }}>
+                              <span style={{ background: "rgba(var(--accent-rgb),0.2)", border: "1px solid rgba(var(--accent-rgb),0.4)", color: "var(--accent-color)", fontSize: "0.6rem", fontWeight: 800, padding: "0.15rem 0.5rem", borderRadius: "9999px", textTransform: "uppercase" }}>
                                 Popular
                               </span>
                             )}
                           </div>
-                          {pkg.tagline && <p style={{ color: pkg.color || "#D4AF37", fontSize: "0.75rem", fontWeight: 700, margin: "0.2rem 0 0" }}>{pkg.tagline}</p>}
+                          {pkg.tagline && <p style={{ color: pkg.color || "var(--accent-color)", fontSize: "0.75rem", fontWeight: 700, margin: "0.2rem 0 0" }}>{pkg.tagline}</p>}
                         </div>
                         <div style={{ textAlign: "right" }}>
                           <div style={{ fontSize: "1.25rem", fontWeight: 900, color: "#ffffff" }}>${pkg.price}</div>
@@ -3037,7 +3250,7 @@ export default function AdminDashboard() {
 
                       {/* Included Items */}
                       <div>
-                        <div style={{ fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#D4AF37", marginBottom: "0.4rem" }}>
+                        <div style={{ fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--accent-color)", marginBottom: "0.4rem" }}>
                           Included Features ({pkg.items?.length || 0})
                         </div>
                         <ul style={{ margin: 0, paddingLeft: "1rem", fontSize: "0.78rem", color: "rgba(255,255,255,0.75)", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
@@ -3057,7 +3270,7 @@ export default function AdminDashboard() {
                             {pkg.addons.map((ad, i) => (
                               <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.03)", padding: "0.35rem 0.6rem", borderRadius: "0.375rem", fontSize: "0.75rem" }}>
                                 <span style={{ color: "rgba(255,255,255,0.8)" }}>{ad.label}</span>
-                                <span style={{ color: "#D4AF37", fontWeight: 700 }}>+${ad.price}</span>
+                                <span style={{ color: "var(--accent-color)", fontWeight: 700 }}>+${ad.price}</span>
                               </div>
                             ))}
                           </div>
@@ -3074,10 +3287,10 @@ export default function AdminDashboard() {
                         </button>
                         <button
                           onClick={() => handleTogglePkgPopular(pkg)}
-                          style={{ padding: "0.45rem 0.6rem", borderRadius: "0.375rem", background: pkg.popular ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.04)", border: pkg.popular ? "1px solid rgba(212,175,55,0.3)" : "1px solid rgba(255,255,255,0.08)", color: pkg.popular ? "#D4AF37" : "rgba(255,255,255,0.4)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
+                          style={{ padding: "0.45rem 0.6rem", borderRadius: "0.375rem", background: pkg.popular ? "rgba(var(--accent-rgb),0.15)" : "rgba(255,255,255,0.04)", border: pkg.popular ? "1px solid rgba(var(--accent-rgb),0.3)" : "1px solid rgba(255,255,255,0.08)", color: pkg.popular ? "var(--accent-color)" : "rgba(255,255,255,0.4)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
                           title="Toggle Popular Badge"
                         >
-                          <Star size={14} fill={pkg.popular ? "#D4AF37" : "none"} />
+                          <Star size={14} fill={pkg.popular ? "var(--accent-color)" : "none"} />
                         </button>
                         <button
                           onClick={() => setPkgDeleteConfirmId(pkg.id)}
@@ -3095,14 +3308,14 @@ export default function AdminDashboard() {
                 {(editingPkg || isCreatingPkg) && (
                   <div style={{
                     ...cardStyle,
-                    border: "1px solid rgba(212,175,55,0.25)",
+                    border: "1px solid rgba(var(--accent-rgb),0.25)",
                     position: isMobile ? "static" : "sticky",
                     top: isMobile ? undefined : "80px",
                     maxHeight: isMobile ? undefined : "calc(100vh - 100px)",
                     overflowY: isMobile ? undefined : "auto"
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                      <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "#D4AF37", margin: 0 }}>
+                      <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--accent-color)", margin: 0 }}>
                         {isCreatingPkg ? "Create Package" : `Edit #${editingPkg?.id}`}
                       </h3>
                       <button onClick={() => { setEditingPkg(null); setIsCreatingPkg(false); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex" }}><X size={18} /></button>
@@ -3200,7 +3413,7 @@ export default function AdminDashboard() {
                                 setNewItemText("");
                               }
                             }}
-                            style={{ background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, padding: "0.4rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.75rem", cursor: "pointer", whiteSpace: "nowrap" }}
+                            style={{ background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, padding: "0.4rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.75rem", cursor: "pointer", whiteSpace: "nowrap" }}
                           >
                             + Add
                           </button>
@@ -3224,7 +3437,7 @@ export default function AdminDashboard() {
                                 style={{ ...inputStyle, flex: 2, padding: "0.4rem 0.6rem", fontSize: "0.78rem" }}
                               />
                               <div style={{ display: "flex", alignItems: "center", background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.375rem", padding: "0 0.4rem" }}>
-                                <span style={{ color: "#D4AF37", fontSize: "0.75rem", fontWeight: 700 }}>+$</span>
+                                <span style={{ color: "var(--accent-color)", fontSize: "0.75rem", fontWeight: 700 }}>+$</span>
                                 <input
                                   type="number"
                                   value={ad.price}
@@ -3274,7 +3487,7 @@ export default function AdminDashboard() {
                                 setNewAddonPrice("100");
                               }
                             }}
-                            style={{ background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, padding: "0.4rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.75rem", cursor: "pointer", whiteSpace: "nowrap" }}
+                            style={{ background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, padding: "0.4rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.75rem", cursor: "pointer", whiteSpace: "nowrap" }}
                           >
                             + Addon
                           </button>
@@ -3287,7 +3500,7 @@ export default function AdminDashboard() {
                       </div>
 
                       <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-                        <button type="submit" style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "#D4AF37", border: "none", color: "#000", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
+                        <button type="submit" style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "var(--accent-color)", border: "none", color: "#000", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
                           Save Package
                         </button>
                         <button type="button" onClick={() => { setEditingPkg(null); setIsCreatingPkg(false); }} style={{ flex: 1, padding: "0.6rem", borderRadius: "0.375rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: "0.8rem" }}>
@@ -3376,7 +3589,7 @@ export default function AdminDashboard() {
           }}>
             <div style={{
               background: "#111111",
-              border: "1px solid rgba(212,175,55,0.3)",
+              border: "1px solid rgba(var(--accent-rgb),0.3)",
               borderRadius: "1.25rem",
               width: "100%",
               maxWidth: "460px",
@@ -3394,7 +3607,7 @@ export default function AdminDashboard() {
                 <div>
                   <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "#ffffff", margin: 0 }}>Record Offline Payment</h3>
                   <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", margin: "0.2rem 0 0 0" }}>
-                    Booking Ref: <strong style={{ color: "#D4AF37" }}>{paymentRecordingBookingId}</strong>
+                    Booking Ref: <strong style={{ color: "var(--accent-color)" }}>{paymentRecordingBookingId}</strong>
                   </p>
                 </div>
                 <button
@@ -3435,7 +3648,7 @@ export default function AdminDashboard() {
                     value={paymentAmount}
                     onChange={e => setPaymentAmount(e.currentTarget.value)}
                     style={{ ...inputStyle, fontSize: "1rem", fontWeight: 600 }}
-                    onFocus={e => { e.currentTarget.style.borderColor = "#D4AF37"; }}
+                    onFocus={e => { e.currentTarget.style.borderColor = "var(--accent-color)"; }}
                     onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
                   />
                 </div>
@@ -3465,7 +3678,7 @@ export default function AdminDashboard() {
                     onChange={e => setPaymentReferenceId(e.currentTarget.value)}
                     placeholder="e.g. Check #1042, TXN-8273"
                     style={inputStyle}
-                    onFocus={e => { e.currentTarget.style.borderColor = "#D4AF37"; }}
+                    onFocus={e => { e.currentTarget.style.borderColor = "var(--accent-color)"; }}
                     onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
                   />
                 </div>
@@ -3587,7 +3800,7 @@ export default function AdminDashboard() {
             top: 0, right: 0, bottom: 0,
             width: "100%", maxWidth: "420px",
             background: "#111111",
-            borderLeft: "1px solid rgba(212,175,55,0.3)",
+            borderLeft: "1px solid rgba(var(--accent-rgb),0.3)",
             boxShadow: "-10px 0 40px rgba(0,0,0,0.5)",
             zIndex: 150,
             display: "flex",
@@ -3613,7 +3826,7 @@ export default function AdminDashboard() {
                   </h3>
                 </div>
                 <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", margin: "0.15rem 0 0" }}>
-                  Booking Ref: <strong style={{ color: "#D4AF37" }}>{activeChatBookingId}</strong>
+                  Booking Ref: <strong style={{ color: "var(--accent-color)" }}>{activeChatBookingId}</strong>
                 </p>
               </div>
               <button
@@ -3626,8 +3839,8 @@ export default function AdminDashboard() {
 
             {/* Quick Context Bar */}
             <div style={{
-              background: "rgba(212,175,55,0.05)",
-              borderBottom: "1px solid rgba(212,175,55,0.1)",
+              background: "rgba(var(--accent-rgb),0.05)",
+              borderBottom: "1px solid rgba(var(--accent-rgb),0.1)",
               padding: "0.625rem 1.25rem",
               fontSize: "0.75rem",
               color: "rgba(255,255,255,0.6)",
@@ -3635,7 +3848,7 @@ export default function AdminDashboard() {
               justifyContent: "space-between",
             }}>
               <span>📅 {currentBooking.event.date}</span>
-              <span style={{ color: "#D4AF37", fontWeight: 700 }}>💵 {fmt(currentBooking.estimatedTotal)}</span>
+              <span style={{ color: "var(--accent-color)", fontWeight: 700 }}>💵 {fmt(currentBooking.estimatedTotal)}</span>
             </div>
 
             {/* Messages Feed */}
@@ -3671,8 +3884,8 @@ export default function AdminDashboard() {
                       }}
                     >
                       <div style={{
-                        background: isAdminMsg ? "rgba(212,175,55,0.15)" : "#161616",
-                        border: `1px solid ${isAdminMsg ? "rgba(212,175,55,0.25)" : "rgba(255,255,255,0.05)"}`,
+                        background: isAdminMsg ? "rgba(var(--accent-rgb),0.15)" : "#161616",
+                        border: `1px solid ${isAdminMsg ? "rgba(var(--accent-rgb),0.25)" : "rgba(255,255,255,0.05)"}`,
                         borderRadius: isAdminMsg ? "1rem 1rem 0 1rem" : "1rem 1rem 1rem 0",
                         padding: "0.75rem 1rem",
                         color: "#ffffff",
@@ -3749,7 +3962,7 @@ export default function AdminDashboard() {
                   value={chatInput}
                   onChange={e => setChatInput(e.currentTarget.value)}
                   style={{ ...inputStyle, flex: 1 }}
-                  onFocus={e => { e.currentTarget.style.borderColor = "#D4AF37"; }}
+                  onFocus={e => { e.currentTarget.style.borderColor = "var(--accent-color)"; }}
                   onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
                 />
 
@@ -3759,7 +3972,7 @@ export default function AdminDashboard() {
                   style={{
                     padding: "0.55rem 1rem",
                     borderRadius: "0.5rem",
-                    background: (!chatInput.trim() && !chatMediaUrl) ? "rgba(255,255,255,0.06)" : "#D4AF37",
+                    background: (!chatInput.trim() && !chatMediaUrl) ? "rgba(255,255,255,0.06)" : "var(--accent-color)",
                     color: (!chatInput.trim() && !chatMediaUrl) ? "rgba(255,255,255,0.2)" : "#000000",
                     border: "none",
                     fontWeight: 700,

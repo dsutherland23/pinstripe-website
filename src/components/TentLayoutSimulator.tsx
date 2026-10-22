@@ -132,7 +132,7 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
         <polygon
           key="peak-1"
           points={`${width / 2},${height / 2 - 6} ${width / 2 + 6},${height / 2} ${width / 2},${height / 2 + 6} ${width / 2 - 6},${height / 2}`}
-          fill="#D4AF37"
+          fill="var(--accent-color)"
           opacity="0.6"
         />
       );
@@ -141,13 +141,13 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
         <polygon
           key="peak-1"
           points={`${width / 2 - 60},${height / 2 - 6} ${width / 2 - 54},${height / 2} ${width / 2 - 60},${height / 2 + 6} ${width / 2 - 66},${height / 2}`}
-          fill="#D4AF37"
+          fill="var(--accent-color)"
           opacity="0.6"
         />,
         <polygon
           key="peak-2"
           points={`${width / 2 + 60},${height / 2 - 6} ${width / 2 + 66},${height / 2} ${width / 2 + 60},${height / 2 + 6} ${width / 2 + 54},${height / 2}`}
-          fill="#D4AF37"
+          fill="var(--accent-color)"
           opacity="0.6"
         />
       );
@@ -157,19 +157,19 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
         <polygon
           key="peak-1"
           points={`${width / 2 - 100},${height / 2 - 6} ${width / 2 - 94},${height / 2} ${width / 2 - 100},${height / 2 + 6} ${width / 2 - 106},${height / 2}`}
-          fill="#D4AF37"
+          fill="var(--accent-color)"
           opacity="0.6"
         />,
         <polygon
           key="peak-2"
           points={`${width / 2},${height / 2 - 6} ${width / 2 + 6},${height / 2} ${width / 2},${height / 2 + 6} ${width / 2 - 6},${height / 2}`}
-          fill="#D4AF37"
+          fill="var(--accent-color)"
           opacity="0.6"
         />,
         <polygon
           key="peak-3"
           points={`${width / 2 + 100},${height / 2 - 6} ${width / 2 + 106},${height / 2} ${width / 2 + 100},${height / 2 + 6} ${width / 2 + 94},${height / 2}`}
-          fill="#D4AF37"
+          fill="var(--accent-color)"
           opacity="0.6"
         />
       );
@@ -183,18 +183,18 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
             width="70"
             height="70"
             rx="4"
-            fill="rgba(212, 175, 55, 0.12)"
-            stroke="#D4AF37"
+            fill="rgba(var(--accent-rgb), 0.12)"
+            stroke="var(--accent-color)"
             strokeWidth="1.5"
             strokeDasharray="4 2"
           />
-          <line x1="0" y1="35" x2="70" y2="35" stroke="#D4AF37" strokeWidth="0.5" opacity="0.4" />
-          <line x1="35" y1="0" x2="35" y2="70" stroke="#D4AF37" strokeWidth="0.5" opacity="0.4" />
+          <line x1="0" y1="35" x2="70" y2="35" stroke="var(--accent-color)" strokeWidth="0.5" opacity="0.4" />
+          <line x1="35" y1="0" x2="35" y2="70" stroke="var(--accent-color)" strokeWidth="0.5" opacity="0.4" />
           <text
             x="35"
             y="39"
             textAnchor="middle"
-            fill="#D4AF37"
+            fill="var(--accent-color)"
             style={{ fontSize: "7px", fontFamily: "var(--font-heading)", fontWeight: 800, letterSpacing: "0.05em" }}
           >
             DANCE FLOOR
@@ -301,7 +301,7 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
             cy={coord.y}
             r={tableRadius}
             fill="var(--card-bg)"
-            stroke="#D4AF37"
+            stroke="var(--accent-color)"
             strokeWidth="1.5"
           />,
           <text
@@ -327,7 +327,7 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
               cx={cx}
               cy={cy}
               r="2.2"
-              fill="#D4AF37"
+              fill="var(--accent-color)"
               opacity="0.9"
             />
           );
@@ -345,12 +345,12 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
       // Draw ceremony altar/stage indicator at the front of the tent
       itemsList.push(
         <g key="stage" transform={`translate(${width / 2 - 30}, ${ry + 20})`}>
-          <rect width="60" height="15" rx="1.5" fill="none" stroke="#D4AF37" strokeWidth="1.5" />
+          <rect width="60" height="15" rx="1.5" fill="none" stroke="var(--accent-color)" strokeWidth="1.5" />
           <text
             x="30"
             y="9.5"
             textAnchor="middle"
-            fill="#D4AF37"
+            fill="var(--accent-color)"
             style={{ fontSize: "6px", fontFamily: "var(--font-heading)", fontWeight: 800 }}
           >
             ALTAR / STAGE
@@ -414,7 +414,7 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
           height={tentH + 6}
           rx="18"
           fill="none"
-          stroke="rgba(212, 175, 55, 0.15)"
+          stroke="rgba(var(--accent-rgb), 0.15)"
           strokeWidth="6"
         />
 
@@ -426,7 +426,7 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
           height={tentH}
           rx="15"
           fill="none"
-          stroke="#D4AF37"
+          stroke="var(--accent-color)"
           strokeWidth="2.5"
           strokeDasharray="8 6"
         />
@@ -445,7 +445,7 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
           x={rx + 55}
           y={ry + tentH - 12}
           textAnchor="middle"
-          fill="#D4AF37"
+          fill="var(--accent-color)"
           style={{ fontSize: "6.5px", fontFamily: "var(--font-heading)", fontWeight: 800, letterSpacing: "0.05em" }}
         >
           {tentConfig.size} TENT AREA
@@ -495,8 +495,8 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
             <div style={{ marginBottom: "1.5rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                 <label style={{ fontSize: "0.75rem", fontFamily: "var(--font-heading)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <Users size={14} color="#D4AF37" />
-                  Estimated Guests: <span style={{ color: "#D4AF37", fontSize: "0.85rem", fontWeight: 800 }}>{guestCount} Seats</span>
+                  <Users size={14} color="var(--accent-color)" />
+                  Estimated Guests: <span style={{ color: "var(--accent-color)", fontSize: "0.85rem", fontWeight: 800 }}>{guestCount} Seats</span>
                 </label>
               </div>
               <input
@@ -508,7 +508,7 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
                 onChange={(e) => setGuestCount(Number(e.target.value))}
                 style={{
                   width: "100%",
-                  accentColor: "#D4AF37",
+                  accentColor: "var(--accent-color)",
                   cursor: "pointer",
                 }}
               />
@@ -531,9 +531,9 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
                     flex: 1,
                     padding: "0.75rem 1rem",
                     borderRadius: "0.75rem",
-                    border: layoutType === "banquet" ? "2px solid #D4AF37" : "1.5px solid var(--border-secondary)",
-                    background: layoutType === "banquet" ? "rgba(212, 175, 55, 0.08)" : "transparent",
-                    color: layoutType === "banquet" ? "#D4AF37" : "var(--text-secondary)",
+                    border: layoutType === "banquet" ? "2px solid var(--accent-color)" : "1.5px solid var(--border-secondary)",
+                    background: layoutType === "banquet" ? "rgba(var(--accent-rgb), 0.08)" : "transparent",
+                    color: layoutType === "banquet" ? "var(--accent-color)" : "var(--text-secondary)",
                     fontFamily: "var(--font-heading)",
                     fontSize: "0.68rem",
                     fontWeight: 800,
@@ -551,9 +551,9 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
                     flex: 1,
                     padding: "0.75rem 1rem",
                     borderRadius: "0.75rem",
-                    border: layoutType === "ceremony" ? "2px solid #D4AF37" : "1.5px solid var(--border-secondary)",
-                    background: layoutType === "ceremony" ? "rgba(212, 175, 55, 0.08)" : "transparent",
-                    color: layoutType === "ceremony" ? "#D4AF37" : "var(--text-secondary)",
+                    border: layoutType === "ceremony" ? "2px solid var(--accent-color)" : "1.5px solid var(--border-secondary)",
+                    background: layoutType === "ceremony" ? "rgba(var(--accent-rgb), 0.08)" : "transparent",
+                    color: layoutType === "ceremony" ? "var(--accent-color)" : "var(--text-secondary)",
                     fontFamily: "var(--font-heading)",
                     fontSize: "0.68rem",
                     fontWeight: 800,
@@ -584,19 +584,19 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
                     justifyContent: "space-between",
                     padding: "0.75rem 1rem",
                     borderRadius: "0.75rem",
-                    background: includeDanceFloor ? "rgba(212, 175, 55, 0.04)" : "var(--bg-secondary)",
-                    border: `1px solid ${includeDanceFloor ? "#D4AF37" : "var(--border-secondary)"}`,
+                    background: includeDanceFloor ? "rgba(var(--accent-rgb), 0.04)" : "var(--bg-secondary)",
+                    border: `1px solid ${includeDanceFloor ? "var(--accent-color)" : "var(--border-secondary)"}`,
                     cursor: "pointer",
                     transition: "all 0.2s ease",
                   }}
                 >
                   <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                    <div style={{ width: "16px", height: "16px", borderRadius: "4px", border: "1.5px solid #D4AF37", display: "flex", alignItems: "center", justifyContent: "center", background: includeDanceFloor ? "#D4AF37" : "transparent" }}>
+                    <div style={{ width: "16px", height: "16px", borderRadius: "4px", border: "1.5px solid var(--accent-color)", display: "flex", alignItems: "center", justifyContent: "center", background: includeDanceFloor ? "var(--accent-color)" : "transparent" }}>
                       {includeDanceFloor && <Check size={12} color="#0f0f0f" strokeWidth={3} />}
                     </div>
                     <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-primary)" }}>10' × 10' Dance Floor</span>
                   </div>
-                  <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#D4AF37", letterSpacing: "0.02em", fontFamily: "var(--font-heading)" }}>+20 Guest Spacing Equivalent</span>
+                  <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--accent-color)", letterSpacing: "0.02em", fontFamily: "var(--font-heading)" }}>+20 Guest Spacing Equivalent</span>
                 </div>
 
                 {/* Accessory 2 */}
@@ -608,19 +608,19 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
                     justifyContent: "space-between",
                     padding: "0.75rem 1rem",
                     borderRadius: "0.75rem",
-                    background: includeBuffet ? "rgba(212, 175, 55, 0.04)" : "var(--bg-secondary)",
-                    border: `1px solid ${includeBuffet ? "#D4AF37" : "var(--border-secondary)"}`,
+                    background: includeBuffet ? "rgba(var(--accent-rgb), 0.04)" : "var(--bg-secondary)",
+                    border: `1px solid ${includeBuffet ? "var(--accent-color)" : "var(--border-secondary)"}`,
                     cursor: "pointer",
                     transition: "all 0.2s ease",
                   }}
                 >
                   <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                    <div style={{ width: "16px", height: "16px", borderRadius: "4px", border: "1.5px solid #D4AF37", display: "flex", alignItems: "center", justifyContent: "center", background: includeBuffet ? "#D4AF37" : "transparent" }}>
+                    <div style={{ width: "16px", height: "16px", borderRadius: "4px", border: "1.5px solid var(--accent-color)", display: "flex", alignItems: "center", justifyContent: "center", background: includeBuffet ? "var(--accent-color)" : "transparent" }}>
                       {includeBuffet && <Check size={12} color="#0f0f0f" strokeWidth={3} />}
                     </div>
                     <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-primary)" }}>Double Buffet Catering Tables (8')</span>
                   </div>
-                  <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#D4AF37", letterSpacing: "0.02em", fontFamily: "var(--font-heading)" }}>+15 Guest Spacing Equivalent</span>
+                  <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--accent-color)", letterSpacing: "0.02em", fontFamily: "var(--font-heading)" }}>+15 Guest Spacing Equivalent</span>
                 </div>
 
                 {/* Accessory 3 */}
@@ -632,19 +632,19 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
                     justifyContent: "space-between",
                     padding: "0.75rem 1rem",
                     borderRadius: "0.75rem",
-                    background: includeConcessions ? "rgba(212, 175, 55, 0.04)" : "var(--bg-secondary)",
-                    border: `1px solid ${includeConcessions ? "#D4AF37" : "var(--border-secondary)"}`,
+                    background: includeConcessions ? "rgba(var(--accent-rgb), 0.04)" : "var(--bg-secondary)",
+                    border: `1px solid ${includeConcessions ? "var(--accent-color)" : "var(--border-secondary)"}`,
                     cursor: "pointer",
                     transition: "all 0.2s ease",
                   }}
                 >
                   <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-                    <div style={{ width: "16px", height: "16px", borderRadius: "4px", border: "1.5px solid #D4AF37", display: "flex", alignItems: "center", justifyContent: "center", background: includeConcessions ? "#D4AF37" : "transparent" }}>
+                    <div style={{ width: "16px", height: "16px", borderRadius: "4px", border: "1.5px solid var(--accent-color)", display: "flex", alignItems: "center", justifyContent: "center", background: includeConcessions ? "var(--accent-color)" : "transparent" }}>
                       {includeConcessions && <Check size={12} color="#0f0f0f" strokeWidth={3} />}
                     </div>
                     <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-primary)" }}>Concessions & Treat Carts Zone</span>
                   </div>
-                  <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#D4AF37", letterSpacing: "0.02em", fontFamily: "var(--font-heading)" }}>+10 Guest Spacing Equivalent</span>
+                  <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--accent-color)", letterSpacing: "0.02em", fontFamily: "var(--font-heading)" }}>+10 Guest Spacing Equivalent</span>
                 </div>
               </div>
             </div>
@@ -659,7 +659,7 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
                   {tentConfig.size} {tentConfig.name}
                 </h4>
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginTop: "0.2rem" }}>
-                  <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "#D4AF37" }}>${tentConfig.price}</span>
+                  <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--accent-color)" }}>${tentConfig.price}</span>
                   <span style={{ fontSize: "0.65rem", color: "var(--text-secondary)" }}>(Professional Setup Included)</span>
                 </div>
               </div>
@@ -694,7 +694,7 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
                   2D Top-Down Spacing Diagram
                 </h3>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.65rem", color: "var(--text-secondary)", fontFamily: "var(--font-heading)", fontWeight: 700 }}>
-                  <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#D4AF37" }} />
+                  <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-color)" }} />
                   {tentConfig.size} Tent Area ({tentConfig.area} sq.ft)
                 </div>
               </div>
@@ -703,16 +703,16 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1rem", justifyContent: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.6rem", fontFamily: "var(--font-heading)", fontWeight: 700, color: "var(--text-secondary)" }}>
-                  <span style={{ display: "inline-block", width: "6px", height: "6px", borderRadius: "50%", background: "none", border: "1.5px solid #D4AF37" }} />
+                  <span style={{ display: "inline-block", width: "6px", height: "6px", borderRadius: "50%", background: "none", border: "1.5px solid var(--accent-color)" }} />
                   Table
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.6rem", fontFamily: "var(--font-heading)", fontWeight: 700, color: "var(--text-secondary)" }}>
-                  <span style={{ display: "inline-block", width: "5px", height: "5px", borderRadius: "50%", background: "#D4AF37" }} />
+                  <span style={{ display: "inline-block", width: "5px", height: "5px", borderRadius: "50%", background: "var(--accent-color)" }} />
                   Chairs
                 </div>
                 {includeDanceFloor && (
                   <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.6rem", fontFamily: "var(--font-heading)", fontWeight: 700, color: "var(--text-secondary)" }}>
-                    <span style={{ display: "inline-block", width: "8px", height: "8px", background: "rgba(212,175,55,0.12)", border: "1px dashed #D4AF37", borderRadius: "1px" }} />
+                    <span style={{ display: "inline-block", width: "8px", height: "8px", background: "rgba(var(--accent-rgb),0.12)", border: "1px dashed var(--accent-color)", borderRadius: "1px" }} />
                     Dance Floor
                   </div>
                 )}
@@ -728,8 +728,8 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
             {/* SPECS & ADVISORY PANEL */}
             <div
               style={{
-                background: "rgba(212, 175, 55, 0.05)",
-                border: "1px solid rgba(212, 175, 55, 0.25)",
+                background: "rgba(var(--accent-rgb), 0.05)",
+                border: "1px solid rgba(var(--accent-rgb), 0.25)",
                 borderRadius: "1rem",
                 padding: "1.25rem",
                 display: "flex",
@@ -737,9 +737,9 @@ export default function TentLayoutSimulator({ onOpenQuoteWithItem }: TentLayoutS
                 alignItems: "flex-start",
               }}
             >
-              <HelpCircle size={18} color="#D4AF37" style={{ flexShrink: 0, marginTop: "0.15rem" }} />
+              <HelpCircle size={18} color="var(--accent-color)" style={{ flexShrink: 0, marginTop: "0.15rem" }} />
               <div>
-                <h4 style={{ fontFamily: "var(--font-heading)", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.02em", color: "#bda030", marginBottom: "0.3rem" }}>
+                <h4 style={{ fontFamily: "var(--font-heading)", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--accent-hover)", marginBottom: "0.3rem" }}>
                   Spacing Spacing & Logistics Note
                 </h4>
                 <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>

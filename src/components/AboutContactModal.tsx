@@ -115,7 +115,7 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
         <div style={{ padding: "1.75rem 1.75rem 0.5rem", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", marginBottom: "1.25rem" }}>
             <div>
-              <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#D4AF37", display: "inline-block", marginBottom: "0.25rem" }}>
+              <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--accent-color)", display: "inline-block", marginBottom: "0.25rem" }}>
                 Pinstripes Rentals
               </span>
               <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.3rem", color: "#0f0f0f", margin: 0 }}>
@@ -159,7 +159,7 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
                 cursor: "pointer",
                 transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                 ...(activeTab === "about"
-                  ? { background: "#0f0f0f", color: "#D4AF37", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }
+                  ? { background: "#0f0f0f", color: "var(--accent-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }
                   : { background: "transparent", color: "#666" })
               }}
             >
@@ -181,7 +181,7 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
                 cursor: "pointer",
                 transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                 ...(activeTab === "contact"
-                  ? { background: "#0f0f0f", color: "#D4AF37", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }
+                  ? { background: "#0f0f0f", color: "var(--accent-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }
                   : { background: "transparent", color: "#666" })
               }}
             >
@@ -196,7 +196,7 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
           {/* TAB 1: ABOUT US */}
           {activeTab === "about" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              <div style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.15)", borderRadius: "1.25rem", padding: "1.25rem" }}>
+              <div style={{ background: "rgba(var(--accent-rgb),0.04)", border: "1px solid rgba(var(--accent-rgb),0.15)", borderRadius: "1.25rem", padding: "1.25rem" }}>
                 <p style={{ fontFamily: "var(--font-body)", fontSize: "0.85rem", color: "#333", lineHeight: 1.65, margin: 0 }}>
                   {aboutData.paragraph1}
                 </p>
@@ -229,7 +229,7 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
                     }
                   ].map((p, i) => (
                     <div key={i} style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-                      <div style={{ background: "rgba(212,175,55,0.1)", borderRadius: "0.75rem", padding: "0.5rem", display: "flex", color: "#D4AF37", flexShrink: 0 }}>
+                      <div style={{ background: "rgba(var(--accent-rgb),0.1)", borderRadius: "0.75rem", padding: "0.5rem", display: "flex", color: "var(--accent-color)", flexShrink: 0 }}>
                         <p.Icon size={18} />
                       </div>
                       <div>
@@ -289,8 +289,8 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.borderColor = "#D4AF37";
-                      e.currentTarget.style.background = "rgba(212,175,55,0.02)";
+                      e.currentTarget.style.borderColor = "var(--accent-color)";
+                      e.currentTarget.style.background = "rgba(var(--accent-rgb),0.02)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = "";
@@ -298,7 +298,7 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
                       e.currentTarget.style.background = "#fafafa";
                     }}
                   >
-                    <div style={{ color: "#D4AF37", marginBottom: "0.35rem" }}>
+                    <div style={{ color: "var(--accent-color)", marginBottom: "0.35rem" }}>
                       <c.Icon size={18} />
                     </div>
                     <div style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.55rem", textTransform: "uppercase", color: "#aaa", letterSpacing: "0.05em", marginBottom: "0.15rem" }}>
@@ -361,7 +361,7 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
                         justifyContent: "center",
                         gap: "0.4rem",
                         padding: "0.8rem",
-                        background: "#D4AF37",
+                        background: "var(--accent-color)",
                         border: "none",
                         borderRadius: "0.875rem",
                         fontFamily: "var(--font-heading)",
@@ -371,7 +371,7 @@ export default function AboutContactModal({ isOpen, onClose, defaultTab = "about
                         textTransform: "uppercase",
                         cursor: "pointer",
                         color: "#0f0f0f",
-                        boxShadow: "0 6px 20px rgba(212,175,55,0.25)",
+                        boxShadow: "0 6px 20px rgba(var(--accent-rgb),0.25)",
                         transition: "all 0.2s",
                         marginTop: "0.25rem"
                       }}

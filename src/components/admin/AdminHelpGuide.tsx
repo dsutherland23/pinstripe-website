@@ -27,7 +27,7 @@ interface Article {
 const Note = ({ type = "info", children }: { type?: "info" | "tip" | "warning" | "important"; children: React.ReactNode }) => {
   const map: Record<string, { bg: string; border: string; color: string; icon: React.ReactNode; label: string }> = {
     info:      { bg: "rgba(96,165,250,0.06)",  border: "rgba(96,165,250,0.25)",  color: "#60a5fa", icon: <Info style={{ width: 14 }} />,          label: "Note" },
-    tip:       { bg: "rgba(212,175,55,0.07)",  border: "rgba(212,175,55,0.3)",   color: "#D4AF37", icon: <Lightbulb style={{ width: 14 }} />,      label: "Tip" },
+    tip:       { bg: "rgba(var(--accent-rgb),0.07)",  border: "rgba(var(--accent-rgb),0.3)",   color: "var(--accent-color)", icon: <Lightbulb style={{ width: 14 }} />,      label: "Tip" },
     warning:   { bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.3)",   color: "#f59e0b", icon: <AlertTriangle style={{ width: 14 }} />,  label: "Warning" },
     important: { bg: "rgba(239,68,68,0.07)",   border: "rgba(239,68,68,0.25)",   color: "#ef4444", icon: <Shield style={{ width: 14 }} />,         label: "Important" },
   };
@@ -42,18 +42,18 @@ const Note = ({ type = "info", children }: { type?: "info" | "tip" | "warning" |
 
 const Step = ({ num, children }: { num: number; children: React.ReactNode }) => (
   <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", marginTop: "0.6rem" }}>
-    <span style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(212,175,55,0.2)", border: "1px solid rgba(212,175,55,0.4)", color: "#D4AF37", fontSize: "0.72rem", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{num}</span>
+    <span style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(var(--accent-rgb),0.2)", border: "1px solid rgba(var(--accent-rgb),0.4)", color: "var(--accent-color)", fontSize: "0.72rem", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{num}</span>
     <span style={{ fontSize: "0.83rem", color: "rgba(255,255,255,0.82)", lineHeight: 1.65 }}>{children}</span>
   </div>
 );
 
-const Pill = ({ label, color = "#D4AF37" }: { label: string; color?: string }) => (
+const Pill = ({ label, color = "var(--accent-color)" }: { label: string; color?: string }) => (
   <span style={{ display: "inline-block", padding: "0.1rem 0.5rem", borderRadius: "20px", fontSize: "0.68rem", fontWeight: 700, border: "1px solid " + color + "44", color, background: color + "15", letterSpacing: "0.04em", textTransform: "uppercase" as const }}>{label}</span>
 );
 
 const Row = ({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) => (
   <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", padding: "0.65rem 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-    <span style={{ color: "#D4AF37", marginTop: "0.1rem", flexShrink: 0 }}>{icon}</span>
+    <span style={{ color: "var(--accent-color)", marginTop: "0.1rem", flexShrink: 0 }}>{icon}</span>
     <div>
       <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.85rem" }}>{title}</div>
       <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.55)", marginTop: "0.1rem", lineHeight: 1.5 }}>{desc}</div>
@@ -79,7 +79,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     ],
   },
   {
-    id: "inventory", icon: <Package style={{ width: 18 }} />, title: "Rentals & Equipment", color: "#D4AF37",
+    id: "inventory", icon: <Package style={{ width: 18 }} />, title: "Rentals & Equipment", color: "var(--accent-color)",
     summary: "Manage your complete rental catalog — add items, set prices, stock levels, and availability.",
     articles: [
       { id: "inv-1", title: "Adding a New Rental Item", content: (
@@ -188,12 +188,12 @@ const GUIDE_SECTIONS: GuideSection[] = [
     ],
   },
   {
-    id: "delivery", icon: <Truck style={{ width: 18 }} />, title: "Delivery Pricing Engine", color: "#D4AF37",
+    id: "delivery", icon: <Truck style={{ width: 18 }} />, title: "Delivery Pricing Engine", color: "var(--accent-color)",
     summary: "The full Smart Delivery Pricing & Rules Engine — pricing modes, zone maps, fleet vehicles, and labor costs.",
     articles: [
       { id: "del-0", title: "What is the Delivery Pricing Engine?", content: (
         <div>
-          <p style={{ fontSize: "0.83rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: "0.75rem" }}>The <strong style={{ color: "#D4AF37" }}>Smart Delivery Pricing &amp; Rules Engine</strong> is a fully automated system that calculates exactly what each customer should pay for delivery — based on <strong>where they live, what they are renting, how big your truck needs to be, how long setup takes, and any special venue conditions</strong>.</p>
+          <p style={{ fontSize: "0.83rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: "0.75rem" }}>The <strong style={{ color: "var(--accent-color)" }}>Smart Delivery Pricing &amp; Rules Engine</strong> is a fully automated system that calculates exactly what each customer should pay for delivery — based on <strong>where they live, what they are renting, how big your truck needs to be, how long setup takes, and any special venue conditions</strong>.</p>
           <p style={{ fontSize: "0.83rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: "0.75rem" }}>It runs automatically in the Quote Builder checkout. Customers never see a call for a price — they see a real, itemised delivery fee calculated in real time.</p>
           <Note type="info">The engine has two operating modes: <strong>Fixed Price Mode</strong> (every customer pays one flat rate) and <strong>Smart Rules Engine</strong> (rates are calculated dynamically based on your custom rules).</Note>
         </div>
@@ -204,7 +204,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", margin: "0.75rem 0" }}>
             {[
               { icon: <DollarSign style={{ width: 16 }} />, mode: "Fixed Price Mode", desc: "Every order pays the same flat delivery rate you set (e.g. $45). Venue handling add-ons still apply on top. Best for simple local delivery.", color: "#60a5fa" },
-              { icon: <Zap style={{ width: 16 }} />, mode: "Smart Rules Engine", desc: "Rules evaluate in priority order. Each rule triggers a strategy: Free, Fixed, Distance-Based, Zone Map, or Full Dynamic Engine. Best for multi-zone pricing.", color: "#D4AF37" },
+              { icon: <Zap style={{ width: 16 }} />, mode: "Smart Rules Engine", desc: "Rules evaluate in priority order. Each rule triggers a strategy: Free, Fixed, Distance-Based, Zone Map, or Full Dynamic Engine. Best for multi-zone pricing.", color: "var(--accent-color)" },
             ].map(m => (
               <div key={m.mode} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid " + m.color + "33", borderRadius: "10px", padding: "0.9rem" }}>
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", color: m.color, fontWeight: 700, fontSize: "0.82rem", marginBottom: "0.4rem" }}>{m.icon}{m.mode}</div>
@@ -222,8 +222,8 @@ const GUIDE_SECTIONS: GuideSection[] = [
           <Row icon={<Layers style={{ width: 15 }} />} title="Condition Fields" desc="Each rule can evaluate: Order Total, Item Count, Delivery Distance (miles), Customer ZIP Code, or Item Category." />
           <Row icon={<ToggleLeft style={{ width: 15 }} />} title="AND / OR Logic" desc="Combine multiple conditions using AND (all must match) or OR (any can match) logic." />
           <Row icon={<Zap style={{ width: 15 }} />} title="Strategy Types" desc="Free Delivery, Fixed Fee, Distance-Based, Delivery Zone Map, Dynamic Engine, or Manual Quote." />
-          <div style={{ marginTop: "0.75rem", background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: "8px", padding: "0.85rem" }}>
-            <div style={{ fontWeight: 700, color: "#D4AF37", fontSize: "0.8rem", marginBottom: "0.5rem" }}>Example Rule Setup</div>
+          <div style={{ marginTop: "0.75rem", background: "rgba(var(--accent-rgb),0.05)", border: "1px solid rgba(var(--accent-rgb),0.2)", borderRadius: "8px", padding: "0.85rem" }}>
+            <div style={{ fontWeight: 700, color: "var(--accent-color)", fontSize: "0.8rem", marginBottom: "0.5rem" }}>Example Rule Setup</div>
             <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.7 }}>
               <strong style={{ color: "#fff" }}>Rule 1 (Priority 0 — runs first):</strong> If Distance &gt; 60 mi then Manual Staff Quote<br />
               <strong style={{ color: "#fff" }}>Rule 2 (Priority 1):</strong> If Order Total &gt; $2,000 AND Distance &lt; 15 mi then Free Delivery<br />
@@ -242,7 +242,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
             { s: "Fixed Fee", d: "A flat dollar amount you set. E.g., always charge $45 regardless of distance.", color: "#60a5fa" },
             { s: "Distance Based", d: "Base Fee + (Miles x Rate Per Mile) + (Drive Time x Rate Per Minute). Configured in Pricing Strategies.", color: "#a78bfa" },
             { s: "Delivery Zones", d: "Matches the customer ZIP to a Zone you defined, then charges that zone flat rate.", color: "#f472b6" },
-            { s: "Dynamic Engine", d: "Full cost-of-service model: Vehicle + Travel + Labor and Crew Time + Venue Handling Add-ons. Most precise.", color: "#D4AF37" },
+            { s: "Dynamic Engine", d: "Full cost-of-service model: Vehicle + Travel + Labor and Crew Time + Venue Handling Add-ons. Most precise.", color: "var(--accent-color)" },
             { s: "Manual Quote", d: "Tells the customer that a staff member will reach out with a custom delivery price.", color: "#f87171" },
           ].map(({ s, d, color }) => (
             <div key={s} style={{ display: "flex", gap: "0.75rem", padding: "0.55rem 0", borderBottom: "1px solid rgba(255,255,255,0.04)", alignItems: "flex-start" }}>
@@ -385,7 +385,7 @@ export default function AdminHelpGuide() {
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto" }}>
       <div style={{ marginBottom: "1.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-        <div style={{ width: 40, height: 40, borderRadius: "10px", background: "rgba(212,175,55,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#D4AF37" }}>
+        <div style={{ width: 40, height: 40, borderRadius: "10px", background: "rgba(var(--accent-rgb),0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-color)" }}>
           <Book style={{ width: 20 }} />
         </div>
         <div>

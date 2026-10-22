@@ -643,7 +643,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
         <div style={{ padding: "1.75rem 1.75rem 0", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "1.5rem" }}>
             <div>
-              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "#D4AF37", marginBottom: "0.25rem" }}>
+              <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--accent-color)", marginBottom: "0.25rem" }}>
                 Instant Booking & Reservation
               </div>
               <h2 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.4rem", color: "var(--text-primary)", lineHeight: 1.2 }}>
@@ -677,7 +677,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                     style={{
                       height: "4px",
                       borderRadius: "9999px",
-                      background: step > i ? "#D4AF37" : step === i + 1 ? "#f0cc60" : "var(--border-secondary)",
+                      background: step > i ? "var(--accent-color)" : step === i + 1 ? "#f0cc60" : "var(--border-secondary)",
                       transition: "background 0.3s",
                     }}
                   />
@@ -688,7 +688,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       fontWeight: 700,
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
-                      color: step >= i + 1 ? "#D4AF37" : "var(--text-secondary)",
+                      color: step >= i + 1 ? "var(--accent-color)" : "var(--text-secondary)",
                       opacity: step >= i + 1 ? 1 : 0.6,
                       marginTop: "0.3rem",
                     }}
@@ -745,12 +745,12 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "0.5rem",
-                    background: "rgba(212,175,55,0.08)",
-                    border: "1px solid rgba(212,175,55,0.25)",
+                    background: "rgba(var(--accent-rgb),0.08)",
+                    border: "1px solid rgba(var(--accent-rgb),0.25)",
                     borderRadius: "0.5rem",
                     padding: "0.5rem 1rem",
                     fontSize: "0.78rem",
-                    color: "#D4AF37",
+                    color: "var(--accent-color)",
                     fontFamily: "var(--font-body)",
                     fontWeight: 600,
                     marginBottom: "1.5rem",
@@ -768,7 +768,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "0.5rem",
-                      background: "#D4AF37",
+                      background: "var(--accent-color)",
                       color: "#0f0f0f",
                       border: "none",
                       borderRadius: "0.875rem",
@@ -779,7 +779,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       textTransform: "uppercase",
                       letterSpacing: "0.08em",
                       textDecoration: "none",
-                      boxShadow: "0 6px 20px rgba(212,175,55,0.3)",
+                      boxShadow: "0 6px 20px rgba(var(--accent-rgb),0.3)",
                       transition: "all 0.2s ease",
                     }}
                     className="btn-press"
@@ -1058,7 +1058,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                           style={{ paddingLeft: "2.3rem", paddingRight: isSearchingAddress && step === 1 ? "2.5rem" : "0.75rem", ...(errors.eventLoc ? { borderColor: "#ef4444" } : {}) }}
                         />
                         {isSearchingAddress && step === 1 && (
-                          <span style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "#D4AF37", fontWeight: 700 }}>
+                          <span style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "var(--accent-color)", fontWeight: 700 }}>
                             Searching...
                           </span>
                         )}
@@ -1069,13 +1069,13 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
 
                       {/* Step 1 Autocomplete Suggestions Dropdown */}
                       {step === 1 && showAddressSuggestions && addressSuggestions.length > 0 && (
-                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "#18181c", border: "1px solid #D4AF37", borderRadius: "0.5rem", boxShadow: "0 8px 24px rgba(0,0,0,0.6)", marginTop: "0.25rem", overflow: "hidden" }}>
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "#18181c", border: "1px solid var(--accent-color)", borderRadius: "0.5rem", boxShadow: "0 8px 24px rgba(0,0,0,0.6)", marginTop: "0.25rem", overflow: "hidden" }}>
                           {addressSuggestions.map((s, idx) => (
                             <div
                               key={idx}
                               onMouseDown={(e) => { e.preventDefault(); selectAddressSuggestion(s); }}
                               style={{ padding: "0.65rem 0.85rem", cursor: "pointer", borderBottom: idx < addressSuggestions.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none", fontSize: "0.78rem", color: "rgba(255,255,255,0.9)", transition: "background 0.15s ease" }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(212,175,55,0.15)")}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(var(--accent-rgb),0.15)")}
                               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                             >
                               📍 {s.display_name}
@@ -1159,8 +1159,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                 style={{
                                   padding: "0.875rem 1.1rem",
                                   borderRadius: "1rem",
-                                  border: isSelected ? "2.5px solid #D4AF37" : "1.5px solid var(--border-primary)",
-                                  background: isSelected ? "rgba(212,175,55,0.04)" : "var(--card-bg)",
+                                  border: isSelected ? "2.5px solid var(--accent-color)" : "1.5px solid var(--border-primary)",
+                                  background: isSelected ? "rgba(var(--accent-rgb),0.04)" : "var(--card-bg)",
                                   cursor: "pointer",
                                   transition: "all 0.2s ease",
                                   display: "flex",
@@ -1172,14 +1172,14 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                   type="radio"
                                   checked={isSelected}
                                   onChange={() => {}}
-                                  style={{ accentColor: "#D4AF37", width: "16px", height: "16px", pointerEvents: "none", flexShrink: 0 }}
+                                  style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px", pointerEvents: "none", flexShrink: 0 }}
                                 />
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.5rem" }}>
                                     <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.8rem", color: "var(--text-primary)" }}>
                                       {pkg.name} Package
                                     </h4>
-                                    <span style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "0.85rem", color: isSelected ? "#D4AF37" : "var(--text-primary)" }}>
+                                    <span style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "0.85rem", color: isSelected ? "var(--accent-color)" : "var(--text-primary)" }}>
                                       ${pkg.price}
                                     </span>
                                   </div>
@@ -1211,7 +1211,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                           <div>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
                               <label style={{ ...labelStyle, marginBottom: 0 }}>Rental Duration</label>
-                              <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.78rem", color: "#D4AF37" }}>
+                              <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.78rem", color: "var(--accent-color)" }}>
                                 {packageHours} Hours {packageHours > 4 && `(+$${(packageHours - 4) * 65})`}
                               </span>
                             </div>
@@ -1244,7 +1244,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                 max="12"
                                 value={packageHours}
                                 onChange={(e) => setPackageHours(parseInt(e.target.value, 10))}
-                                style={{ flex: 1, accentColor: "#D4AF37" }}
+                                style={{ flex: 1, accentColor: "var(--accent-color)" }}
                               />
                               <button
                                 type="button"
@@ -1287,8 +1287,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                         alignItems: "center",
                                         justifyContent: "space-between",
                                         padding: "0.6rem 0.875rem",
-                                        background: isChecked ? "rgba(212,175,55,0.04)" : "var(--card-bg)",
-                                        border: `1.5px solid ${isChecked ? "#D4AF37" : "var(--border-primary)"}`,
+                                        background: isChecked ? "rgba(var(--accent-rgb),0.04)" : "var(--card-bg)",
+                                        border: `1.5px solid ${isChecked ? "var(--accent-color)" : "var(--border-primary)"}`,
                                         borderRadius: "0.75rem",
                                         cursor: "pointer",
                                         transition: "all 0.2s ease"
@@ -1299,13 +1299,13 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                           type="checkbox"
                                           checked={isChecked}
                                           onChange={() => {}}
-                                          style={{ accentColor: "#D4AF37", width: "16px", height: "16px", pointerEvents: "none" }}
+                                          style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px", pointerEvents: "none" }}
                                         />
                                         <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.75rem", color: "var(--text-primary)" }}>
                                           {addon.label}
                                         </span>
                                       </div>
-                                      <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.75rem", color: isChecked ? "#D4AF37" : "var(--text-secondary)" }}>
+                                      <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.75rem", color: isChecked ? "var(--accent-color)" : "var(--text-secondary)" }}>
                                         +${addon.price}
                                       </span>
                                     </div>
@@ -1350,13 +1350,13 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                 background: isSoldOut
                                   ? "rgba(239,68,68,0.02)"
                                   : qty
-                                  ? "rgba(212,175,55,0.04)"
+                                  ? "rgba(var(--accent-rgb),0.04)"
                                   : "var(--bg-secondary)",
                                 border: `1.5px solid ${
                                   isSoldOut
                                     ? "rgba(239,68,68,0.2)"
                                     : qty
-                                    ? "#D4AF37"
+                                    ? "var(--accent-color)"
                                     : "var(--border-primary)"
                                 }`,
                                 borderRadius: "0.75rem",
@@ -1381,7 +1381,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                     checked={qty > 0}
                                     disabled={isSoldOut}
                                     onChange={() => {}}
-                                    style={{ accentColor: "#D4AF37", width: "16px", height: "16px", pointerEvents: "none" }}
+                                    style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px", pointerEvents: "none" }}
                                   />
                                   <div style={{ minWidth: 0 }}>
                                     <h4
@@ -1454,14 +1454,14 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                   gap: "0.625rem",
                                   width: "100%"
                                 }}>
-                                  <div style={{ fontSize: "0.62rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", color: "#D4AF37" }}>
+                                  <div style={{ fontSize: "0.62rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--accent-color)" }}>
                                     Add-on Options
                                   </div>
                                   
                                   {/* Kits Counter */}
                                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
                                     <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: 650 }}>
-                                      {item.id === "7" ? "Popcorn Kit" : (item.id === "3" ? "Cotton Candy Kit" : "Snow-cone Kit")} (appx 50 servings) — <strong style={{ color: "#D4AF37" }}>${item.id === "7" ? 18 : 20}</strong>
+                                      {item.id === "7" ? "Popcorn Kit" : (item.id === "3" ? "Cotton Candy Kit" : "Snow-cone Kit")} (appx 50 servings) — <strong style={{ color: "var(--accent-color)" }}>${item.id === "7" ? 18 : 20}</strong>
                                     </span>
                                     <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "var(--card-bg)", border: "1px solid var(--border-primary)", borderRadius: "0.375rem", padding: "0.1rem 0.35rem" }}>
                                       <button
@@ -1500,13 +1500,13 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                       style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", cursor: "pointer" }}
                                     >
                                       <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: 650 }}>
-                                        Equipment Stand — <strong style={{ color: "#D4AF37" }}>$25</strong>
+                                        Equipment Stand — <strong style={{ color: "var(--accent-color)" }}>$25</strong>
                                       </span>
                                       <input
                                         type="checkbox"
                                         checked={getAddonState(item.id).stand}
                                         onChange={() => {}}
-                                        style={{ accentColor: "#D4AF37", width: "14px", height: "14px", cursor: "pointer" }}
+                                        style={{ accentColor: "var(--accent-color)", width: "14px", height: "14px", cursor: "pointer" }}
                                       />
                                     </div>
                                   )}
@@ -1514,7 +1514,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                   {/* Extra Hours Counter */}
                                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
                                     <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: 650 }}>
-                                      Additional Rental Hours — <strong style={{ color: "#D4AF37" }}>$15/hr</strong>
+                                      Additional Rental Hours — <strong style={{ color: "var(--accent-color)" }}>$15/hr</strong>
                                     </span>
                                     <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "var(--card-bg)", border: "1px solid var(--border-primary)", borderRadius: "0.375rem", padding: "0.1rem 0.35rem" }}>
                                       <button
@@ -1570,8 +1570,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                     alignItems: "center",
                                     justifyContent: "space-between",
                                     padding: "0.75rem 1rem",
-                                    background: isChecked ? "rgba(212,175,55,0.04)" : "var(--card-bg)",
-                                    border: `1.5px solid ${isChecked ? "#D4AF37" : "var(--border-primary)"}`,
+                                    background: isChecked ? "rgba(var(--accent-rgb),0.04)" : "var(--card-bg)",
+                                    border: `1.5px solid ${isChecked ? "var(--accent-color)" : "var(--border-primary)"}`,
                                     borderRadius: "0.75rem",
                                     cursor: "pointer",
                                     transition: "all 0.2s ease"
@@ -1582,13 +1582,13 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                       type="checkbox"
                                       checked={isChecked}
                                       onChange={() => {}}
-                                      style={{ accentColor: "#D4AF37", width: "18px", height: "18px", pointerEvents: "none" }}
+                                      style={{ accentColor: "var(--accent-color)", width: "18px", height: "18px", pointerEvents: "none" }}
                                     />
                                     <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.8rem", color: "var(--text-primary)" }}>
                                       {addon.label}
                                     </span>
                                   </div>
-                                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.8rem", color: isChecked ? "#D4AF37" : "var(--text-primary)" }}>
+                                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.8rem", color: isChecked ? "var(--accent-color)" : "var(--text-primary)" }}>
                                     +${addon.price}
                                   </span>
                                 </div>
@@ -1688,8 +1688,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         style={{
                           padding: "0.75rem",
                           borderRadius: "0.75rem",
-                          border: deliveryMethod === "delivery" ? "2px solid #D4AF37" : "1px solid var(--border-primary)",
-                          background: deliveryMethod === "delivery" ? "rgba(212,175,55,0.08)" : "transparent",
+                          border: deliveryMethod === "delivery" ? "2px solid var(--accent-color)" : "1px solid var(--border-primary)",
+                          background: deliveryMethod === "delivery" ? "rgba(var(--accent-rgb),0.08)" : "transparent",
                           color: deliveryMethod === "delivery" ? "var(--text-primary)" : "var(--text-secondary)",
                           fontWeight: 700,
                           fontSize: "0.8rem",
@@ -1706,8 +1706,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         style={{
                           padding: "0.75rem",
                           borderRadius: "0.75rem",
-                          border: deliveryMethod === "pickup" ? "2px solid #D4AF37" : "1px solid var(--border-primary)",
-                          background: deliveryMethod === "pickup" ? "rgba(212,175,55,0.08)" : "transparent",
+                          border: deliveryMethod === "pickup" ? "2px solid var(--accent-color)" : "1px solid var(--border-primary)",
+                          background: deliveryMethod === "pickup" ? "rgba(var(--accent-rgb),0.08)" : "transparent",
                           color: deliveryMethod === "pickup" ? "var(--text-primary)" : "var(--text-secondary)",
                           fontWeight: 700,
                           fontSize: "0.8rem",
@@ -1721,7 +1721,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       </button>
                     </div>
                     {!isPickupAllowed && (
-                      <p style={{ fontSize: "0.7rem", color: "#D4AF37", marginTop: "0.35rem", fontFamily: "var(--font-body)", lineHeight: 1.4 }}>
+                      <p style={{ fontSize: "0.7rem", color: "var(--accent-color)", marginTop: "0.35rem", fontFamily: "var(--font-body)", lineHeight: 1.4 }}>
                         ⚠️ Pick up is unavailable because your cart contains a photobooth or inflatable item (water slides, bounce houses). These must be delivered & set up by our team.
                       </p>
                     )}
@@ -1744,7 +1744,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                             style={{ paddingRight: isSearchingAddress ? "2.5rem" : "0.75rem", ...(errors.address ? { borderColor: "#ef4444" } : {}) }}
                           />
                           {isSearchingAddress && (
-                            <span style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "#D4AF37", fontWeight: 700 }}>
+                            <span style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "var(--accent-color)", fontWeight: 700 }}>
                               Searching...
                             </span>
                           )}
@@ -1755,13 +1755,13 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
 
                         {/* Free Address Autocomplete Dropdown */}
                         {showAddressSuggestions && addressSuggestions.length > 0 && (
-                          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "#18181c", border: "1px solid #D4AF37", borderRadius: "0.5rem", boxShadow: "0 8px 24px rgba(0,0,0,0.6)", marginTop: "0.25rem", overflow: "hidden" }}>
+                          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "#18181c", border: "1px solid var(--accent-color)", borderRadius: "0.5rem", boxShadow: "0 8px 24px rgba(0,0,0,0.6)", marginTop: "0.25rem", overflow: "hidden" }}>
                             {addressSuggestions.map((s, idx) => (
                               <div
                                 key={idx}
                                 onMouseDown={(e) => { e.preventDefault(); selectAddressSuggestion(s); }}
                                 style={{ padding: "0.65rem 0.85rem", cursor: "pointer", borderBottom: idx < addressSuggestions.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none", fontSize: "0.78rem", color: "rgba(255,255,255,0.9)", transition: "background 0.15s ease" }}
-                                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(212,175,55,0.15)")}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(var(--accent-rgb),0.15)")}
                                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                               >
                                 📍 {s.display_name}
@@ -1772,7 +1772,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
 
                         {/* Free Map Coordinates Badge */}
                         {selectedCoordinates && (
-                          <div style={{ marginTop: "0.5rem", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.3)", borderRadius: "0.5rem", padding: "0.4rem 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.72rem", color: "#D4AF37" }}>
+                          <div style={{ marginTop: "0.5rem", background: "rgba(var(--accent-rgb),0.08)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: "0.5rem", padding: "0.4rem 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.72rem", color: "var(--accent-color)" }}>
                             <span>🗺️ Location Verified: {selectedCoordinates.lat.toFixed(4)}°N, {Math.abs(selectedCoordinates.lon).toFixed(4)}°W</span>
                             <span style={{ color: "#4ade80", fontWeight: 700 }}>✓ Free Route Mapped</span>
                           </div>
@@ -1811,7 +1811,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                       {/* Venue Surface & Setup Intelligence Panel */}
                       <div style={{ marginTop: "0.875rem", background: "var(--card-bg)", border: "1.5px solid var(--border-primary)", borderRadius: "1rem", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "0.875rem", boxShadow: "0 4px 16px rgba(0,0,0,0.12)" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#D4AF37", fontFamily: "var(--font-heading)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--accent-color)", fontFamily: "var(--font-heading)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                             ⛺ Venue Surface & Logistics Intelligence
                           </span>
                           <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--text-secondary)" }}>Live Delivery Math</span>
@@ -1839,9 +1839,9 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                     borderRadius: "0.5rem",
                                     fontSize: "0.75rem",
                                     fontWeight: isSel ? 800 : 650,
-                                    background: isSel ? "rgba(212,175,55,0.18)" : "var(--bg-secondary)",
-                                    border: isSel ? "2px solid #D4AF37" : "1px solid var(--border-primary)",
-                                    color: isSel ? "#D4AF37" : "var(--text-primary)",
+                                    background: isSel ? "rgba(var(--accent-rgb),0.18)" : "var(--bg-secondary)",
+                                    border: isSel ? "2px solid var(--accent-color)" : "1px solid var(--border-primary)",
+                                    color: isSel ? "var(--accent-color)" : "var(--text-primary)",
                                     cursor: "pointer",
                                     transition: "all 0.15s ease"
                                   }}
@@ -1895,19 +1895,19 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                           <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-primary)", display: "block", marginBottom: "0.4rem" }}>Site Logistics & Utilities</span>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.78rem" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "var(--text-primary)", fontWeight: 650 }}>
-                              <input type="checkbox" checked={hasStairs} onChange={(e) => setHasStairs(e.target.checked)} style={{ accentColor: "#D4AF37", width: "16px", height: "16px" }} />
+                              <input type="checkbox" checked={hasStairs} onChange={(e) => setHasStairs(e.target.checked)} style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px" }} />
                               🪜 Stairs Required (+$25)
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "var(--text-primary)", fontWeight: 650 }}>
-                              <input type="checkbox" checked={hasElevator} onChange={(e) => setHasElevator(e.target.checked)} style={{ accentColor: "#D4AF37", width: "16px", height: "16px" }} />
+                              <input type="checkbox" checked={hasElevator} onChange={(e) => setHasElevator(e.target.checked)} style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px" }} />
                               🛗 Elevator Access (+$15)
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "var(--text-primary)", fontWeight: 650 }}>
-                              <input type="checkbox" checked={hasPower} onChange={(e) => setHasPower(e.target.checked)} style={{ accentColor: "#D4AF37", width: "16px", height: "16px" }} />
+                              <input type="checkbox" checked={hasPower} onChange={(e) => setHasPower(e.target.checked)} style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px" }} />
                               ⚡ 110V Power within 50ft
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "var(--text-primary)", fontWeight: 650 }}>
-                              <input type="checkbox" checked={hasWater} onChange={(e) => setHasWater(e.target.checked)} style={{ accentColor: "#D4AF37", width: "16px", height: "16px" }} />
+                              <input type="checkbox" checked={hasWater} onChange={(e) => setHasWater(e.target.checked)} style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px" }} />
                               💧 Water Spigot within 50ft
                             </label>
                           </div>
@@ -1928,14 +1928,14 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                           </div>
                           <div
                             style={{
-                              background: "rgba(212,175,55,0.06)",
-                              border: "1px solid rgba(212,175,55,0.25)",
+                              background: "rgba(var(--accent-rgb),0.06)",
+                              border: "1px solid rgba(var(--accent-rgb),0.25)",
                               borderRadius: "0.875rem",
                               padding: "1.1rem",
                               marginTop: "0.25rem",
                             }}
                           >
-                            <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "#bda030", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.35rem" }}>
+                            <span style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--accent-hover)", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", gap: "0.4rem", alignItems: "center", marginBottom: "0.35rem" }}>
                               📍 Service Area Notice: Coming Soon
                             </span>
                             <p style={{ fontFamily: "var(--font-body)", fontSize: "0.72rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
@@ -1988,8 +1988,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                             style={{
                               padding: "0.75rem 1rem",
                               borderRadius: "0.75rem",
-                              border: isSel ? "2.5px solid #D4AF37" : "1.5px solid var(--border-secondary)",
-                              background: isSel ? "rgba(212,175,55,0.04)" : "var(--card-bg)",
+                              border: isSel ? "2.5px solid var(--accent-color)" : "1.5px solid var(--border-secondary)",
+                              background: isSel ? "rgba(var(--accent-rgb),0.04)" : "var(--card-bg)",
                               cursor: "pointer",
                               display: "flex",
                               alignItems: "center",
@@ -2003,7 +2003,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                 type="radio"
                                 checked={isSel}
                                 onChange={() => {}}
-                                style={{ accentColor: "#D4AF37", width: "16px", height: "16px", cursor: "pointer", pointerEvents: "none", flexShrink: 0 }}
+                                style={{ accentColor: "var(--accent-color)", width: "16px", height: "16px", cursor: "pointer", pointerEvents: "none", flexShrink: 0 }}
                               />
                               <div style={{ minWidth: 0 }}>
                                 <div
@@ -2035,7 +2035,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                                 </div>
                               </div>
                             </div>
-                            <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "0.9rem", color: isSel ? "#D4AF37" : "var(--text-primary)", flexShrink: 0 }}>
+                            <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "0.9rem", color: isSel ? "var(--accent-color)" : "var(--text-primary)", flexShrink: 0 }}>
                               {opt.priceText}
                             </div>
                           </div>
@@ -2047,8 +2047,8 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                   {/* Weather Guarantee Banner in Checkout */}
                   <div
                     style={{
-                      background: "rgba(212, 175, 55, 0.05)",
-                      border: "1px solid rgba(212, 175, 55, 0.25)",
+                      background: "rgba(var(--accent-rgb), 0.05)",
+                      border: "1px solid rgba(var(--accent-rgb), 0.25)",
                       borderRadius: "0.875rem",
                       padding: "0.75rem 1rem",
                       marginTop: "0.5rem",
@@ -2164,7 +2164,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         {handlingBreakdown.length > 0 && (
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem", marginTop: "0.3rem" }}>
                             {handlingBreakdown.map(h => (
-                              <span key={h.id} style={{ fontSize: "0.62rem", fontWeight: 700, background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.35)", borderRadius: "0.35rem", padding: "0.15rem 0.45rem", color: "#D4AF37", fontFamily: "var(--font-heading)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                              <span key={h.id} style={{ fontSize: "0.62rem", fontWeight: 700, background: "rgba(var(--accent-rgb),0.12)", border: "1px solid rgba(var(--accent-rgb),0.35)", borderRadius: "0.35rem", padding: "0.15rem 0.45rem", color: "var(--accent-color)", fontFamily: "var(--font-heading)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
                                 {h.name} +${h.amount}
                               </span>
                             ))}
@@ -2224,7 +2224,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
                         cursor: "pointer",
-                        color: "#D4AF37",
+                        color: "var(--accent-color)",
                         transition: "all 0.2s ease",
                       }}
                       className="btn-press"
@@ -2240,7 +2240,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         alignItems: "center",
                         gap: "0.4rem",
                         padding: "0.875rem 1.5rem",
-                        background: isSubmitting ? "#b8962e" : "#D4AF37",
+                        background: isSubmitting ? "#b8962e" : "var(--accent-color)",
                         border: "none",
                         borderRadius: "0.875rem",
                         fontFamily: "var(--font-heading)",
@@ -2250,7 +2250,7 @@ export default function QuoteBuilder({ isOpen, onClose, selectedItemFromInventor
                         textTransform: "uppercase",
                         cursor: isSubmitting ? "not-allowed" : "pointer",
                         color: "#0f0f0f",
-                        boxShadow: "0 6px 20px rgba(212,175,55,0.3)",
+                        boxShadow: "0 6px 20px rgba(var(--accent-rgb),0.3)",
                         transition: "all 0.2s ease",
                         opacity: isSubmitting ? 0.8 : 1,
                       }}

@@ -12,12 +12,12 @@ export default function InvoiceControls() {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        borderBottom: "1px solid rgba(212,175,55,0.2)",
+        borderBottom: "1px solid rgba(var(--accent-rgb),0.2)",
       }}
     >
       <span
         style={{
-          color: "#D4AF37",
+          color: "var(--accent-color)",
           fontWeight: 800,
           letterSpacing: "0.1em",
           fontSize: "0.85rem",
@@ -45,7 +45,7 @@ export default function InvoiceControls() {
           style={{
             padding: "0.5rem 1.25rem",
             borderRadius: "0.5rem",
-            background: "#D4AF37",
+            background: "var(--accent-color)",
             border: "none",
             color: "#000000",
             fontWeight: 700,

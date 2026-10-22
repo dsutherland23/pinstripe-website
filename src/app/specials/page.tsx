@@ -124,8 +124,8 @@ export default function SpecialsPage() {
     <main className="pb-18 lg:pb-0" style={{ fontFamily: "var(--font-body)", background: "var(--bg-primary)", color: "var(--text-primary)", minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
       
       {/* Ambient background glows */}
-      <div style={{ position: "absolute", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)", top: "5%", left: "-100px", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
-      <div style={{ position: "absolute", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 70%)", top: "45%", right: "-150px", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "absolute", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(var(--accent-rgb),0.06) 0%, transparent 70%)", top: "5%", left: "-100px", filter: "blur(60px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "absolute", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(var(--accent-rgb),0.04) 0%, transparent 70%)", top: "45%", right: "-150px", filter: "blur(80px)", pointerEvents: "none", zIndex: 0 }} />
 
       <Navbar
         onOpenQuote={() => setQuoteOpen(true)}
@@ -136,14 +136,14 @@ export default function SpecialsPage() {
       {loading ? (
         // Loading State
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "70vh", gap: "1rem" }}>
-          <div className="animate-spin" style={{ width: "40px", height: "40px", border: "3px solid rgba(212,175,55,0.2)", borderTopColor: "#D4AF37", borderRadius: "50%" }} />
+          <div className="animate-spin" style={{ width: "40px", height: "40px", border: "3px solid rgba(var(--accent-rgb),0.2)", borderTopColor: "var(--accent-color)", borderRadius: "50%" }} />
           <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem" }}>Loading exclusive offers...</p>
         </div>
       ) : !specialsEnabled ? (
         // Specials Disabled Fallback View
         <section style={{ padding: "10rem 1.5rem 6rem", textAlign: "center", minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ maxWidth: "600px", margin: "0 auto", background: "var(--card-bg)", border: "1px solid var(--border-primary)", padding: "3rem 2rem", borderRadius: "1.5rem", boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}>
-            <div style={{ display: "inline-flex", padding: "1rem", borderRadius: "50%", background: "rgba(212,175,55,0.08)", border: "2px solid rgba(212,175,55,0.2)", color: "#D4AF37", marginBottom: "1.5rem" }}>
+            <div style={{ display: "inline-flex", padding: "1rem", borderRadius: "50%", background: "rgba(var(--accent-rgb),0.08)", border: "2px solid rgba(var(--accent-rgb),0.2)", color: "var(--accent-color)", marginBottom: "1.5rem" }}>
               <Sparkles size={32} />
             </div>
             <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "2rem", fontWeight: 900, marginBottom: "1rem", color: "var(--text-primary)" }}>
@@ -182,7 +182,7 @@ export default function SpecialsPage() {
           {/* Header Hero Section */}
           <section
             style={{
-              background: "linear-gradient(180deg, var(--bg-secondary) 0%, rgba(212,175,55,0.02) 60%, var(--bg-primary) 100%)",
+              background: "linear-gradient(180deg, var(--bg-secondary) 0%, rgba(var(--accent-rgb),0.02) 60%, var(--bg-primary) 100%)",
               backgroundImage: "radial-gradient(var(--border-secondary) 1px, transparent 1px)",
               backgroundSize: "24px 24px",
               padding: "9rem 1.5rem 4rem",
@@ -193,7 +193,7 @@ export default function SpecialsPage() {
             }}
           >
             <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-              <div className="section-label" style={{ justifyContent: "center", display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.4rem 1rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+              <div className="section-label" style={{ justifyContent: "center", display: "inline-flex", background: "rgba(var(--accent-rgb),0.06)", border: "1px solid rgba(var(--accent-rgb),0.2)", padding: "0.4rem 1rem", borderRadius: "9999px", color: "var(--accent-color)", fontSize: "0.68rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase" }}>
                 ★ Limited-Time Offers ★
               </div>
               <h1 className="section-title text-gradient" style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "1.25rem", marginTop: "1rem" }}>
@@ -210,7 +210,7 @@ export default function SpecialsPage() {
             <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
               {specials.length === 0 ? (
                 <div style={{ padding: "6rem 2rem", textAlign: "center", background: "var(--card-bg)", borderRadius: "1.5rem", border: "2px dashed var(--border-primary)" }}>
-                  <Zap size={32} color="#D4AF37" style={{ marginBottom: "1rem" }} />
+                  <Zap size={32} color="var(--accent-color)" style={{ marginBottom: "1rem" }} />
                   <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.25rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
                     No Active Specials Available
                   </h3>
@@ -249,7 +249,7 @@ export default function SpecialsPage() {
 
                             {/* Badge */}
                             {special.badge && (
-                              <div style={{ position: "absolute", top: "1rem", left: "1rem", background: "linear-gradient(135deg, #D4AF37 0%, #f5e8a0 100%)", padding: "0.35rem 0.85rem", borderRadius: "9999px", color: "#000000", fontFamily: "var(--font-heading)", fontSize: "0.58rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", boxShadow: "0 4px 12px rgba(212,175,55,0.3)" }}>
+                              <div style={{ position: "absolute", top: "1rem", left: "1rem", background: "linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 100%)", padding: "0.35rem 0.85rem", borderRadius: "9999px", color: "#000000", fontFamily: "var(--font-heading)", fontSize: "0.58rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", boxShadow: "0 4px 12px rgba(var(--accent-rgb),0.3)" }}>
                                 {special.badge}
                               </div>
                             )}
@@ -265,11 +265,11 @@ export default function SpecialsPage() {
                                   right: "0.75rem", 
                                   background: "rgba(10, 10, 12, 0.9)", 
                                   backdropFilter: "blur(10px)", 
-                                  border: isExpired ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(212,175,55,0.3)", 
+                                  border: isExpired ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(var(--accent-rgb),0.3)", 
                                   borderRadius: "0.625rem" 
                                 }}
                               >
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: isExpired ? "#ef4444" : "#D4AF37" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: isExpired ? "#ef4444" : "var(--accent-color)" }}>
                                   <Clock size={12} className={isExpired ? "" : "animate-pulse"} />
                                   <span style={{ fontSize: "0.55rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                                     {isExpired ? "Expired" : "Ends In:"}
@@ -277,10 +277,10 @@ export default function SpecialsPage() {
                                 </div>
                                 {!isExpired && (
                                   <div style={{ display: "flex", gap: "0.35rem", fontFamily: "monospace", fontSize: "0.68rem", fontWeight: 700, color: "#ffffff" }}>
-                                    <div>{String(timer.days).padStart(2, "0")}<span style={{ color: "#D4AF37", fontSize: "0.55rem" }}>d</span></div>
-                                    <div>{String(timer.hours).padStart(2, "0")}<span style={{ color: "#D4AF37", fontSize: "0.55rem" }}>h</span></div>
-                                    <div>{String(timer.minutes).padStart(2, "0")}<span style={{ color: "#D4AF37", fontSize: "0.55rem" }}>m</span></div>
-                                    <div style={{ color: "#D4AF37" }}>{String(timer.seconds).padStart(2, "0")}<span style={{ color: "#ffffff", fontSize: "0.55rem" }}>s</span></div>
+                                    <div>{String(timer.days).padStart(2, "0")}<span style={{ color: "var(--accent-color)", fontSize: "0.55rem" }}>d</span></div>
+                                    <div>{String(timer.hours).padStart(2, "0")}<span style={{ color: "var(--accent-color)", fontSize: "0.55rem" }}>h</span></div>
+                                    <div>{String(timer.minutes).padStart(2, "0")}<span style={{ color: "var(--accent-color)", fontSize: "0.55rem" }}>m</span></div>
+                                    <div style={{ color: "var(--accent-color)" }}>{String(timer.seconds).padStart(2, "0")}<span style={{ color: "#ffffff", fontSize: "0.55rem" }}>s</span></div>
                                   </div>
                                 )}
                               </div>
@@ -298,7 +298,7 @@ export default function SpecialsPage() {
 
                             {/* Promo Code Info Badge */}
                             {special.promoCode && !isExpired && (
-                              <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.15)", alignSelf: "flex-start", padding: "0.25rem 0.6rem", borderRadius: "0.5rem", color: "#D4AF37", fontSize: "0.65rem", fontWeight: 700 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: "rgba(var(--accent-rgb),0.06)", border: "1px solid rgba(var(--accent-rgb),0.15)", alignSelf: "flex-start", padding: "0.25rem 0.6rem", borderRadius: "0.5rem", color: "var(--accent-color)", fontSize: "0.65rem", fontWeight: 700 }}>
                                 <Tag size={12} />
                                 Code: {special.promoCode}
                               </div>
@@ -310,7 +310,7 @@ export default function SpecialsPage() {
                                 <span style={{ textDecoration: "line-through", color: "rgba(255,255,255,0.3)", fontSize: "0.82rem", fontWeight: 600 }}>
                                   ${special.originalPrice}
                                 </span>
-                                <span style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.4rem", color: "#D4AF37", textShadow: "0 0 10px rgba(212,175,55,0.15)" }}>
+                                <span style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.4rem", color: "var(--accent-color)", textShadow: "0 0 10px rgba(var(--accent-rgb),0.15)" }}>
                                   ${special.specialPrice}
                                 </span>
                               </div>

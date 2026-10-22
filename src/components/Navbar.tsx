@@ -366,7 +366,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                         fontSize: "0.72rem",
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
-                        color: rentalsDropdownOpen ? "#D4AF37" : ((scrolled || !isHome) ? (isEvening ? "rgba(255,255,255,0.9)" : "#0f0f0f") : "rgba(255,255,255,0.9)"),
+                        color: rentalsDropdownOpen ? "var(--accent-color)" : ((scrolled || !isHome) ? (isEvening ? "rgba(255,255,255,0.9)" : "#0f0f0f") : "rgba(255,255,255,0.9)"),
                         background: "transparent",
                         border: "none",
                         cursor: "pointer",
@@ -395,7 +395,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                         backdropFilter: "blur(24px)",
                         WebkitBackdropFilter: "blur(24px)",
                         borderRadius: "1.25rem",
-                        boxShadow: "0 20px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(212,175,55,0.12), 0 0 0 1px rgba(212,175,55,0.15)",
+                        boxShadow: "0 20px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(var(--accent-rgb),0.12), 0 0 0 1px rgba(var(--accent-rgb),0.15)",
                         padding: "0.5rem",
                         opacity: rentalsDropdownOpen ? 1 : 0,
                         pointerEvents: rentalsDropdownOpen ? "auto" : "none",
@@ -416,7 +416,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                           width: "12px",
                           height: "12px",
                           background: "rgba(255,255,255,0.97)",
-                          border: "1px solid rgba(212,175,55,0.2)",
+                          border: "1px solid rgba(var(--accent-rgb),0.2)",
                           borderBottom: "none",
                           borderRight: "none",
                         }}
@@ -424,7 +424,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                       <div
                         style={{
                           padding: "0.4rem 0.75rem 0.5rem",
-                          borderBottom: "1px solid rgba(212,175,55,0.12)",
+                          borderBottom: "1px solid rgba(var(--accent-rgb),0.12)",
                           marginBottom: "0.25rem",
                         }}
                       >
@@ -434,7 +434,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                           fontWeight: 800,
                           letterSpacing: "0.14em",
                           textTransform: "uppercase",
-                          color: "#D4AF37",
+                          color: "var(--accent-color)",
                         }}>Browse by Category</span>
                       </div>
                       {rentalSubItems.map((sub, i) => (
@@ -458,14 +458,14 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                             transitionDelay: rentalsDropdownOpen ? `${i * 35}ms` : "0ms",
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "rgba(212,175,55,0.07)";
+                            e.currentTarget.style.background = "rgba(var(--accent-rgb),0.07)";
                             const icon = e.currentTarget.querySelector(".sub-icon") as HTMLElement;
-                            if (icon) { icon.style.background = "#D4AF37"; icon.style.color = "#0f0f0f"; }
+                            if (icon) { icon.style.background = "var(--accent-color)"; icon.style.color = "#0f0f0f"; }
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.background = "transparent";
                             const icon = e.currentTarget.querySelector(".sub-icon") as HTMLElement;
-                            if (icon) { icon.style.background = "rgba(212,175,55,0.1)"; icon.style.color = "#D4AF37"; }
+                            if (icon) { icon.style.background = "rgba(var(--accent-rgb),0.1)"; icon.style.color = "var(--accent-color)"; }
                           }}
                         >
                           <div
@@ -474,11 +474,11 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                               width: "32px",
                               height: "32px",
                               borderRadius: "0.625rem",
-                              background: "rgba(212,175,55,0.1)",
+                              background: "rgba(var(--accent-rgb),0.1)",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              color: "#D4AF37",
+                              color: "var(--accent-color)",
                               flexShrink: 0,
                               transition: "all 0.18s ease",
                             }}
@@ -503,26 +503,26 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                           </div>
                         </button>
                       ))}
-                      <div style={{ padding: "0.4rem 0.75rem", borderTop: "1px solid rgba(212,175,55,0.12)", marginTop: "0.25rem" }}>
+                      <div style={{ padding: "0.4rem 0.75rem", borderTop: "1px solid rgba(var(--accent-rgb),0.12)", marginTop: "0.25rem" }}>
                         <button
                           onClick={() => handleRentalSubClick("all")}
                           style={{
                             width: "100%",
                             padding: "0.55rem",
-                            background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.06))",
-                            border: "1px solid rgba(212,175,55,0.25)",
+                            background: "linear-gradient(135deg, rgba(var(--accent-rgb),0.12), rgba(var(--accent-rgb),0.06))",
+                            border: "1px solid rgba(var(--accent-rgb),0.25)",
                             borderRadius: "0.75rem",
                             fontFamily: "var(--font-heading)",
                             fontWeight: 800,
                             fontSize: "0.6rem",
                             letterSpacing: "0.1em",
                             textTransform: "uppercase",
-                            color: "#D4AF37",
+                            color: "var(--accent-color)",
                             cursor: "pointer",
                             transition: "all 0.18s ease",
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,175,55,0.2)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.06))"; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(var(--accent-rgb),0.2)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg, rgba(var(--accent-rgb),0.12), rgba(var(--accent-rgb),0.06))"; }}
                         >
                           View All Rentals →
                         </button>
@@ -557,7 +557,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                     padding: "0.25rem 0",
                     position: "relative",
                   }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#D4AF37")}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--accent-color)")}
                   onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = navLinkColor)}
                 >
                   {l.label}
@@ -585,10 +585,10 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 transition: "color 0.2s",
                 whiteSpace: "nowrap",
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#D4AF37")}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--accent-color)")}
               onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = navLinkColor)}
             >
-              <Phone size={14} color="#D4AF37" />
+              <Phone size={14} color="var(--accent-color)" />
               {phone}
             </a>
             {/* Ambient Theme Toggler */}
@@ -606,7 +606,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 justifyContent: "center",
                 cursor: "pointer",
                 transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                color: isEvening ? "#D4AF37" : ((scrolled || !isHome) ? "#0f0f0f" : "#ffffff"),
+                color: isEvening ? "var(--accent-color)" : ((scrolled || !isHome) ? "#0f0f0f" : "#ffffff"),
               }}
               title={isEvening ? "Switch to Daytime Warmth" : "Switch to Evening Elegance"}
             >
@@ -653,8 +653,8 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
             position: "absolute",
             inset: 0,
             background: isEvening 
-              ? "radial-gradient(circle at top right, rgba(212, 175, 55, 0.15), rgba(10, 10, 10, 0.9))" 
-              : "radial-gradient(circle at top right, rgba(212, 175, 55, 0.08), rgba(0, 0, 0, 0.75))",
+              ? "radial-gradient(circle at top right, rgba(var(--accent-rgb), 0.15), rgba(10, 10, 10, 0.9))" 
+              : "radial-gradient(circle at top right, rgba(var(--accent-rgb), 0.08), rgba(0, 0, 0, 0.75))",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
             opacity: open ? 1 : 0,
@@ -671,15 +671,15 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
             bottom: "12px",
             width: "min(310px, 85vw)",
             background: isEvening
-              ? "repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.015) 0px, rgba(212, 175, 55, 0.015) 2px, transparent 2px, transparent 10px), linear-gradient(135deg, rgba(22, 22, 22, 0.96), rgba(15, 15, 15, 0.99))"
-              : "repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.02) 0px, rgba(212, 175, 55, 0.02) 2px, transparent 2px, transparent 10px), linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 248, 248, 0.99))",
+              ? "repeating-linear-gradient(45deg, rgba(var(--accent-rgb), 0.015) 0px, rgba(var(--accent-rgb), 0.015) 2px, transparent 2px, transparent 10px), linear-gradient(135deg, rgba(22, 22, 22, 0.96), rgba(15, 15, 15, 0.99))"
+              : "repeating-linear-gradient(45deg, rgba(var(--accent-rgb), 0.02) 0px, rgba(var(--accent-rgb), 0.02) 2px, transparent 2px, transparent 10px), linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 248, 248, 0.99))",
             backdropFilter: "blur(30px)",
             WebkitBackdropFilter: "blur(30px)",
-            border: "1px solid rgba(212, 175, 55, 0.25)",
+            border: "1px solid rgba(var(--accent-rgb), 0.25)",
             borderRadius: "1.5rem",
             boxShadow: isEvening
-              ? "0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(212, 175, 55, 0.15)"
-              : "0 24px 60px rgba(0, 0, 0, 0.12), 0 0 20px rgba(212, 175, 55, 0.06)",
+              ? "0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(var(--accent-rgb), 0.15)"
+              : "0 24px 60px rgba(0, 0, 0, 0.12), 0 0 20px rgba(var(--accent-rgb), 0.06)",
             transform: open ? "translateX(0)" : "translateX(-115%)",
             transition: "transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.5s, border-color 0.5s",
             display: "flex",
@@ -729,7 +729,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                     fontWeight: 900,
                     letterSpacing: "0.15em",
                     textTransform: "uppercase",
-                    background: "linear-gradient(135deg, #D4AF37 0%, #f5e8a0 50%, #D4AF37 100%)",
+                    background: "linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 50%, var(--accent-color) 100%)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                   }}
@@ -755,23 +755,23 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
             <button
               onClick={() => setOpen(false)}
               style={{
-                background: "rgba(212, 175, 55, 0.08)",
-                border: "1px solid rgba(212, 175, 55, 0.2)",
+                background: "rgba(var(--accent-rgb), 0.08)",
+                border: "1px solid rgba(var(--accent-rgb), 0.2)",
                 borderRadius: "50%",
                 padding: "0.5rem",
                 cursor: "pointer",
-                color: "#D4AF37",
+                color: "var(--accent-color)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(212, 175, 55, 0.18)";
+                e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.18)";
                 e.currentTarget.style.transform = "rotate(90deg) scale(1.08)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(212, 175, 55, 0.08)";
+                e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.08)";
                 e.currentTarget.style.transform = "";
               }}
             >
@@ -797,7 +797,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                         borderRadius: "1rem",
                         border: "1px solid transparent",
                         background: mobileRentalsOpen
-                          ? (isEvening ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.05)")
+                          ? (isEvening ? "rgba(var(--accent-rgb),0.06)" : "rgba(var(--accent-rgb),0.05)")
                           : "transparent",
                         transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
                         transform: open ? "translateX(0) scale(1)" : "translateX(-24px) scale(0.92)",
@@ -806,7 +806,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                         cursor: "pointer",
                       }}
                     >
-                      <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.65rem", color: "#D4AF37", opacity: 0.8, width: "16px" }}>
+                      <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.65rem", color: "var(--accent-color)", opacity: 0.8, width: "16px" }}>
                         {l.num}
                       </span>
                       <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: isEvening ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-primary)", flexShrink: 0 }}>
@@ -822,7 +822,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                       </div>
                       <ChevronDown
                         size={14}
-                        color="#D4AF37"
+                        color="var(--accent-color)"
                         style={{ transition: "transform 0.25s ease", transform: mobileRentalsOpen ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }}
                       />
                     </button>
@@ -853,10 +853,10 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                               width: "100%",
                               transition: "all 0.2s ease",
                             }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = isEvening ? "rgba(212,175,55,0.06)" : "rgba(212,175,55,0.05)"; e.currentTarget.style.borderColor = "rgba(212,175,55,0.2)"; }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = isEvening ? "rgba(var(--accent-rgb),0.06)" : "rgba(var(--accent-rgb),0.05)"; e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.2)"; }}
                             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; }}
                           >
-                            <div style={{ width: "28px", height: "28px", borderRadius: "0.5rem", background: "rgba(212,175,55,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#D4AF37", flexShrink: 0 }}>
+                            <div style={{ width: "28px", height: "28px", borderRadius: "0.5rem", background: "rgba(var(--accent-rgb),0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-color)", flexShrink: 0 }}>
                               {sub.icon}
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.05rem" }}>
@@ -867,7 +867,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                         ))}
                         <button
                           onClick={() => handleRentalSubClick("all")}
-                          style={{ padding: "0.5rem 0.75rem", marginTop: "0.15rem", borderRadius: "0.625rem", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.58rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#D4AF37", cursor: "pointer", width: "100%", transition: "all 0.2s ease" }}
+                          style={{ padding: "0.5rem 0.75rem", marginTop: "0.15rem", borderRadius: "0.625rem", background: "rgba(var(--accent-rgb),0.08)", border: "1px solid rgba(var(--accent-rgb),0.2)", fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.58rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-color)", cursor: "pointer", width: "100%", transition: "all 0.2s ease" }}
                         >
                           View All Rentals →
                         </button>
@@ -908,8 +908,8 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   }}
                   onMouseEnter={(e) => {
                     const el = e.currentTarget;
-                    el.style.background = isEvening ? "rgba(212, 175, 55, 0.06)" : "rgba(212, 175, 55, 0.05)";
-                    el.style.borderColor = "rgba(212, 175, 55, 0.2)";
+                    el.style.background = isEvening ? "rgba(var(--accent-rgb), 0.06)" : "rgba(var(--accent-rgb), 0.05)";
+                    el.style.borderColor = "rgba(var(--accent-rgb), 0.2)";
                     el.style.paddingLeft = "1.5rem";
                     
                     const numSpan = el.querySelector(".nav-num") as HTMLElement;
@@ -917,7 +917,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                     
                     const iconBox = el.querySelector(".nav-icon-box") as HTMLElement;
                     if (iconBox) {
-                      iconBox.style.background = "#D4AF37";
+                      iconBox.style.background = "var(--accent-color)";
                       iconBox.style.color = "#0f0f0f";
                       iconBox.style.transform = "scale(1.1) rotate(5deg)";
                     }
@@ -929,7 +929,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                     el.style.paddingLeft = "1.25rem";
                     
                     const numSpan = el.querySelector(".nav-num") as HTMLElement;
-                    if (numSpan) numSpan.style.color = "#D4AF37";
+                    if (numSpan) numSpan.style.color = "var(--accent-color)";
                     
                     const iconBox = el.querySelector(".nav-icon-box") as HTMLElement;
                     if (iconBox) {
@@ -946,7 +946,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                       fontFamily: "var(--font-heading)",
                       fontWeight: 800,
                       fontSize: "0.65rem",
-                      color: "#D4AF37",
+                      color: "var(--accent-color)",
                       opacity: 0.8,
                       width: "16px",
                       transition: "color 0.3s ease",
@@ -1010,9 +1010,9 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
               margin: "0.5rem 0.85rem",
               padding: "0.95rem",
               background: isEvening
-                ? "linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(20, 20, 20, 0.5) 100%)"
-                : "linear-gradient(135deg, rgba(212, 175, 55, 0.04) 0%, rgba(255, 255, 255, 0.7) 100%)",
-              border: "1px solid rgba(212, 175, 55, 0.22)",
+                ? "linear-gradient(135deg, rgba(var(--accent-rgb), 0.05) 0%, rgba(20, 20, 20, 0.5) 100%)"
+                : "linear-gradient(135deg, rgba(var(--accent-rgb), 0.04) 0%, rgba(255, 255, 255, 0.7) 100%)",
+              border: "1px solid rgba(var(--accent-rgb), 0.22)",
               borderRadius: "1.25rem",
               boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
               display: "flex",
@@ -1029,12 +1029,12 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 width: "40px",
                 height: "40px",
                 borderRadius: "50%",
-                background: "rgba(212, 175, 55, 0.12)",
-                border: "1px solid rgba(212, 175, 55, 0.25)",
+                background: "rgba(var(--accent-rgb), 0.12)",
+                border: "1px solid rgba(var(--accent-rgb), 0.25)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#D4AF37",
+                color: "var(--accent-color)",
                 flexShrink: 0,
               }}
             >
@@ -1048,7 +1048,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   fontSize: "0.65rem",
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
-                  color: "#D4AF37",
+                  color: "var(--accent-color)",
                 }}
               >
                 Rain-Check Guarantee
@@ -1118,7 +1118,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
 
             {/* Quick region pin */}
             <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-              <MapPin size={11} color="#D4AF37" style={{ flexShrink: 0 }} />
+              <MapPin size={11} color="var(--accent-color)" style={{ flexShrink: 0 }} />
               <div
                 style={{
                   fontSize: "0.6rem",
@@ -1172,9 +1172,9 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#D4AF37";
-                  e.currentTarget.style.color = "#D4AF37";
-                  e.currentTarget.style.background = "rgba(212, 175, 55, 0.05)";
+                  e.currentTarget.style.borderColor = "var(--accent-color)";
+                  e.currentTarget.style.color = "var(--accent-color)";
+                  e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.05)";
                   e.currentTarget.style.transform = "translateY(-1px)";
                 }}
                 onMouseLeave={(e) => {
@@ -1208,9 +1208,9 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#D4AF37";
-                  e.currentTarget.style.color = "#D4AF37";
-                  e.currentTarget.style.background = "rgba(212, 175, 55, 0.05)";
+                  e.currentTarget.style.borderColor = "var(--accent-color)";
+                  e.currentTarget.style.color = "var(--accent-color)";
+                  e.currentTarget.style.background = "rgba(var(--accent-rgb), 0.05)";
                   e.currentTarget.style.transform = "translateY(-1px)";
                 }}
                 onMouseLeave={(e) => {
@@ -1220,7 +1220,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   e.currentTarget.style.transform = "";
                 }}
               >
-                <Phone size={11} color="#D4AF37" />
+                <Phone size={11} color="var(--accent-color)" />
                 Call Direct
               </a>
             </div>
@@ -1233,10 +1233,10 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 alignItems: "center",
                 justifyContent: "center",
                 padding: "0.5rem 0.85rem",
-                background: "rgba(212, 175, 55, 0.08)",
-                border: "1px solid rgba(212, 175, 55, 0.2)",
+                background: "rgba(var(--accent-rgb), 0.08)",
+                border: "1px solid rgba(var(--accent-rgb), 0.2)",
                 borderRadius: "9999px",
-                color: "#D4AF37",
+                color: "var(--accent-color)",
                 fontFamily: "var(--font-heading)",
                 fontWeight: 700,
                 fontSize: "0.6rem",
@@ -1269,7 +1269,7 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                 fontSize: "0.68rem",
                 borderRadius: "9999px",
                 letterSpacing: "0.12em",
-                boxShadow: "0 8px 24px rgba(212,175,55,0.25)",
+                boxShadow: "0 8px 24px rgba(var(--accent-rgb),0.25)",
               }}
             >
               Book & Reserve

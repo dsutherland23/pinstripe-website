@@ -37,7 +37,7 @@ export default function ErrorPage({
           width: '600px',
           height: '600px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(212,175,55,0.10) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(var(--accent-rgb),0.10) 0%, transparent 70%)',
           pointerEvents: 'none',
         }}
       />
@@ -76,7 +76,7 @@ export default function ErrorPage({
           style={{
             fontSize: '4.5rem',
             marginBottom: '1.5rem',
-            filter: 'drop-shadow(0 4px 24px rgba(212,175,55,0.25))',
+            filter: 'drop-shadow(0 4px 24px rgba(var(--accent-rgb),0.25))',
             animation: 'float 5s ease-in-out infinite',
           }}
         >
@@ -91,7 +91,7 @@ export default function ErrorPage({
             fontWeight: 800,
             letterSpacing: '0.2em',
             textTransform: 'uppercase' as const,
-            color: '#D4AF37',
+            color: 'var(--accent-color)',
             marginBottom: '0.75rem',
           }}
         >
@@ -106,7 +106,7 @@ export default function ErrorPage({
             fontWeight: 800,
             letterSpacing: '-0.02em',
             lineHeight: 1.15,
-            background: 'linear-gradient(135deg, #D4AF37 0%, #f5e8a0 50%, #D4AF37 100%)',
+            background: 'linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 50%, var(--accent-color) 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -137,13 +137,13 @@ export default function ErrorPage({
           <div
             style={{
               display: 'inline-block',
-              background: 'rgba(212,175,55,0.08)',
-              border: '1px solid rgba(212,175,55,0.15)',
+              background: 'rgba(var(--accent-rgb),0.08)',
+              border: '1px solid rgba(var(--accent-rgb),0.15)',
               borderRadius: '0.75rem',
               padding: '0.5rem 1.25rem',
               marginBottom: '2rem',
               fontSize: '0.75rem',
-              color: 'rgba(212,175,55,0.7)',
+              color: 'rgba(var(--accent-rgb),0.7)',
               fontFamily: 'monospace',
               letterSpacing: '0.03em',
             }}
@@ -169,7 +169,7 @@ export default function ErrorPage({
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
-              background: '#D4AF37',
+              background: 'var(--accent-color)',
               color: '#0f0f0f',
               padding: '0.875rem 2rem',
               borderRadius: '9999px',
@@ -180,19 +180,19 @@ export default function ErrorPage({
               textTransform: 'uppercase' as const,
               cursor: 'pointer',
               border: 'none',
-              boxShadow: '0 4px 16px rgba(212,175,55,0.35)',
+              boxShadow: '0 4px 16px rgba(var(--accent-rgb),0.35)',
               transition: 'background 0.2s, transform 0.2s, box-shadow 0.2s',
               whiteSpace: 'nowrap' as const,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#bda030';
+              e.currentTarget.style.background = 'var(--accent-hover)';
               e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(212,175,55,0.45)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(var(--accent-rgb),0.45)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#D4AF37';
+              e.currentTarget.style.background = 'var(--accent-color)';
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(212,175,55,0.35)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(var(--accent-rgb),0.35)';
             }}
           >
             🔄 Try Again
@@ -222,8 +222,8 @@ export default function ErrorPage({
               whiteSpace: 'nowrap' as const,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#D4AF37';
-              e.currentTarget.style.color = '#D4AF37';
+              e.currentTarget.style.borderColor = 'var(--accent-color)';
+              e.currentTarget.style.color = 'var(--accent-color)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
@@ -239,7 +239,7 @@ export default function ErrorPage({
           style={{
             marginTop: '3rem',
             height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(var(--accent-rgb),0.3), transparent)',
           }}
         />
 

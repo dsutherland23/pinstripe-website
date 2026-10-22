@@ -42,7 +42,7 @@ export default function StripePaymentForm({
     appearance: {
       theme: "night" as const,
       variables: {
-        colorPrimary: "#D4AF37", // Gold
+        colorPrimary: "var(--accent-color)", // Gold
         colorBackground: "#1a1a1a",
         colorText: "#ffffff",
         colorDanger: "#ef4444",
@@ -56,8 +56,8 @@ export default function StripePaymentForm({
           boxShadow: "none",
         },
         ".Input:focus": {
-          border: "1px solid #D4AF37",
-          boxShadow: "0 0 0 1px #D4AF37",
+          border: "1px solid var(--accent-color)",
+          boxShadow: "0 0 0 1px var(--accent-color)",
         },
       },
     },
@@ -177,7 +177,7 @@ function CheckoutForm({ amount, bookingId, onSuccess, onCancel }: CheckoutFormPr
           style={{
             flex: 2,
             padding: "0.75rem",
-            background: "#D4AF37",
+            background: "var(--accent-color)",
             border: "none",
             borderRadius: "0.5rem",
             color: "#000000",
@@ -202,7 +202,7 @@ function CheckoutForm({ amount, bookingId, onSuccess, onCancel }: CheckoutFormPr
       </div>
 
       <p style={{ margin: 0, fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.3rem" }}>
-        <ShieldAlert size={11} color="#D4AF37" />
+        <ShieldAlert size={11} color="var(--accent-color)" />
         Secured by Stripe. Card details are processed directly and never stored.
       </p>
     </form>

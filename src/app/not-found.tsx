@@ -44,18 +44,18 @@ export default function NotFound() {
               opacity: 0;
               animation: confettiFall linear infinite;
             }
-            .confetti-piece:nth-child(1)  { left: 5%;  background: #D4AF37; animation-duration: 5.2s; animation-delay: 0s; width: 10px; height: 6px; }
-            .confetti-piece:nth-child(2)  { left: 12%; background: #f5e8a0; animation-duration: 4.8s; animation-delay: 0.8s; width: 6px; height: 10px; }
-            .confetti-piece:nth-child(3)  { left: 22%; background: #D4AF37; animation-duration: 6.1s; animation-delay: 1.5s; border-radius: 50%; }
-            .confetti-piece:nth-child(4)  { left: 30%; background: #bda030; animation-duration: 5.5s; animation-delay: 0.3s; width: 12px; height: 5px; }
-            .confetti-piece:nth-child(5)  { left: 38%; background: #f5e9b0; animation-duration: 4.5s; animation-delay: 2.0s; border-radius: 50%; width: 6px; height: 6px; }
-            .confetti-piece:nth-child(6)  { left: 48%; background: #D4AF37; animation-duration: 5.8s; animation-delay: 0.6s; width: 8px; height: 12px; }
-            .confetti-piece:nth-child(7)  { left: 55%; background: #f5e8a0; animation-duration: 6.4s; animation-delay: 1.2s; }
-            .confetti-piece:nth-child(8)  { left: 65%; background: #bda030; animation-duration: 5.0s; animation-delay: 1.8s; width: 10px; height: 4px; }
-            .confetti-piece:nth-child(9)  { left: 75%; background: #D4AF37; animation-duration: 5.6s; animation-delay: 0.4s; border-radius: 50%; width: 7px; height: 7px; }
-            .confetti-piece:nth-child(10) { left: 85%; background: #f5e9b0; animation-duration: 4.9s; animation-delay: 2.5s; width: 10px; height: 6px; }
-            .confetti-piece:nth-child(11) { left: 92%; background: #D4AF37; animation-duration: 5.3s; animation-delay: 1.0s; width: 5px; height: 10px; }
-            .confetti-piece:nth-child(12) { left: 18%; background: #bda030; animation-duration: 6.0s; animation-delay: 3.0s; border-radius: 50%; }
+            .confetti-piece:nth-child(1)  { left: 5%;  background: var(--accent-color); animation-duration: 5.2s; animation-delay: 0s; width: 10px; height: 6px; }
+            .confetti-piece:nth-child(2)  { left: 12%; background: var(--accent-light); animation-duration: 4.8s; animation-delay: 0.8s; width: 6px; height: 10px; }
+            .confetti-piece:nth-child(3)  { left: 22%; background: var(--accent-color); animation-duration: 6.1s; animation-delay: 1.5s; border-radius: 50%; }
+            .confetti-piece:nth-child(4)  { left: 30%; background: var(--accent-hover); animation-duration: 5.5s; animation-delay: 0.3s; width: 12px; height: 5px; }
+            .confetti-piece:nth-child(5)  { left: 38%; background: var(--accent-light); animation-duration: 4.5s; animation-delay: 2.0s; border-radius: 50%; width: 6px; height: 6px; }
+            .confetti-piece:nth-child(6)  { left: 48%; background: var(--accent-color); animation-duration: 5.8s; animation-delay: 0.6s; width: 8px; height: 12px; }
+            .confetti-piece:nth-child(7)  { left: 55%; background: var(--accent-light); animation-duration: 6.4s; animation-delay: 1.2s; }
+            .confetti-piece:nth-child(8)  { left: 65%; background: var(--accent-hover); animation-duration: 5.0s; animation-delay: 1.8s; width: 10px; height: 4px; }
+            .confetti-piece:nth-child(9)  { left: 75%; background: var(--accent-color); animation-duration: 5.6s; animation-delay: 0.4s; border-radius: 50%; width: 7px; height: 7px; }
+            .confetti-piece:nth-child(10) { left: 85%; background: var(--accent-light); animation-duration: 4.9s; animation-delay: 2.5s; width: 10px; height: 6px; }
+            .confetti-piece:nth-child(11) { left: 92%; background: var(--accent-color); animation-duration: 5.3s; animation-delay: 1.0s; width: 5px; height: 10px; }
+            .confetti-piece:nth-child(12) { left: 18%; background: var(--accent-hover); animation-duration: 6.0s; animation-delay: 3.0s; border-radius: 50%; }
           `,
         }}
       />
@@ -77,7 +77,7 @@ export default function NotFound() {
           width: '700px',
           height: '700px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(var(--accent-rgb),0.08) 0%, transparent 70%)',
           pointerEvents: 'none',
         }}
       />
@@ -104,7 +104,7 @@ export default function NotFound() {
             lineHeight: 1,
             letterSpacing: '-0.04em',
             color: 'transparent',
-            WebkitTextStroke: '1.5px rgba(212,175,55,0.12)',
+            WebkitTextStroke: '1.5px rgba(var(--accent-rgb),0.12)',
             pointerEvents: 'none',
             userSelect: 'none',
           }}
@@ -119,7 +119,7 @@ export default function NotFound() {
             position: 'relative',
             fontSize: '4.5rem',
             marginBottom: '1.5rem',
-            filter: 'drop-shadow(0 4px 24px rgba(212,175,55,0.25))',
+            filter: 'drop-shadow(0 4px 24px rgba(var(--accent-rgb),0.25))',
           }}
         >
           🎉
@@ -134,7 +134,7 @@ export default function NotFound() {
             fontWeight: 800,
             letterSpacing: '0.2em',
             textTransform: 'uppercase',
-            color: '#D4AF37',
+            color: 'var(--accent-color)',
             marginBottom: '0.75rem',
           }}
         >
@@ -241,7 +241,7 @@ export default function NotFound() {
               href={link.href}
               style={{
                 fontSize: '0.75rem',
-                color: 'rgba(212,175,55,0.6)',
+                color: 'rgba(var(--accent-rgb),0.6)',
                 textDecoration: 'none',
                 fontWeight: 600,
                 letterSpacing: '0.05em',
@@ -259,7 +259,7 @@ export default function NotFound() {
             position: 'relative',
             marginTop: '2.5rem',
             height: '1px',
-            background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(var(--accent-rgb),0.3), transparent)',
           }}
         />
 

@@ -218,7 +218,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
   if (loading) {
     return (
       <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>
-        <div style={{ display: "inline-block", width: "2rem", height: "2rem", border: "3px solid #D4AF37", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+        <div style={{ display: "inline-block", width: "2rem", height: "2rem", border: "3px solid var(--accent-color)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
         <p style={{ marginTop: "1rem" }}>Loading Smart Delivery Engine CMS...</p>
       </div>
     );
@@ -227,14 +227,14 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
   if (!config) return null;
 
   return (
-    <div style={{ background: "rgba(18, 18, 22, 0.85)", backdropFilter: "blur(12px)", border: "1px solid rgba(212, 175, 55, 0.2)", borderRadius: "16px", padding: "1.5rem", color: "#fff" }}>
+    <div style={{ background: "rgba(18, 18, 22, 0.85)", backdropFilter: "blur(12px)", border: "1px solid rgba(var(--accent-rgb), 0.2)", borderRadius: "16px", padding: "1.5rem", color: "#fff" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "1.25rem", marginBottom: "1.5rem" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <Truck style={{ color: "#D4AF37", width: "28px", height: "28px" }} />
+            <Truck style={{ color: "var(--accent-color)", width: "28px", height: "28px" }} />
             <h2 style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#fff" }}>
-              Smart Delivery Pricing & Rules Engine <span style={{ fontSize: "0.85rem", background: "rgba(212,175,55,0.2)", color: "#D4AF37", padding: "0.2rem 0.6rem", borderRadius: "20px", marginLeft: "0.5rem" }}>v2.0</span>
+              Smart Delivery Pricing & Rules Engine <span style={{ fontSize: "0.85rem", background: "rgba(var(--accent-rgb),0.2)", color: "var(--accent-color)", padding: "0.2rem 0.6rem", borderRadius: "20px", marginLeft: "0.5rem" }}>v2.0</span>
             </h2>
           </div>
           <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", margin: "0.3rem 0 0 0" }}>
@@ -244,12 +244,12 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
 
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)" }}>
-            Active Profile: <strong style={{ color: "#D4AF37" }}>{config.profiles.find(p => p.id === config.activeProfileId)?.name || "Standard"}</strong> (v{config.versionNumber})
+            Active Profile: <strong style={{ color: "var(--accent-color)" }}>{config.profiles.find(p => p.id === config.activeProfileId)?.name || "Standard"}</strong> (v{config.versionNumber})
           </span>
           <button
             onClick={() => setShowSaveModal(true)}
             disabled={saving}
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%)", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem 1.2rem", fontWeight: "700", cursor: "pointer", boxShadow: "0 4px 12px rgba(212, 175, 55, 0.3)" }}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg, var(--accent-color) 0%, #AA7C11 100%)", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem 1.2rem", fontWeight: "700", cursor: "pointer", boxShadow: "0 4px 12px rgba(var(--accent-rgb), 0.3)" }}
           >
             <Save style={{ width: "16px", height: "16px" }} /> Save Changes
           </button>
@@ -265,11 +265,11 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
       )}
 
       {/* ─── PRICING MODE SWITCHER ───────────────────────────────────────────────── */}
-      <div style={{ marginBottom: "1.5rem", background: "rgba(0,0,0,0.35)", border: "2px solid rgba(212,175,55,0.3)", borderRadius: "12px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div style={{ marginBottom: "1.5rem", background: "rgba(0,0,0,0.35)", border: "2px solid rgba(var(--accent-rgb),0.3)", borderRadius: "12px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <Zap style={{ color: "#D4AF37", width: "20px", height: "20px" }} />
+          <Zap style={{ color: "var(--accent-color)", width: "20px", height: "20px" }} />
           <span style={{ fontWeight: 800, fontSize: "1rem", color: "#fff", letterSpacing: "0.02em" }}>Delivery Pricing Mode</span>
-          <span style={{ fontSize: "0.72rem", background: "rgba(212,175,55,0.15)", color: "#D4AF37", border: "1px solid rgba(212,175,55,0.4)", borderRadius: "20px", padding: "0.15rem 0.6rem", fontWeight: 700 }}>Live Setting</span>
+          <span style={{ fontSize: "0.72rem", background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent-color)", border: "1px solid rgba(var(--accent-rgb),0.4)", borderRadius: "20px", padding: "0.15rem 0.6rem", fontWeight: 700 }}>Live Setting</span>
         </div>
         <p style={{ margin: 0, fontSize: "0.82rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>
           Choose how delivery fees are calculated for all customer bookings. <strong style={{ color: "#fff" }}>Fixed Price</strong> charges a single flat rate. <strong style={{ color: "#fff" }}>Smart Engine</strong> evaluates rules, vehicles, labor, travel distance, and venue logistics automatically.
@@ -283,15 +283,15 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
             style={{
               display: "flex", flexDirection: "column", gap: "0.5rem",
               padding: "1rem 1.1rem",
-              background: config.pricingMode === "fixed" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
-              border: config.pricingMode === "fixed" ? "2px solid #D4AF37" : "1.5px solid rgba(255,255,255,0.1)",
+              background: config.pricingMode === "fixed" ? "rgba(var(--accent-rgb),0.12)" : "rgba(255,255,255,0.03)",
+              border: config.pricingMode === "fixed" ? "2px solid var(--accent-color)" : "1.5px solid rgba(255,255,255,0.1)",
               borderRadius: "10px", cursor: "pointer", textAlign: "left", transition: "all 0.2s ease"
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-              <DollarSign style={{ color: config.pricingMode === "fixed" ? "#D4AF37" : "rgba(255,255,255,0.5)", width: "18px", height: "18px" }} />
-              <span style={{ fontWeight: 800, color: config.pricingMode === "fixed" ? "#D4AF37" : "#fff", fontSize: "0.9rem" }}>Fixed Price Mode</span>
-              {config.pricingMode === "fixed" && <span style={{ marginLeft: "auto", background: "#D4AF37", color: "#000", fontSize: "0.65rem", fontWeight: 800, borderRadius: "20px", padding: "0.1rem 0.5rem", letterSpacing: "0.05em" }}>ACTIVE</span>}
+              <DollarSign style={{ color: config.pricingMode === "fixed" ? "var(--accent-color)" : "rgba(255,255,255,0.5)", width: "18px", height: "18px" }} />
+              <span style={{ fontWeight: 800, color: config.pricingMode === "fixed" ? "var(--accent-color)" : "#fff", fontSize: "0.9rem" }}>Fixed Price Mode</span>
+              {config.pricingMode === "fixed" && <span style={{ marginLeft: "auto", background: "var(--accent-color)", color: "#000", fontSize: "0.65rem", fontWeight: 800, borderRadius: "20px", padding: "0.1rem 0.5rem", letterSpacing: "0.05em" }}>ACTIVE</span>}
             </div>
             <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.55)", fontWeight: 500, lineHeight: 1.4 }}>
               Every order pays the same flat delivery rate. Venue handling add-ons (stairs, sand anchors, etc.) are still added on top.
@@ -305,15 +305,15 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
             style={{
               display: "flex", flexDirection: "column", gap: "0.5rem",
               padding: "1rem 1.1rem",
-              background: config.pricingMode === "smart" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
-              border: config.pricingMode === "smart" ? "2px solid #D4AF37" : "1.5px solid rgba(255,255,255,0.1)",
+              background: config.pricingMode === "smart" ? "rgba(var(--accent-rgb),0.12)" : "rgba(255,255,255,0.03)",
+              border: config.pricingMode === "smart" ? "2px solid var(--accent-color)" : "1.5px solid rgba(255,255,255,0.1)",
               borderRadius: "10px", cursor: "pointer", textAlign: "left", transition: "all 0.2s ease"
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-              <Zap style={{ color: config.pricingMode === "smart" ? "#D4AF37" : "rgba(255,255,255,0.5)", width: "18px", height: "18px" }} />
-              <span style={{ fontWeight: 800, color: config.pricingMode === "smart" ? "#D4AF37" : "#fff", fontSize: "0.9rem" }}>Smart Rules Engine</span>
-              {config.pricingMode === "smart" && <span style={{ marginLeft: "auto", background: "#D4AF37", color: "#000", fontSize: "0.65rem", fontWeight: 800, borderRadius: "20px", padding: "0.1rem 0.5rem", letterSpacing: "0.05em" }}>ACTIVE</span>}
+              <Zap style={{ color: config.pricingMode === "smart" ? "var(--accent-color)" : "rgba(255,255,255,0.5)", width: "18px", height: "18px" }} />
+              <span style={{ fontWeight: 800, color: config.pricingMode === "smart" ? "var(--accent-color)" : "#fff", fontSize: "0.9rem" }}>Smart Rules Engine</span>
+              {config.pricingMode === "smart" && <span style={{ marginLeft: "auto", background: "var(--accent-color)", color: "#000", fontSize: "0.65rem", fontWeight: 800, borderRadius: "20px", padding: "0.1rem 0.5rem", letterSpacing: "0.05em" }}>ACTIVE</span>}
             </div>
             <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.55)", fontWeight: 500, lineHeight: 1.4 }}>
               Evaluates rules, strategies, vehicle type, labor time, travel distance, and zone pricing automatically per order.
@@ -323,10 +323,10 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
 
         {/* Fixed Price Amount Input — only shown when mode is fixed */}
         {config.pricingMode === "fixed" && (
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(212,175,55,0.07)", border: "1px solid rgba(212,175,55,0.3)", borderRadius: "8px", padding: "0.85rem 1rem" }}>
-            <DollarSign style={{ color: "#D4AF37", flexShrink: 0, width: "18px", height: "18px" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: "8px", padding: "0.85rem 1rem" }}>
+            <DollarSign style={{ color: "var(--accent-color)", flexShrink: 0, width: "18px", height: "18px" }} />
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, color: "#D4AF37", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.3rem" }}>
+              <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, color: "var(--accent-color)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.3rem" }}>
                 Fixed Delivery Price (applies to all orders)
               </label>
               <input
@@ -335,7 +335,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 step={0.01}
                 value={config.fixedDeliveryPrice ?? 45}
                 onChange={e => setConfig(prev => prev ? { ...prev, fixedDeliveryPrice: parseFloat(e.target.value) || 0 } : prev)}
-                style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(212,175,55,0.4)", borderRadius: "6px", color: "#fff", fontSize: "1.1rem", fontWeight: 800, padding: "0.4rem 0.75rem", width: "140px", outline: "none" }}
+                style={{ background: "rgba(0,0,0,0.5)", border: "1px solid rgba(var(--accent-rgb),0.4)", borderRadius: "6px", color: "#fff", fontSize: "1.1rem", fontWeight: 800, padding: "0.4rem 0.75rem", width: "140px", outline: "none" }}
               />
             </div>
             <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
@@ -349,7 +349,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
             type="button"
             onClick={() => handleSaveConfig(config, `Pricing mode changed to: ${config.pricingMode}${config.pricingMode === "fixed" ? ` (Fixed: $${config.fixedDeliveryPrice})` : ""}`)}
             disabled={saving}
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg, #D4AF37 0%, #AA7C11 100%)", color: "#000", border: "none", borderRadius: "8px", padding: "0.55rem 1.1rem", fontWeight: 800, fontSize: "0.82rem", cursor: "pointer", letterSpacing: "0.04em" }}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg, var(--accent-color) 0%, #AA7C11 100%)", color: "#000", border: "none", borderRadius: "8px", padding: "0.55rem 1.1rem", fontWeight: 800, fontSize: "0.82rem", cursor: "pointer", letterSpacing: "0.04em" }}
           >
             <Save style={{ width: "14px", height: "14px" }} />
             {saving ? "Saving…" : "Save Pricing Mode"}
@@ -388,9 +388,9 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 borderRadius: "8px",
                 fontSize: "0.85rem",
                 fontWeight: isActive ? "700" : "500",
-                background: isActive ? "rgba(212, 175, 55, 0.18)" : "rgba(255,255,255,0.04)",
-                color: isActive ? "#D4AF37" : "rgba(255,255,255,0.7)",
-                border: isActive ? "1px solid rgba(212, 175, 55, 0.5)" : "1px solid transparent",
+                background: isActive ? "rgba(var(--accent-rgb), 0.18)" : "rgba(255,255,255,0.04)",
+                color: isActive ? "var(--accent-color)" : "rgba(255,255,255,0.7)",
+                border: isActive ? "1px solid rgba(var(--accent-rgb), 0.5)" : "1px solid transparent",
                 cursor: "pointer",
                 transition: "all 0.15s ease"
               }}
@@ -411,7 +411,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
               <div key={strat.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "1.25rem", position: "relative" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: "1.05rem", color: "#D4AF37" }}>{strat.name}</h4>
+                    <h4 style={{ margin: 0, fontSize: "1.05rem", color: "var(--accent-color)" }}>{strat.name}</h4>
                     <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Type: {strat.type}</span>
                   </div>
                   <label style={{ display: "flex", alignItems: "center", cursor: "pointer", gap: "0.4rem" }}>
@@ -422,7 +422,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                         const updated = config.strategies.map(s => s.id === strat.id ? { ...s, enabled: e.target.checked } : s);
                         setConfig({ ...config, strategies: updated });
                       }}
-                      style={{ accentColor: "#D4AF37" }}
+                      style={{ accentColor: "var(--accent-color)" }}
                     />
                     <span style={{ fontSize: "0.8rem", color: strat.enabled ? "#4ade80" : "#94a3b8" }}>{strat.enabled ? "Active" : "Disabled"}</span>
                   </label>
@@ -492,7 +492,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 strategyType: "fixed",
                 conditions: { logic: "AND", conditions: [{ field: "orderTotal", operator: "greater_than", value: 1000 }] }
               })}
-              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(212,175,55,0.2)", border: "1px solid #D4AF37", color: "#D4AF37", borderRadius: "6px", padding: "0.4rem 0.8rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: "600" }}
+              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(var(--accent-rgb),0.2)", border: "1px solid var(--accent-color)", color: "var(--accent-color)", borderRadius: "6px", padding: "0.4rem 0.8rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: "600" }}
             >
               <Plus style={{ width: "14px" }} /> Add Rule
             </button>
@@ -502,12 +502,12 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
             {config.rules.map((rule, idx) => (
               <div key={rule.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                  <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(212,175,55,0.15)", color: "#D4AF37", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "0.85rem" }}>
+                  <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent-color)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "0.85rem" }}>
                     #{rule.priority}
                   </span>
                   <div>
                     <h4 style={{ margin: 0, fontSize: "1rem", color: "#fff" }}>{rule.name}</h4>
-                    <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)" }}>Strategy: <strong style={{ color: "#D4AF37" }}>{rule.strategyType.toUpperCase()}</strong></span>
+                    <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)" }}>Strategy: <strong style={{ color: "var(--accent-color)" }}>{rule.strategyType.toUpperCase()}</strong></span>
                   </div>
                 </div>
 
@@ -539,8 +539,8 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
           {/* Rule Editor Modal */}
           {editingRule && (
             <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "1rem" }}>
-              <div style={{ background: "#18181c", border: "1px solid #D4AF37", borderRadius: "14px", width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", padding: "1.5rem" }}>
-                <h4 style={{ margin: "0 0 1rem 0", color: "#D4AF37", fontSize: "1.2rem" }}>Edit Delivery Rule</h4>
+              <div style={{ background: "#18181c", border: "1px solid var(--accent-color)", borderRadius: "14px", width: "100%", maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", padding: "1.5rem" }}>
+                <h4 style={{ margin: "0 0 1rem 0", color: "var(--accent-color)", fontSize: "1.2rem" }}>Edit Delivery Rule</h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.85rem" }}>
                   <label>Rule Name:
                     <input
@@ -581,7 +581,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                       type="checkbox"
                       checked={editingRule.enabled}
                       onChange={e => setEditingRule({ ...editingRule, enabled: e.target.checked })}
-                      style={{ accentColor: "#D4AF37" }}
+                      style={{ accentColor: "var(--accent-color)" }}
                     />
                     Enable Rule
                   </label>
@@ -646,7 +646,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                         const newConds = [...editingRule.conditions.conditions, { field: "orderTotal" as ConditionField, operator: "greater_than" as ConditionOperator, value: 500 }];
                         setEditingRule({ ...editingRule, conditions: { ...editingRule.conditions, conditions: newConds } });
                       }}
-                      style={{ fontSize: "0.8rem", color: "#D4AF37", background: "none", border: "1px dashed #D4AF37", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer", marginTop: "0.4rem" }}
+                      style={{ fontSize: "0.8rem", color: "var(--accent-color)", background: "none", border: "1px dashed var(--accent-color)", borderRadius: "6px", padding: "0.3rem 0.6rem", cursor: "pointer", marginTop: "0.4rem" }}
                     >
                       + Add Condition
                     </button>
@@ -661,7 +661,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                         setConfig({ ...config, rules: updatedRules });
                         setEditingRule(null);
                       }}
-                      style={{ background: "#D4AF37", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", fontWeight: "700", cursor: "pointer" }}
+                      style={{ background: "var(--accent-color)", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", fontWeight: "700", cursor: "pointer" }}
                     >
                       Save Rule
                     </button>
@@ -694,7 +694,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 maxTableCount: 20,
                 requiresCDL: false
               })}
-              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(212,175,55,0.2)", border: "1px solid #D4AF37", color: "#D4AF37", borderRadius: "6px", padding: "0.4rem 0.8rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: "600" }}
+              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(var(--accent-rgb),0.2)", border: "1px solid var(--accent-color)", color: "var(--accent-color)", borderRadius: "6px", padding: "0.4rem 0.8rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: "600" }}
             >
               <Plus style={{ width: "14px" }} /> Add Vehicle
             </button>
@@ -704,7 +704,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
             {config.vehicles.map(v => (
               <div key={v.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "1.25rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                  <h4 style={{ margin: 0, color: "#D4AF37", fontSize: "1.05rem" }}>{v.name}</h4>
+                  <h4 style={{ margin: 0, color: "var(--accent-color)", fontSize: "1.05rem" }}>{v.name}</h4>
                   <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#fff" }}>${v.baseCost} Base</span>
                 </div>
                 <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.3rem", margin: "0.75rem 0" }}>
@@ -829,7 +829,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 amount: 25,
                 enabled: true
               })}
-              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(212,175,55,0.2)", border: "1px solid #D4AF37", color: "#D4AF37", borderRadius: "6px", padding: "0.45rem 0.9rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}
+              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(var(--accent-rgb),0.2)", border: "1px solid var(--accent-color)", color: "var(--accent-color)", borderRadius: "6px", padding: "0.45rem 0.9rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}
             >
               <Plus style={{ width: "14px" }} /> Add Fee
             </button>
@@ -837,13 +837,13 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "0.75rem" }}>
             {config.handling.map(fee => (
-              <div key={fee.id} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${fee.enabled ? "rgba(212,175,55,0.25)" : "rgba(255,255,255,0.06)"}`, borderRadius: "10px", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              <div key={fee.id} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${fee.enabled ? "rgba(var(--accent-rgb),0.25)" : "rgba(255,255,255,0.06)"}`, borderRadius: "10px", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: "0.95rem", color: fee.enabled ? "#fff" : "rgba(255,255,255,0.45)" }}>{fee.name}</div>
                     <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.4)", marginTop: "0.15rem" }}>ID: {fee.id}</div>
                   </div>
-                  <div style={{ fontSize: "1.1rem", fontWeight: 800, color: fee.enabled ? "#D4AF37" : "rgba(255,255,255,0.3)" }}>
+                  <div style={{ fontSize: "1.1rem", fontWeight: 800, color: fee.enabled ? "var(--accent-color)" : "rgba(255,255,255,0.3)" }}>
                     {fee.feeType === "percentage" ? `${fee.amount}%` : `$${fee.amount}`}
                   </div>
                 </div>
@@ -891,8 +891,8 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
           {/* Handling Fee Editor Modal */}
           {editingHandling && (
             <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "1rem" }}>
-              <div style={{ background: "#18181c", border: "1px solid #D4AF37", borderRadius: "14px", width: "100%", maxWidth: "480px", padding: "1.5rem" }}>
-                <h4 style={{ margin: "0 0 1.25rem 0", color: "#D4AF37", fontSize: "1.1rem" }}>
+              <div style={{ background: "#18181c", border: "1px solid var(--accent-color)", borderRadius: "14px", width: "100%", maxWidth: "480px", padding: "1.5rem" }}>
+                <h4 style={{ margin: "0 0 1.25rem 0", color: "var(--accent-color)", fontSize: "1.1rem" }}>
                   {config.handling.some(h => h.id === editingHandling.id) ? "Edit" : "New"} Handling Fee
                 </h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.85rem" }}>
@@ -924,7 +924,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                   <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <input type="checkbox" checked={editingHandling.enabled}
                       onChange={e => setEditingHandling({ ...editingHandling, enabled: e.target.checked })}
-                      style={{ accentColor: "#D4AF37" }}
+                      style={{ accentColor: "var(--accent-color)" }}
                     />
                     Enabled (shown during checkout)
                   </label>
@@ -939,7 +939,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                         setConfig({ ...config, handling: updated });
                         setEditingHandling(null);
                       }}
-                      style={{ background: "#D4AF37", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
+                      style={{ background: "var(--accent-color)", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
                     >
                       Save Fee
                     </button>
@@ -952,7 +952,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1.5rem" }}>
             <button
               onClick={() => setShowSaveModal(true)} disabled={saving}
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg,#D4AF37,#AA7C11)", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg,var(--accent-color),#AA7C11)", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
             >
               <Save style={{ width: "15px" }} /> Save Handling Fees
             </button>
@@ -984,7 +984,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 const logistics = item.logistics || {};
                 const isEditing = editingLogisticsItem?.id === item.id;
                 return (
-                  <div key={item.id} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${isEditing ? "#D4AF37" : "rgba(255,255,255,0.07)"}`, borderRadius: "10px", padding: "0.9rem 1rem", transition: "border-color 0.2s" }}>
+                  <div key={item.id} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${isEditing ? "var(--accent-color)" : "rgba(255,255,255,0.07)"}`, borderRadius: "10px", padding: "0.9rem 1rem", transition: "border-color 0.2s" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
                         <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.92rem" }}>{item.title}</div>
@@ -999,7 +999,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                         </div>
                         <button
                           onClick={() => setEditingLogisticsItem(isEditing ? null : { ...item, logistics: { deliveryPoints: 5, weight: 25, volume: 10, avgLoadingMinutes: 5, avgUnloadingMinutes: 5, avgSetupMinutes: 10, avgBreakdownMinutes: 10, stackable: true, fragile: false, installationRequired: false, requiresDolly: false, requiresLiftGate: false, requiresTwoWorkers: false, requiresThreeWorkers: false, ...logistics } })}
-                          style={{ background: isEditing ? "rgba(212,175,55,0.2)" : "rgba(255,255,255,0.07)", border: isEditing ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.1)", color: isEditing ? "#D4AF37" : "#fff", borderRadius: "6px", padding: "0.35rem 0.75rem", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                          style={{ background: isEditing ? "rgba(var(--accent-rgb),0.2)" : "rgba(255,255,255,0.07)", border: isEditing ? "1px solid var(--accent-color)" : "1px solid rgba(255,255,255,0.1)", color: isEditing ? "var(--accent-color)" : "#fff", borderRadius: "6px", padding: "0.35rem 0.75rem", fontSize: "0.78rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem" }}
                         >
                           <Edit2 style={{ width: "12px" }} /> {isEditing ? "Close" : "Edit"}
                         </button>
@@ -1041,7 +1041,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                               <input type="checkbox"
                                 checked={(editingLogisticsItem.logistics as any)[key] ?? false}
                                 onChange={e => setEditingLogisticsItem({ ...editingLogisticsItem, logistics: { ...editingLogisticsItem.logistics, [key]: e.target.checked } })}
-                                style={{ accentColor: "#D4AF37" }}
+                                style={{ accentColor: "var(--accent-color)" }}
                               />
                               {label}
                             </label>
@@ -1057,7 +1057,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                               setEditingLogisticsItem(null);
                               setFeedback({ type: "success", text: `Logistics saved for "${editingLogisticsItem.title}"` });
                             }}
-                            style={{ background: "#D4AF37", color: "#000", border: "none", borderRadius: "6px", padding: "0.45rem 1.1rem", fontWeight: 700, cursor: "pointer", fontSize: "0.82rem" }}
+                            style={{ background: "var(--accent-color)", color: "#000", border: "none", borderRadius: "6px", padding: "0.45rem 1.1rem", fontWeight: 700, cursor: "pointer", fontSize: "0.82rem" }}
                           >
                             <Save style={{ width: "13px", display: "inline", marginRight: "4px" }} />
                             Save Logistics
@@ -1094,7 +1094,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 enabled: true,
                 priority: config.zones.length + 1
               })}
-              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(212,175,55,0.2)", border: "1px solid #D4AF37", color: "#D4AF37", borderRadius: "6px", padding: "0.45rem 0.9rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}
+              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(var(--accent-rgb),0.2)", border: "1px solid var(--accent-color)", color: "var(--accent-color)", borderRadius: "6px", padding: "0.45rem 0.9rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}
             >
               <Plus style={{ width: "14px" }} /> Add Zone
             </button>
@@ -1105,10 +1105,10 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
               .slice()
               .sort((a, b) => a.priority - b.priority)
               .map(zone => (
-                <div key={zone.id} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${zone.enabled ? "rgba(212,175,55,0.25)" : "rgba(255,255,255,0.06)"}`, borderRadius: "10px", padding: "1rem 1.1rem" }}>
+                <div key={zone.id} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${zone.enabled ? "rgba(var(--accent-rgb),0.25)" : "rgba(255,255,255,0.06)"}`, borderRadius: "10px", padding: "1rem 1.1rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                      <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(212,175,55,0.15)", color: "#D4AF37", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.85rem", flexShrink: 0 }}>
+                      <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent-color)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.85rem", flexShrink: 0 }}>
                         #{zone.priority}
                       </div>
                       <div>
@@ -1120,7 +1120,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ fontSize: "1.2rem", fontWeight: 800, color: zone.enabled ? "#D4AF37" : "rgba(255,255,255,0.3)" }}>
+                      <span style={{ fontSize: "1.2rem", fontWeight: 800, color: zone.enabled ? "var(--accent-color)" : "rgba(255,255,255,0.3)" }}>
                         ${zone.price}
                       </span>
                       <span style={{ padding: "0.2rem 0.55rem", borderRadius: "20px", fontSize: "0.72rem", fontWeight: 700, background: zone.enabled ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.12)", color: zone.enabled ? "#4ade80" : "#f87171" }}>
@@ -1150,7 +1150,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                   {zone.zipCodes.length > 0 && (
                     <div style={{ marginTop: "0.65rem", display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
                       {zone.zipCodes.map(z => (
-                        <span key={z} style={{ fontSize: "0.7rem", background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: "4px", padding: "0.1rem 0.4rem", color: "#D4AF37", fontWeight: 600 }}>{z}</span>
+                        <span key={z} style={{ fontSize: "0.7rem", background: "rgba(var(--accent-rgb),0.08)", border: "1px solid rgba(var(--accent-rgb),0.2)", borderRadius: "4px", padding: "0.1rem 0.4rem", color: "var(--accent-color)", fontWeight: 600 }}>{z}</span>
                       ))}
                     </div>
                   )}
@@ -1161,8 +1161,8 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
           {/* Zone Editor Modal */}
           {editingZone && (
             <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "1rem" }}>
-              <div style={{ background: "#18181c", border: "1px solid #D4AF37", borderRadius: "14px", width: "100%", maxWidth: "560px", maxHeight: "90vh", overflowY: "auto", padding: "1.5rem" }}>
-                <h4 style={{ margin: "0 0 1.25rem 0", color: "#D4AF37", fontSize: "1.1rem" }}>
+              <div style={{ background: "#18181c", border: "1px solid var(--accent-color)", borderRadius: "14px", width: "100%", maxWidth: "560px", maxHeight: "90vh", overflowY: "auto", padding: "1.5rem" }}>
+                <h4 style={{ margin: "0 0 1.25rem 0", color: "var(--accent-color)", fontSize: "1.1rem" }}>
                   {config.zones.some(z => z.id === editingZone.id) ? "Edit" : "New"} Delivery Zone
                 </h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.85rem" }}>
@@ -1205,7 +1205,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                   <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <input type="checkbox" checked={editingZone.enabled}
                       onChange={e => setEditingZone({ ...editingZone, enabled: e.target.checked })}
-                      style={{ accentColor: "#D4AF37" }}
+                      style={{ accentColor: "var(--accent-color)" }}
                     />
                     Zone Active
                   </label>
@@ -1220,7 +1220,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                         setConfig({ ...config, zones: updated });
                         setEditingZone(null);
                       }}
-                      style={{ background: "#D4AF37", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
+                      style={{ background: "var(--accent-color)", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
                     >
                       Save Zone
                     </button>
@@ -1233,7 +1233,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1.5rem" }}>
             <button
               onClick={() => setShowSaveModal(true)} disabled={saving}
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg,#D4AF37,#AA7C11)", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg,var(--accent-color),#AA7C11)", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
             >
               <Save style={{ width: "15px" }} /> Save Delivery Zones
             </button>
@@ -1261,7 +1261,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 notes: "",
                 ruleIds: []
               })}
-              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(212,175,55,0.2)", border: "1px solid #D4AF37", color: "#D4AF37", borderRadius: "6px", padding: "0.45rem 0.9rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}
+              style={{ display: "flex", alignItems: "center", gap: "0.4rem", background: "rgba(var(--accent-rgb),0.2)", border: "1px solid var(--accent-color)", color: "var(--accent-color)", borderRadius: "6px", padding: "0.45rem 0.9rem", fontSize: "0.85rem", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}
             >
               <Plus style={{ width: "14px" }} /> New Profile
             </button>
@@ -1271,13 +1271,13 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
             {config.profiles.map(profile => {
               const isActive = config.activeProfileId === profile.id;
               return (
-                <div key={profile.id} style={{ background: isActive ? "rgba(212,175,55,0.07)" : "rgba(255,255,255,0.03)", border: `${isActive ? "2px" : "1px"} solid ${isActive ? "#D4AF37" : "rgba(255,255,255,0.08)"}`, borderRadius: "10px", padding: "1rem 1.1rem" }}>
+                <div key={profile.id} style={{ background: isActive ? "rgba(var(--accent-rgb),0.07)" : "rgba(255,255,255,0.03)", border: `${isActive ? "2px" : "1px"} solid ${isActive ? "var(--accent-color)" : "rgba(255,255,255,0.08)"}`, borderRadius: "10px", padding: "1rem 1.1rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                        <span style={{ fontWeight: 700, color: isActive ? "#D4AF37" : "#fff", fontSize: "1rem" }}>{profile.name}</span>
+                        <span style={{ fontWeight: 700, color: isActive ? "var(--accent-color)" : "#fff", fontSize: "1rem" }}>{profile.name}</span>
                         {isActive && (
-                          <span style={{ fontSize: "0.68rem", fontWeight: 800, background: "#D4AF37", color: "#000", borderRadius: "20px", padding: "0.1rem 0.55rem", letterSpacing: "0.05em" }}>ACTIVE</span>
+                          <span style={{ fontSize: "0.68rem", fontWeight: 800, background: "var(--accent-color)", color: "#000", borderRadius: "20px", padding: "0.1rem 0.55rem", letterSpacing: "0.05em" }}>ACTIVE</span>
                         )}
                       </div>
                       {profile.notes && (
@@ -1299,7 +1299,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                             setConfig(updated);
                             setFeedback({ type: "success", text: `"${profile.name}" is now the active delivery profile.` });
                           }}
-                          style={{ background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.5)", color: "#D4AF37", borderRadius: "6px", padding: "0.4rem 0.8rem", fontSize: "0.78rem", cursor: "pointer", fontWeight: 700 }}
+                          style={{ background: "rgba(var(--accent-rgb),0.15)", border: "1px solid rgba(var(--accent-rgb),0.5)", color: "var(--accent-color)", borderRadius: "6px", padding: "0.4rem 0.8rem", fontSize: "0.78rem", cursor: "pointer", fontWeight: 700 }}
                         >
                           Set Active
                         </button>
@@ -1325,8 +1325,8 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
           {/* Profile Editor Modal */}
           {editingProfile && (
             <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "1rem" }}>
-              <div style={{ background: "#18181c", border: "1px solid #D4AF37", borderRadius: "14px", width: "100%", maxWidth: "560px", maxHeight: "90vh", overflowY: "auto", padding: "1.5rem" }}>
-                <h4 style={{ margin: "0 0 1.25rem 0", color: "#D4AF37", fontSize: "1.1rem" }}>
+              <div style={{ background: "#18181c", border: "1px solid var(--accent-color)", borderRadius: "14px", width: "100%", maxWidth: "560px", maxHeight: "90vh", overflowY: "auto", padding: "1.5rem" }}>
+                <h4 style={{ margin: "0 0 1.25rem 0", color: "var(--accent-color)", fontSize: "1.1rem" }}>
                   {config.profiles.some(p => p.id === editingProfile.id) ? "Edit" : "New"} Delivery Profile
                 </h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.85rem" }}>
@@ -1365,7 +1365,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", maxHeight: "180px", overflowY: "auto", paddingRight: "0.25rem" }}>
                       {config.rules.map(rule => (
-                        <label key={rule.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "rgba(255,255,255,0.85)", padding: "0.35rem 0.5rem", borderRadius: "6px", background: editingProfile.ruleIds?.includes(rule.id) ? "rgba(212,175,55,0.08)" : "transparent" }}>
+                        <label key={rule.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", color: "rgba(255,255,255,0.85)", padding: "0.35rem 0.5rem", borderRadius: "6px", background: editingProfile.ruleIds?.includes(rule.id) ? "rgba(var(--accent-rgb),0.08)" : "transparent" }}>
                           <input type="checkbox"
                             checked={editingProfile.ruleIds?.includes(rule.id) ?? false}
                             onChange={e => {
@@ -1375,12 +1375,12 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                                 : current.filter(id => id !== rule.id);
                               setEditingProfile({ ...editingProfile, ruleIds: updated });
                             }}
-                            style={{ accentColor: "#D4AF37" }}
+                            style={{ accentColor: "var(--accent-color)" }}
                           />
                           <span style={{ fontWeight: 600, color: rule.enabled ? "#fff" : "rgba(255,255,255,0.4)" }}>
                             #{rule.priority} {rule.name}
                           </span>
-                          <span style={{ marginLeft: "auto", fontSize: "0.7rem", color: "#D4AF37" }}>{rule.strategyType}</span>
+                          <span style={{ marginLeft: "auto", fontSize: "0.7rem", color: "var(--accent-color)" }}>{rule.strategyType}</span>
                         </label>
                       ))}
                     </div>
@@ -1397,7 +1397,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                         setConfig({ ...config, profiles: updated });
                         setEditingProfile(null);
                       }}
-                      style={{ background: "#D4AF37", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
+                      style={{ background: "var(--accent-color)", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
                     >
                       Save Profile
                     </button>
@@ -1410,7 +1410,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1.5rem" }}>
             <button
               onClick={() => setShowSaveModal(true)} disabled={saving}
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg,#D4AF37,#AA7C11)", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "linear-gradient(135deg,var(--accent-color),#AA7C11)", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem 1.2rem", fontWeight: 700, cursor: "pointer" }}
             >
               <Save style={{ width: "15px" }} /> Save Profiles
             </button>
@@ -1424,7 +1424,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
           <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>Delivery Price Simulator</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
             <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "1.25rem" }}>
-              <h4 style={{ margin: "0 0 1rem 0", color: "#D4AF37" }}>Test Order Inputs</h4>
+              <h4 style={{ margin: "0 0 1rem 0", color: "var(--accent-color)" }}>Test Order Inputs</h4>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.85rem" }}>
                 <label>Order Total ($):
                   <input
@@ -1455,22 +1455,22 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 <button
                   onClick={runSimulation}
                   disabled={simulating}
-                  style={{ marginTop: "1rem", background: "#D4AF37", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem", fontWeight: "700", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.4rem" }}
+                  style={{ marginTop: "1rem", background: "var(--accent-color)", color: "#000", border: "none", borderRadius: "8px", padding: "0.6rem", fontWeight: "700", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.4rem" }}
                 >
                   <Zap style={{ width: "16px" }} /> Run Simulation
                 </button>
               </div>
             </div>
 
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(212,175,55,0.3)", borderRadius: "12px", padding: "1.25rem" }}>
-              <h4 style={{ margin: "0 0 1rem 0", color: "#D4AF37" }}>Simulation Output</h4>
+            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: "12px", padding: "1.25rem" }}>
+              <h4 style={{ margin: "0 0 1rem 0", color: "var(--accent-color)" }}>Simulation Output</h4>
               {simResult ? (
                 <div>
                   <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#4ade80", marginBottom: "0.5rem" }}>
                     ${simResult.totalDeliveryFee?.toFixed(2)}
                   </div>
                   <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.8)", marginBottom: "1rem" }}>
-                    Matched Rule: <strong style={{ color: "#D4AF37" }}>{simResult.selectedRuleName}</strong> ({simResult.selectedStrategy})
+                    Matched Rule: <strong style={{ color: "var(--accent-color)" }}>{simResult.selectedRuleName}</strong> ({simResult.selectedStrategy})
                   </div>
                   <div style={{ background: "rgba(0,0,0,0.4)", padding: "0.75rem", borderRadius: "8px", fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                     <div>Vehicle: ${simResult.breakdown?.vehicleCost} ({simResult.vehicle?.name || "N/A"})</div>
@@ -1498,7 +1498,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
             {auditLogs.map(log => (
               <div key={log.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "0.9rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "#D4AF37" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--accent-color)" }}>
                     Version #{log.versionNumber} – {log.action}
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
@@ -1510,7 +1510,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
                 </div>
                 <button
                   onClick={() => handleRollback(log.id)}
-                  style={{ background: "rgba(212,175,55,0.15)", border: "1px solid #D4AF37", color: "#D4AF37", borderRadius: "6px", padding: "0.4rem 0.8rem", fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem" }}
+                  style={{ background: "rgba(var(--accent-rgb),0.15)", border: "1px solid var(--accent-color)", color: "var(--accent-color)", borderRadius: "6px", padding: "0.4rem 0.8rem", fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.3rem" }}
                 >
                   <RotateCcw style={{ width: "14px" }} /> Rollback
                 </button>
@@ -1523,8 +1523,8 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
       {/* Save Confirmation Modal */}
       {showSaveModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
-          <div style={{ background: "#18181c", border: "1px solid #D4AF37", borderRadius: "14px", padding: "1.5rem", width: "100%", maxWidth: "450px" }}>
-            <h4 style={{ margin: "0 0 0.5rem 0", color: "#D4AF37" }}>Confirm Delivery Engine Changes</h4>
+          <div style={{ background: "#18181c", border: "1px solid var(--accent-color)", borderRadius: "14px", padding: "1.5rem", width: "100%", maxWidth: "450px" }}>
+            <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--accent-color)" }}>Confirm Delivery Engine Changes</h4>
             <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.7)", marginBottom: "1rem" }}>
               Please state the reason for this pricing rule update to record in the Audit Log.
             </p>
@@ -1537,7 +1537,7 @@ export default function DeliveryPricingEngineAdmin({ inventoryItems = [], onSave
             />
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
               <button onClick={() => setShowSaveModal(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", borderRadius: "6px", padding: "0.5rem 1rem", cursor: "pointer" }}>Cancel</button>
-              <button onClick={() => handleSaveConfig(config, saveReason)} style={{ background: "#D4AF37", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", fontWeight: "700", cursor: "pointer" }}>Save Version #{config.versionNumber + 1}</button>
+              <button onClick={() => handleSaveConfig(config, saveReason)} style={{ background: "var(--accent-color)", color: "#000", border: "none", borderRadius: "6px", padding: "0.5rem 1rem", fontWeight: "700", cursor: "pointer" }}>Save Version #{config.versionNumber + 1}</button>
             </div>
           </div>
         </div>

@@ -196,7 +196,7 @@ export default function FeaturedRentals({
                         fontWeight: 800,
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
-                        color: "#D4AF37",
+                        color: "var(--accent-color)",
                       }}
                     >
                       {item.category}
@@ -285,13 +285,13 @@ export default function FeaturedRentals({
                     {/* Specs row */}
                     <div style={{ display: "flex", gap: "1rem", padding: "0.75rem 0", borderTop: "1px solid #f0f0f0", borderBottom: "1px solid #f0f0f0", marginBottom: "1rem", flexWrap: "wrap" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                        <Maximize2 size={13} color="#D4AF37" />
+                        <Maximize2 size={13} color="var(--accent-color)" />
                         <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.65rem", color: "#666", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                           {item.dimensions}
                         </span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                        <Users size={13} color="#D4AF37" />
+                        <Users size={13} color="var(--accent-color)" />
                         <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.65rem", color: "#666", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                           {item.capacity}
                         </span>
@@ -329,7 +329,7 @@ export default function FeaturedRentals({
                           el.style.background = "#f5f5f5";
                         }}
                       >
-                        <ShoppingCart size={13} color="#D4AF37" />
+                        <ShoppingCart size={13} color="var(--accent-color)" />
                         Details
                       </button>
                       {isBooked ? (
@@ -364,7 +364,7 @@ export default function FeaturedRentals({
                             justifyContent: "center",
                             gap: "0.4rem",
                             padding: "0.7rem",
-                            background: "#D4AF37",
+                            background: "var(--accent-color)",
                             border: "none",
                             borderRadius: "0.75rem",
                             fontFamily: "var(--font-heading)",
@@ -375,10 +375,10 @@ export default function FeaturedRentals({
                             color: "#0f0f0f",
                             cursor: "pointer",
                             transition: "all 0.2s",
-                            boxShadow: "0 4px 12px rgba(212,175,55,0.3)",
+                            boxShadow: "0 4px 12px rgba(var(--accent-rgb),0.3)",
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "#bda030"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "#D4AF37"; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent-hover)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent-color)"; }}
                         >
                           <Calendar size={13} />
                           Reserve
@@ -413,7 +413,7 @@ export default function FeaturedRentals({
         {!loading && (activeCategory.toLowerCase().includes("photo") || activeCategory.toLowerCase().includes("booth") || activeCategory.toLowerCase().includes("package")) && !searchQuery && (
           <div style={{ marginTop: "4.5rem", paddingTop: "3.5rem", borderTop: "1px solid #e5e5e5" }}>
             <div style={{ marginBottom: "1.5rem" }}>
-              <span className="section-label" style={{ display: "inline-flex", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "#D4AF37", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
+              <span className="section-label" style={{ display: "inline-flex", background: "rgba(var(--accent-rgb),0.06)", border: "1px solid rgba(var(--accent-rgb),0.2)", padding: "0.3rem 0.8rem", borderRadius: "9999px", color: "var(--accent-color)", fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.75rem" }}>
                 Curated Packages
               </span>
               <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.35rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>

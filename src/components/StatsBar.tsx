@@ -39,7 +39,7 @@ export default function StatsBar() {
               justifyContent: "center",
             }}
           >
-            <div style={{ color: "#D4AF37", flexShrink: 0 }}>{s.icon}</div>
+            <div style={{ color: "var(--accent-color)", flexShrink: 0 }}>{s.icon}</div>
             <div>
               <div style={{ fontFamily: "var(--font-heading)", fontWeight: 900, fontSize: "1.25rem", color: "#ffffff", lineHeight: 1 }}>
                 {s.value}

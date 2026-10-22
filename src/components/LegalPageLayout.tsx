@@ -76,7 +76,7 @@ export default function LegalPageLayout({
       <div
         style={{
           background: "linear-gradient(135deg, #111111 0%, #1a1a0f 50%, #111111 100%)",
-          borderBottom: "1px solid rgba(212,175,55,0.15)",
+          borderBottom: "1px solid rgba(var(--accent-rgb),0.15)",
           padding: "5rem 1.5rem 3rem",
           textAlign: "center",
           position: "relative",
@@ -92,7 +92,7 @@ export default function LegalPageLayout({
             transform: "translateX(-50%)",
             width: "200px",
             height: "3px",
-            background: "linear-gradient(90deg, transparent, #D4AF37, transparent)",
+            background: "linear-gradient(90deg, transparent, var(--accent-color), transparent)",
           }}
         />
         <Link
@@ -103,7 +103,7 @@ export default function LegalPageLayout({
             gap: "0.4rem",
             fontFamily: "var(--font-body, sans-serif)",
             fontSize: "0.75rem",
-            color: "#D4AF37",
+            color: "var(--accent-color)",
             textDecoration: "none",
             letterSpacing: "0.06em",
             textTransform: "uppercase",
@@ -124,7 +124,7 @@ export default function LegalPageLayout({
             fontWeight: 700,
             letterSpacing: "0.15em",
             textTransform: "uppercase",
-            color: "#D4AF37",
+            color: "var(--accent-color)",
             marginBottom: "0.75rem",
           }}
         >
@@ -160,15 +160,15 @@ export default function LegalPageLayout({
             display: "inline-flex",
             alignItems: "center",
             gap: "0.5rem",
-            background: "rgba(212,175,55,0.08)",
-            border: "1px solid rgba(212,175,55,0.25)",
+            background: "rgba(var(--accent-rgb),0.08)",
+            border: "1px solid rgba(var(--accent-rgb),0.25)",
             borderRadius: "9999px",
             padding: "0.375rem 1rem",
             fontSize: "0.78rem",
             color: "rgba(255,255,255,0.5)",
           }}
         >
-          Last updated: <span style={{ color: "#D4AF37", fontWeight: 600 }}>{lastUpdated}</span>
+          Last updated: <span style={{ color: "var(--accent-color)", fontWeight: 600 }}>{lastUpdated}</span>
         </div>
       </div>
 
@@ -189,11 +189,11 @@ export default function LegalPageLayout({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "rgba(212,175,55,0.06)",
-            border: "1px solid rgba(212,175,55,0.2)",
+            background: "rgba(var(--accent-rgb),0.06)",
+            border: "1px solid rgba(var(--accent-rgb),0.2)",
             borderRadius: "0.5rem",
             padding: "0.625rem 1rem",
-            color: "#D4AF37",
+            color: "var(--accent-color)",
             fontFamily: "var(--font-body, sans-serif)",
             fontWeight: 700,
             fontSize: "0.82rem",
@@ -208,7 +208,7 @@ export default function LegalPageLayout({
           <nav
             style={{
               background: "#161616",
-              border: "1px solid rgba(212,175,55,0.15)",
+              border: "1px solid rgba(var(--accent-rgb),0.15)",
               borderRadius: "0.5rem",
               marginTop: "0.5rem",
               overflow: "hidden",
@@ -222,12 +222,12 @@ export default function LegalPageLayout({
                   width: "100%",
                   textAlign: "left",
                   padding: `0.6rem ${item.level > 1 ? "2rem" : "1rem"}`,
-                  background: activeId === item.id ? "rgba(212,175,55,0.08)" : "transparent",
+                  background: activeId === item.id ? "rgba(var(--accent-rgb),0.08)" : "transparent",
                   borderTop: "none",
                   borderRight: "none",
                   borderBottom: "1px solid rgba(255,255,255,0.04)",
                   borderLeft: "none",
-                  color: activeId === item.id ? "#D4AF37" : "rgba(255,255,255,0.65)",
+                  color: activeId === item.id ? "var(--accent-color)" : "rgba(255,255,255,0.65)",
                   fontFamily: "var(--font-body, sans-serif)",
                   fontSize: item.level > 1 ? "0.78rem" : "0.82rem",
                   fontWeight: activeId === item.id ? 700 : 500,
@@ -269,7 +269,7 @@ export default function LegalPageLayout({
             <div
               style={{
                 background: "#141414",
-                border: "1px solid rgba(212,175,55,0.12)",
+                border: "1px solid rgba(var(--accent-rgb),0.12)",
                 borderRadius: "1rem",
                 padding: "1.25rem",
               }}
@@ -280,9 +280,9 @@ export default function LegalPageLayout({
                   fontWeight: 800,
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
-                  color: "#D4AF37",
+                  color: "var(--accent-color)",
                   marginBottom: "1rem",
-                  borderBottom: "1px solid rgba(212,175,55,0.15)",
+                  borderBottom: "1px solid rgba(var(--accent-rgb),0.15)",
                   paddingBottom: "0.75rem",
                 }}
               >
@@ -298,13 +298,13 @@ export default function LegalPageLayout({
                       width: "100%",
                       textAlign: "left",
                       padding: `0.45rem ${item.level > 1 ? "1.25rem" : "0.5rem"}`,
-                      background: activeId === item.id ? "rgba(212,175,55,0.08)" : "transparent",
+                      background: activeId === item.id ? "rgba(var(--accent-rgb),0.08)" : "transparent",
                       borderTop: "none",
                       borderRight: "none",
                       borderBottom: "none",
-                      borderLeft: activeId === item.id ? "2px solid #D4AF37" : "2px solid transparent",
+                      borderLeft: activeId === item.id ? "2px solid var(--accent-color)" : "2px solid transparent",
                       borderRadius: "0.25rem",
-                      color: activeId === item.id ? "#D4AF37" : "rgba(255,255,255,0.5)",
+                      color: activeId === item.id ? "var(--accent-color)" : "rgba(255,255,255,0.5)",
                       fontFamily: "var(--font-body, sans-serif)",
                       fontSize: item.level > 1 ? "0.75rem" : "0.8rem",
                       fontWeight: activeId === item.id ? 700 : 400,
@@ -352,7 +352,7 @@ export default function LegalPageLayout({
           Questions about this policy? Contact us at{" "}
           <a
             href={`mailto:${email}`}
-            style={{ color: "#D4AF37", textDecoration: "none", fontWeight: 600 }}
+            style={{ color: "var(--accent-color)", textDecoration: "none", fontWeight: 600 }}
           >
             {email}
           </a>
@@ -373,7 +373,7 @@ export default function LegalPageLayout({
                 transition: "color 0.2s",
                 fontWeight: 500,
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#D4AF37")}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--accent-color)")}
               onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.4)")}
             >
               {link.label}
@@ -398,7 +398,7 @@ export default function LegalPageLayout({
           color: #ffffff;
           margin: 2.5rem 0 1rem;
           padding-top: 1rem;
-          border-bottom: 1px solid rgba(212,175,55,0.15);
+          border-bottom: 1px solid rgba(var(--accent-rgb),0.15);
           padding-bottom: 0.625rem;
           scroll-margin-top: 90px;
         }
@@ -407,7 +407,7 @@ export default function LegalPageLayout({
           font-family: var(--font-heading, serif);
           font-size: 1.05rem;
           font-weight: 700;
-          color: #D4AF37;
+          color: var(--accent-color);
           margin: 1.75rem 0 0.75rem;
           scroll-margin-top: 90px;
         }
@@ -429,7 +429,7 @@ export default function LegalPageLayout({
         .legal-content li { margin-bottom: 0.4rem; }
 
         .legal-content a {
-          color: #D4AF37;
+          color: var(--accent-color);
           text-decoration: none;
           font-weight: 600;
         }
@@ -442,9 +442,9 @@ export default function LegalPageLayout({
         }
 
         .legal-content .highlight-box {
-          background: rgba(212,175,55,0.06);
-          border: 1px solid rgba(212,175,55,0.2);
-          border-left: 3px solid #D4AF37;
+          background: rgba(var(--accent-rgb),0.06);
+          border: 1px solid rgba(var(--accent-rgb),0.2);
+          border-left: 3px solid var(--accent-color);
           border-radius: 0.5rem;
           padding: 1rem 1.25rem;
           margin: 1.5rem 0;

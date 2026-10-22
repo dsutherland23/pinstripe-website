@@ -50,7 +50,7 @@ const DEFAULT_PKGS = [
     price: 500,
     duration: "4 hrs",
     extraHour: 65,
-    color: "#D4AF37",
+    color: "var(--accent-color)",
     popular: true,
     items: [
       "Everything in Snap It, plus:",
@@ -110,7 +110,7 @@ export default function Packages({ onOpenQuote, isEmbedded }: PackagesProps) {
             price: p.price,
             duration: p.duration || "4 hrs",
             extraHour: p.extraHourPrice || 65,
-            color: p.color || "#D4AF37",
+            color: p.color || "var(--accent-color)",
             popular: p.popular === true,
             items: p.items || [],
             addons: (p.addons || []).map((ad: any) => ({
@@ -150,14 +150,14 @@ export default function Packages({ onOpenQuote, isEmbedded }: PackagesProps) {
           {pkgs.map((pkg) => (
             <RadialGlowCard
               key={pkg.name}
-              glowColor={pkg.popular ? `${pkg.color}25` : "rgba(212, 175, 55, 0.18)"}
+              glowColor={pkg.popular ? `${pkg.color}25` : "rgba(var(--accent-rgb), 0.18)"}
               style={{
                 position: "relative",
                 background: "var(--card-bg)",
                 borderRadius: "1.5rem",
                 border: pkg.popular ? `2.5px solid ${pkg.color}` : "1.5px solid var(--border-primary)",
                 boxShadow: pkg.popular
-                  ? `0 20px 48px rgba(212,175,55,0.14), 0 0 0 1px rgba(212,175,55,0.1)`
+                  ? `0 20px 48px rgba(var(--accent-rgb),0.14), 0 0 0 1px rgba(var(--accent-rgb),0.1)`
                   : "0 8px 24px var(--shadow-color)",
                 padding: "2rem",
                 transition: "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background-color 0.4s ease, border-color 0.4s ease",
@@ -171,7 +171,7 @@ export default function Packages({ onOpenQuote, isEmbedded }: PackagesProps) {
                 const el = e.currentTarget;
                 el.style.transform = "";
                 el.style.boxShadow = pkg.popular
-                  ? `0 20px 48px rgba(212,175,55,0.14)`
+                  ? `0 20px 48px rgba(var(--accent-rgb),0.14)`
                   : "0 8px 24px var(--shadow-color)";
               }}
             >
@@ -196,7 +196,7 @@ export default function Packages({ onOpenQuote, isEmbedded }: PackagesProps) {
                     alignItems: "center",
                     gap: "0.35rem",
                     whiteSpace: "nowrap",
-                    boxShadow: "0 4px 12px rgba(212,175,55,0.4)",
+                    boxShadow: "0 4px 12px rgba(var(--accent-rgb),0.4)",
                   }}
                 >
                   <Sparkles size={11} />

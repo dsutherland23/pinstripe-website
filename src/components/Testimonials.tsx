@@ -71,7 +71,7 @@ export default function Testimonials({ galleryEnabled = true }: TestimonialsProp
                   borderRadius: "9999px",
                   border: filter === f ? "none" : "1.5px solid #e5e5e5",
                   background: filter === f ? "#0f0f0f" : "#ffffff",
-                  color: filter === f ? "#D4AF37" : "#555",
+                  color: filter === f ? "var(--accent-color)" : "#555",
                   fontFamily: "var(--font-heading)",
                   fontWeight: 700,
                   fontSize: "0.67rem",
@@ -120,7 +120,7 @@ export default function Testimonials({ galleryEnabled = true }: TestimonialsProp
                       ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
                     `}
                   >
-                    <span className="text-[0.65rem] font-bold tracking-widest uppercase text-[#D4AF37] mb-1">
+                    <span className="text-[0.65rem] font-bold tracking-widest uppercase text-[var(--accent-color)] mb-1">
                       {item.cat}
                     </span>
                     <h4 className="font-heading font-extrabold text-sm md:text-base text-white leading-tight">
@@ -203,7 +203,7 @@ export default function Testimonials({ galleryEnabled = true }: TestimonialsProp
                         width: "36px",
                         height: "36px",
                         borderRadius: "50%",
-                        background: "linear-gradient(135deg, #D4AF37, #f5e8a0)",
+                        background: "linear-gradient(135deg, var(--accent-color), var(--accent-light))",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -240,8 +240,8 @@ export default function Testimonials({ galleryEnabled = true }: TestimonialsProp
             }}
           >
             {/* Glow orbs */}
-            <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: "-80px", left: "-80px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(var(--accent-rgb),0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: "-80px", left: "-80px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(var(--accent-rgb),0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
 
             <div
               style={{
@@ -254,7 +254,7 @@ export default function Testimonials({ galleryEnabled = true }: TestimonialsProp
             >
               {/* Left copy */}
               <div>
-                <span className="section-label" style={{ color: "#D4AF37" }}>Got Questions?</span>
+                <span className="section-label" style={{ color: "var(--accent-color)" }}>Got Questions?</span>
                 <h2 className="section-title" style={{ color: "#ffffff", marginBottom: "1rem" }}>
                   Frequently Asked Questions
                 </h2>
@@ -296,7 +296,7 @@ export default function Testimonials({ galleryEnabled = true }: TestimonialsProp
                       </span>
                       <HelpCircle
                         size={18}
-                        color={openFaq === i ? "#D4AF37" : "rgba(255,255,255,0.4)"}
+                        color={openFaq === i ? "var(--accent-color)" : "rgba(255,255,255,0.4)"}
                         style={{ flexShrink: 0, transition: "color 0.2s" }}
                       />
                     </button>

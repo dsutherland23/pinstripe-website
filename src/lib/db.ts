@@ -276,9 +276,16 @@ export async function initDb(): Promise<void> {
         deposit_enabled       TINYINT(1) NOT NULL DEFAULT 1,
         deposit_percentage    INT NOT NULL DEFAULT 50,
         promo_codes           JSON,
-        specials_enabled      TINYINT(1) NOT NULL DEFAULT 1
+        specials_enabled      TINYINT(1) NOT NULL DEFAULT 1,
+        accent_color          VARCHAR(32) NOT NULL DEFAULT '#D4AF37'
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
+
+    try {
+      await conn.query("ALTER TABLE settings ADD COLUMN accent_color VARCHAR(32) NOT NULL DEFAULT '#D4AF37'");
+    } catch (err) {
+      // Ignore if column already exists
+    }
 
     try {
       await conn.query("ALTER TABLE settings ADD COLUMN pay_in_person_enabled TINYINT(1) NOT NULL DEFAULT 1");
@@ -728,6 +735,7 @@ const fallbackStore = {
     depositEnabled: true, 
     depositPercentage: 50,
     specialsEnabled: true,
+    accentColor: "#D4AF37",
     promoCodes: [
       { code: "WELCOME10", type: "percent" as "percent" | "flat", value: 10 },
       { code: "VIP50", type: "percent" as "percent" | "flat", value: 50 },
@@ -1367,6 +1375,7 @@ type SettingsRow = {
   deposit_percentage: number;
   promo_codes: any;
   specials_enabled: number;
+  accent_color?: string;
 };
 
 export async function getSettings(): Promise<{
@@ -1381,11 +1390,12 @@ export async function getSettings(): Promise<{
   depositPercentage?: number;
   promoCodes?: Array<{ code: string; type: "percent" | "flat"; value: number }>;
   specialsEnabled?: boolean;
+  accentColor?: string;
 }> {
   try {
     await ensureInit();
     const rows = await query<SettingsRow>("SELECT * FROM settings WHERE id = 1");
-    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50, promoCodes: [], specialsEnabled: true };
+    if (!rows.length) return { tentPlannerEnabled: true, maintenanceMode: false, analyticsId: "", payInPersonEnabled: true, galleryEnabled: true, categoriesEnabled: true, featuredRentalsEnabled: true, depositEnabled: true, depositPercentage: 50, promoCodes: [], specialsEnabled: true, accentColor: "#D4AF37" };
     return {
       tentPlannerEnabled: Boolean(rows[0].tent_planner_enabled),
       maintenanceMode: Boolean(rows[0].maintenance_mode),
@@ -1398,6 +1408,7 @@ export async function getSettings(): Promise<{
       depositPercentage: Number(rows[0].deposit_percentage ?? 50),
       promoCodes: safeParseJson(rows[0].promo_codes, []),
       specialsEnabled: Boolean(rows[0].specials_enabled ?? 1),
+      accentColor: rows[0].accent_color || "#D4AF37",
     };
   } catch (err) {
     console.warn("⚠️ Database unavailable for getSettings. Using in-memory fallback for this request.", err);
@@ -1417,6 +1428,7 @@ export async function updateSettings(updates: {
   depositPercentage?: number;
   promoCodes?: Array<{ code: string; type: "percent" | "flat"; value: number }>;
   specialsEnabled?: boolean;
+  accentColor?: string;
 }): Promise<void> {
   try {
     await ensureInit();
@@ -1466,9 +1478,16 @@ export async function updateSettings(updates: {
       setClauses.push("specials_enabled = ?");
       values.push(updates.specialsEnabled ? 1 : 0);
     }
-    if (setClauses.length === 0) return;
-    values.push(1);
-    await query(`UPDATE settings SET ${setClauses.join(", ")} WHERE id = ?`, values);
+    if (updates.accentColor !== undefined) {
+      setClauses.push("accent_color = ?");
+      values.push(updates.accentColor);
+    }
+    if (setClauses.length > 0) {
+      values.push(1);
+      await query(`UPDATE settings SET ${setClauses.join(", ")} WHERE id = ?`, values);
+    }
+    fallbackStore.settings = { ...fallbackStore.settings, ...updates };
+    saveFallbackStore();
   } catch (err) {
     console.warn("⚠️ Database unavailable for updateSettings. Using in-memory fallback for this request.", err);
     fallbackStore.settings = { ...fallbackStore.settings, ...updates };

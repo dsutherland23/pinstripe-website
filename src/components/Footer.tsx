@@ -100,7 +100,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
         color: "rgba(255, 255, 255, 0.6)", 
         position: "relative", 
         overflow: "visible",
-        borderTop: "1px solid rgba(212, 175, 55, 0.15)",
+        borderTop: "1px solid rgba(var(--accent-rgb), 0.15)",
         boxShadow: "0 -20px 40px rgba(0, 0, 0, 0.5)"
       }}
     >
@@ -110,7 +110,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div
             style={{
-              background: "linear-gradient(135deg, #D4AF37 0%, #f3df93 50%, #D4AF37 100%)",
+              background: "linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 50%, var(--accent-color) 100%)",
               borderRadius: "1.5rem",
               padding: "2.5rem 3rem",
               display: "flex",
@@ -118,7 +118,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
               alignItems: "center",
               justifyContent: "space-between",
               gap: "2rem",
-              boxShadow: "0 16px 48px rgba(212, 175, 55, 0.3)",
+              boxShadow: "0 16px 48px rgba(var(--accent-rgb), 0.3)",
               border: "1px solid rgba(255, 255, 255, 0.2)",
             }}
           >
@@ -151,8 +151,8 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
               }}
               onMouseEnter={(e) => { 
                 e.currentTarget.style.transform = "translateY(-3px)"; 
-                e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.45), 0 0 10px rgba(212,175,55,0.4)";
-                e.currentTarget.style.color = "#D4AF37";
+                e.currentTarget.style.boxShadow = "0 12px 30px rgba(0,0,0,0.45), 0 0 10px rgba(var(--accent-rgb),0.4)";
+                e.currentTarget.style.color = "var(--accent-color)";
               }}
               onMouseLeave={(e) => { 
                 e.currentTarget.style.transform = ""; 
@@ -195,7 +195,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
               <span style={{ fontFamily: "var(--font-heading)", fontSize: "1.1rem", fontWeight: 900, color: "#ffffff", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                 Pinstripes
               </span>
-              <span style={{ fontFamily: "var(--font-heading)", fontSize: "0.6rem", fontWeight: 700, color: "#D4AF37", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+              <span style={{ fontFamily: "var(--font-heading)", fontSize: "0.6rem", fontWeight: 700, color: "var(--accent-color)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
                 Premium Event Concierge
               </span>
             </div>
@@ -224,9 +224,9 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                   }}
                   onMouseEnter={(e) => {
                     const el = e.currentTarget;
-                    el.style.background = "rgba(212,175,55,0.1)";
-                    el.style.borderColor = "rgba(212,175,55,0.35)";
-                    el.style.color = "#D4AF37";
+                    el.style.background = "rgba(var(--accent-rgb),0.1)";
+                    el.style.borderColor = "rgba(var(--accent-rgb),0.35)";
+                    el.style.color = "var(--accent-color)";
                     el.style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
@@ -245,7 +245,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
 
           {/* Column 2: Navigation Links */}
           <div>
-            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(var(--accent-rgb),0.15)" }}>
               Quick Navigation
             </h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem", padding: 0 }}>
@@ -276,7 +276,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                         gap: "0.25rem"
                       }}
                       onMouseEnter={(e) => { 
-                        e.currentTarget.style.color = "#D4AF37"; 
+                        e.currentTarget.style.color = "var(--accent-color)"; 
                         e.currentTarget.style.transform = "translateX(4px)";
                       }}
                       onMouseLeave={(e) => { 
@@ -293,7 +293,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
 
           {/* Column 3: Service Areas */}
           <div>
-            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(var(--accent-rgb),0.15)" }}>
               Hampton Roads Area
             </h4>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.6rem" }}>
@@ -315,7 +315,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                       transition: "all 0.2s ease" 
                     }}
                     onMouseEnter={(e) => { 
-                      e.currentTarget.style.color = "#D4AF37"; 
+                      e.currentTarget.style.color = "var(--accent-color)"; 
                       e.currentTarget.style.transform = "translateX(3px)";
                     }}
                     onMouseLeave={(e) => { 
@@ -323,7 +323,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                       e.currentTarget.style.transform = "";
                     }}
                   >
-                    <MapPin size={10} color="#D4AF37" style={{ flexShrink: 0 }} />
+                    <MapPin size={10} color="var(--accent-color)" style={{ flexShrink: 0 }} />
                     {loc}
                   </a>
                 );
@@ -333,7 +333,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
 
           {/* Column 4: Contact & Operations */}
           <div>
-            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(212,175,55,0.15)" }}>
+            <h4 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.68rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "#ffffff", marginBottom: "1.25rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(var(--accent-rgb),0.15)" }}>
               Get In Touch
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -347,13 +347,13 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                     width: "30px", 
                     height: "30px", 
                     borderRadius: "0.375rem", 
-                    background: "rgba(212,175,55,0.06)", 
-                    border: "1px solid rgba(212,175,55,0.15)",
+                    background: "rgba(var(--accent-rgb),0.06)", 
+                    border: "1px solid rgba(var(--accent-rgb),0.15)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center"
                   }}>
-                    <Icon size={14} color="#D4AF37" />
+                    <Icon size={14} color="var(--accent-color)" />
                   </div>
                   <div>
                     <div style={{ fontFamily: "var(--font-body)", fontSize: "0.62rem", color: "rgba(255,255,255,0.35)", fontWeight: 650, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
@@ -372,7 +372,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                         alignItems: "center",
                         gap: "0.25rem"
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = "#D4AF37"; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent-color)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = "#ffffff"; }}
                     >
                       {value}
@@ -403,7 +403,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                   fontWeight: 600,
                   transition: "color 0.2s",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = "#D4AF37"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent-color)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; }}
               >
                 Socialkon10
@@ -427,7 +427,7 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
                     fontWeight: 500,
                     transition: "color 0.2s",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#D4AF37"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent-color)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; }}
                 >
                   {link.label}

@@ -5,14 +5,14 @@
    ===================================================== */
 @theme {
   /* Brand Colors */
-  --color-gold:         #D4AF37;
-  --color-gold-hover:   #bda030;
-  --color-gold-light:   #f5e9b0;
+  --color-gold:         var(--accent-color, #D4AF37);
+  --color-gold-hover:   var(--accent-hover, #bda030);
+  --color-gold-light:   var(--accent-light, #f5e9b0);
   --color-dark:         #0f0f0f;
   --color-dark-800:     #1a1a1a;
   --color-dark-700:     #252525;
   --color-dark-600:     #333333;
-  --color-accent:       #E63946;
+  --color-accent:       var(--accent-color, #D4AF37);
   --color-surface:      #fafafa;
 
   /* Fonts */
@@ -24,6 +24,18 @@
    THEME VARIABLES
    ===================================================== */
 :root {
+  --accent-color: #D4AF37;
+  --accent-hover: #bda030;
+  --accent-light: #f5e9b0;
+  --accent-rgb: 212, 175, 55;
+  --accent-glow: rgba(212, 175, 55, 0.18);
+  --accent-shadow: rgba(212, 175, 55, 0.35);
+
+  --color-gold: var(--accent-color);
+  --color-gold-hover: var(--accent-hover);
+  --color-gold-light: var(--accent-light);
+  --color-accent: var(--accent-color);
+
   --bg-primary: #ffffff;
   --bg-secondary: #fafafa;
   --text-primary: #0f0f0f;
@@ -85,7 +97,7 @@ h1, h2, h3, h4, h5, h6 {
    ===================================================== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f1f1; }
-::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 99px; }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -170,7 +182,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Gold gradient text */
 .text-gradient {
-  background: linear-gradient(135deg, #D4AF37 0%, #f5e8a0 50%, #D4AF37 100%);
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-light) 50%, var(--accent-color) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -178,7 +190,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Gold shimmer text */
 .text-shimmer {
-  background: linear-gradient(90deg, #D4AF37, #f5e9b0, #D4AF37);
+  background: linear-gradient(90deg, var(--accent-color), var(--accent-light), var(--accent-color));
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -194,16 +206,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 .card-hover:hover {
   transform: translateY(-6px);
-  box-shadow: 0 24px 48px var(--shadow-color), 0 0 0 1px rgba(212,175,55,0.18);
+  box-shadow: 0 24px 48px var(--shadow-color), 0 0 0 1px rgba(var(--accent-rgb), 0.18);
 }
 
 
 /* Gold glow effects */
 .gold-glow {
-  box-shadow: 0 0 24px rgba(212, 175, 55, 0.18);
+  box-shadow: 0 0 24px var(--accent-glow);
 }
 .gold-glow-md {
-  box-shadow: 0 0 40px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 0 40px rgba(var(--accent-rgb), 0.25);
 }
 
 /* Button press effect */
@@ -273,7 +285,7 @@ dialog::backdrop {
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #D4AF37;
+  color: var(--accent-color);
   margin-bottom: 0.5rem;
 }
 
@@ -294,7 +306,7 @@ dialog::backdrop {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: #D4AF37;
+  background: var(--accent-color);
   color: #0f0f0f;
   padding: 0.875rem 2rem;
   border-radius: 9999px;
@@ -306,13 +318,13 @@ dialog::backdrop {
   transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
   border: none;
-  box-shadow: 0 4px 16px rgba(212,175,55,0.35);
+  box-shadow: 0 4px 16px var(--accent-shadow);
   white-space: nowrap;
 }
 .btn-primary:hover {
-  background: #bda030;
+  background: var(--accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(212,175,55,0.45);
+  box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.45);
 }
 .btn-primary:active { transform: scale(0.97); }
 
@@ -337,7 +349,7 @@ dialog::backdrop {
 }
 .btn-outline:hover {
   background: #0f0f0f;
-  color: #D4AF37;
+  color: var(--accent-color);
 }
 
 .btn-dark {
@@ -388,11 +400,11 @@ dialog::backdrop {
 }
 .cat-pill:hover,
 .cat-pill.active {
-  background: #D4AF37;
-  border-color: #D4AF37;
+  background: var(--accent-color);
+  border-color: var(--accent-color);
   color: #0f0f0f;
   transform: scale(1.06);
-  box-shadow: 0 8px 24px rgba(212,175,55,0.3);
+  box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.3);
 }
 .cat-pill .cat-label {
   font-family: var(--font-heading), 'Montserrat', sans-serif;
@@ -418,7 +430,7 @@ dialog::backdrop {
 }
 .product-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 28px 56px var(--shadow-color), 0 0 0 1px rgba(212,175,55,0.18);
+  box-shadow: 0 28px 56px var(--shadow-color), 0 0 0 1px rgba(var(--accent-rgb), 0.18);
 }
 
 /* =====================================================
@@ -441,8 +453,8 @@ dialog::backdrop {
 
 .field::placeholder { color: #aaa; }
 .field:focus {
-  border-color: #D4AF37;
-  box-shadow: 0 0 0 3px rgba(212,175,55,0.12);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
   background: #fff;
 }
 

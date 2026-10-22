@@ -102,7 +102,7 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
             fontSize: "0.6rem",
             letterSpacing: "0.12em",
             textTransform: "uppercase",
-            color: "#D4AF37",
+            color: "var(--accent-color)",
           }}
         >
           {item.category}
@@ -194,15 +194,15 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
                   width: "36px",
                   height: "36px",
                   borderRadius: "0.625rem",
-                  background: "rgba(212,175,55,0.1)",
-                  border: "1px solid rgba(212,175,55,0.2)",
+                  background: "rgba(var(--accent-rgb),0.1)",
+                  border: "1px solid rgba(var(--accent-rgb),0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
                 }}
               >
-                <Icon size={16} color="#D4AF37" />
+                <Icon size={16} color="var(--accent-color)" />
               </div>
               <div>
                 <div style={{ fontFamily: "var(--font-heading)", fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-secondary)", opacity: 0.8, marginBottom: "0.15rem" }}>
@@ -249,17 +249,17 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
               display: "flex",
               alignItems: "center",
               gap: "0.75rem",
-              background: "rgba(212, 175, 55, 0.05)",
-              border: "1px solid rgba(212, 175, 55, 0.2)",
+              background: "rgba(var(--accent-rgb), 0.05)",
+              border: "1px solid rgba(var(--accent-rgb), 0.2)",
               borderRadius: "0.875rem",
               padding: "0.875rem",
             }}
           >
-            <div style={{ background: "rgba(212, 175, 55, 0.12)", borderRadius: "50%", padding: "0.4rem", display: "flex", flexShrink: 0 }}>
-              <CloudSun size={18} color="#D4AF37" />
+            <div style={{ background: "rgba(var(--accent-rgb), 0.12)", borderRadius: "50%", padding: "0.4rem", display: "flex", flexShrink: 0 }}>
+              <CloudSun size={18} color="var(--accent-color)" />
             </div>
             <div>
-              <div style={{ fontFamily: "var(--font-heading)", fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", color: "#D4AF37" }}>
+              <div style={{ fontFamily: "var(--font-heading)", fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--accent-color)" }}>
                 Hampton Roads Weather Guarantee
               </div>
               <p style={{ fontSize: "0.72rem", color: "var(--text-secondary)", marginTop: "0.1rem", lineHeight: 1.35 }}>
@@ -291,8 +291,8 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "0.85rem 1rem",
-                    background: isChecked ? "rgba(212,175,55,0.04)" : "var(--card-bg)",
-                    border: `1.5px solid ${isChecked ? "#D4AF37" : "var(--border-primary)"}`,
+                    background: isChecked ? "rgba(var(--accent-rgb),0.04)" : "var(--card-bg)",
+                    border: `1.5px solid ${isChecked ? "var(--accent-color)" : "var(--border-primary)"}`,
                     borderRadius: "0.875rem",
                     cursor: "pointer",
                     transition: "all 0.2s ease"
@@ -303,13 +303,13 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => {}}
-                      style={{ accentColor: "#D4AF37", width: "18px", height: "18px", pointerEvents: "none" }}
+                      style={{ accentColor: "var(--accent-color)", width: "18px", height: "18px", pointerEvents: "none" }}
                     />
                     <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.82rem", color: "var(--text-primary)" }}>
                       {addon.label}
                     </span>
                   </div>
-                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.82rem", color: isChecked ? "#D4AF37" : "var(--text-primary)" }}>
+                  <span style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "0.82rem", color: isChecked ? "var(--accent-color)" : "var(--text-primary)" }}>
                     +${addon.price}
                   </span>
                 </div>
@@ -346,7 +346,7 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
             }}
             style={{
               padding: "1rem",
-              background: "#D4AF37",
+              background: "var(--accent-color)",
               border: "none",
               borderRadius: "0.875rem",
               fontFamily: "var(--font-heading)",
@@ -360,7 +360,7 @@ export default function ProductDetail({ item, onClose, onOpenQuoteWithItem }: Pr
               alignItems: "center",
               justifyContent: "center",
               gap: "0.4rem",
-              boxShadow: "0 6px 20px rgba(212,175,55,0.3)",
+              boxShadow: "0 6px 20px rgba(var(--accent-rgb),0.3)",
               transition: "all 0.2s",
             }}
           >

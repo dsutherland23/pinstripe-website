@@ -137,10 +137,10 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
               marginBottom: "1.5rem",
             }}
           >
-            <div style={{ display: "flex", color: "#D4AF37" }}>
-              {[1,2,3,4,5].map(s => <Star key={s} size={12} fill="#D4AF37" strokeWidth={0} />)}
+            <div style={{ display: "flex", color: "var(--accent-color)" }}>
+              {[1,2,3,4,5].map(s => <Star key={s} size={12} fill="var(--accent-color)" strokeWidth={0} />)}
             </div>
-            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.62rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "#D4AF37" }}>
+            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.62rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--accent-color)" }}>
               America&apos;s #1 Rated Event Rentals
             </span>
           </div>
@@ -257,7 +257,7 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
                 style={{
                   height: "5px",
                   width: activeIndex === index ? "32px" : "12px",
-                  background: activeIndex === index ? "#D4AF37" : "rgba(255,255,255,0.3)",
+                  background: activeIndex === index ? "var(--accent-color)" : "rgba(255,255,255,0.3)",
                   border: "none",
                   borderRadius: "9999px",
                   padding: 0,
@@ -281,14 +281,14 @@ export default function Hero({ onOpenQuote, customTitle, customSubtitle }: HeroP
             }}
           >
             {[
-              { icon: <ShieldCheck size={18} color="#D4AF37" />, value: "100%", label: "Sanitised Equipment" },
-              { icon: <Truck size={18} color="#D4AF37" />, value: "Ontime", label: "Delivery & Setup" },
-              { icon: <Star size={18} color="#D4AF37" />, value: "5.0 ★", label: "Customer Rated" },
+              { icon: <ShieldCheck size={18} color="var(--accent-color)" />, value: "100%", label: "Sanitised Equipment" },
+              { icon: <Truck size={18} color="var(--accent-color)" />, value: "Ontime", label: "Delivery & Setup" },
+              { icon: <Star size={18} color="var(--accent-color)" />, value: "5.0 ★", label: "Customer Rated" },
             ].map((p) => (
               <div key={p.label} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                 {p.icon}
                 <div>
-                  <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1rem", color: "#D4AF37", lineHeight: 1 }}>
+                  <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1rem", color: "var(--accent-color)", lineHeight: 1 }}>
                     {p.value}
                   </div>
                   <div style={{ fontFamily: "var(--font-body)", fontSize: "0.7rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.3 }}>

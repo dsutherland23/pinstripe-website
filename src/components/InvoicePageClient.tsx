@@ -180,7 +180,7 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
 
       <div className="invoice-page" style={{ maxWidth: "780px", margin: "2rem auto", background: "#ffffff", boxShadow: "0 4px 32px rgba(0,0,0,0.12)", color: "#1a1a1a" }}>
         {/* Header */}
-        <div className="invoice-header" style={{ background: "#0f0f0f", padding: "2.5rem 3rem", borderBottom: "4px solid #D4AF37" }}>
+        <div className="invoice-header" style={{ background: "#0f0f0f", padding: "2.5rem 3rem", borderBottom: "4px solid var(--accent-color)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1.5rem" }}>
             <div style={{ display: "flex", gap: "1.25rem", alignItems: "center" }}>
               <img
@@ -196,7 +196,7 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
                 style={{ width: "84px", height: "60px", objectFit: "contain" }}
               />
               <div>
-                <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "#D4AF37", marginBottom: "0.4rem" }} className="header-brand-text">Pinstripes Party &amp; Event Rentals</div>
+                <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--accent-color)", marginBottom: "0.4rem" }} className="header-brand-text">Pinstripes Party &amp; Event Rentals</div>
                 <div style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.82rem", lineHeight: 1.8 }} className="header-info-text">
                   {businessAddress}<br />
                   {businessPhone}<br />
@@ -208,7 +208,7 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
               <div className="invoice-title" style={{ fontSize: "2rem", fontWeight: 900, color: "#ffffff", letterSpacing: "-0.03em", textTransform: "uppercase" }}>
                 {booking.paymentStatus === "fully_paid" ? "PAID RECEIPT" : "INVOICE"}
               </div>
-              <div className="invoice-id" style={{ fontFamily: "monospace", fontSize: "1.1rem", color: "#D4AF37", fontWeight: 700, marginTop: "0.25rem" }}>{booking.id}</div>
+              <div className="invoice-id" style={{ fontFamily: "monospace", fontSize: "1.1rem", color: "var(--accent-color)", fontWeight: 700, marginTop: "0.25rem" }}>{booking.id}</div>
               <div className="invoice-issued" style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem", marginTop: "0.5rem" }}>Issued: {issueDate}</div>
               
               {/* Payment Status Stamp */}
@@ -234,7 +234,7 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
         {/* Bill To + Event Info */}
         <div style={{ padding: "2rem 3rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem", borderBottom: "1px solid #eeeeee" }}>
           <div>
-            <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: "#D4AF37", marginBottom: "0.75rem" }}>Bill To</div>
+            <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--accent-color)", marginBottom: "0.75rem" }}>Bill To</div>
             <div style={{ fontWeight: 700, fontSize: "1.05rem", color: "#0f0f0f", marginBottom: "0.25rem" }}>{booking.customer.name}</div>
             <div style={{ color: "#555", fontSize: "0.85rem", lineHeight: 1.7 }}>
               {booking.customer.email}<br />
@@ -250,7 +250,7 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
             </div>
           </div>
           <div>
-            <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: "#D4AF37", marginBottom: "0.75rem" }}>Event Details</div>
+            <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--accent-color)", marginBottom: "0.75rem" }}>Event Details</div>
             <table style={{ borderCollapse: "collapse", fontSize: "0.85rem", width: "100%" }}>
               <tbody>
                 {[
@@ -379,7 +379,7 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
         {/* Notes */}
         {booking.notes && (
           <div style={{ padding: "0 3rem 2rem" }}>
-            <div style={{ background: "#fdfbf4", border: "1px solid #e8d99a", borderLeft: "3px solid #D4AF37", borderRadius: "0.25rem", padding: "1rem 1.25rem" }}>
+            <div style={{ background: "#fdfbf4", border: "1px solid #e8d99a", borderLeft: "3px solid var(--accent-color)", borderRadius: "0.25rem", padding: "1rem 1.25rem" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "#b8860b", marginBottom: "0.4rem" }}>Customer Notes</div>
               <p style={{ fontSize: "0.85rem", color: "#444", lineHeight: 1.6 }}>{booking.notes}</p>
             </div>

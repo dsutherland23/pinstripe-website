@@ -47,7 +47,7 @@ export default function SearchBar({ onSearch, categories }: SearchBarProps) {
         <div style={{ position: "relative" }}>
           <Search
             size={16}
-            color="#D4AF37"
+            color="var(--accent-color)"
             style={{
               position: "absolute",
               left: "1.25rem",
@@ -77,7 +77,7 @@ export default function SearchBar({ onSearch, categories }: SearchBarProps) {
         <div style={{ position: "relative" }}>
           <SlidersHorizontal
             size={15}
-            color="#D4AF37"
+            color="var(--accent-color)"
             style={{
               position: "absolute",
               left: "1.25rem",
@@ -116,7 +116,7 @@ export default function SearchBar({ onSearch, categories }: SearchBarProps) {
         <div style={{ position: "relative" }}>
           <Calendar
             size={15}
-            color="#D4AF37"
+            color="var(--accent-color)"
             style={{
               position: "absolute",
               left: "1.25rem",
@@ -161,7 +161,7 @@ export default function SearchBar({ onSearch, categories }: SearchBarProps) {
             gap: "0.625rem",
           }}
         >
-          <Search size={15} color="#D4AF37" strokeWidth={3} />
+          <Search size={15} color="var(--accent-color)" strokeWidth={3} />
           Search
         </button>
       </form>

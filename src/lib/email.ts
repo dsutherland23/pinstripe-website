@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { mockInventory } from "@/data/mockInventory";
+import { getSettings } from "@/lib/db";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
@@ -35,6 +36,9 @@ export interface EmailQuotePayload {
  * Falls back to logging to console if RESEND_API_KEY is not defined.
  */
 export async function sendQuoteEmail(payload: EmailQuotePayload): Promise<{ success: boolean; id?: string; error?: string }> {
+  const settings = await getSettings().catch(() => null);
+  const accentColor = settings?.accentColor || "#D4AF37";
+
   // Resolve item details
   const resolvedItems = Object.entries(payload.items).map(([id, qty]) => {
     const item = mockInventory.find((inv) => inv.id === id);
@@ -77,17 +81,17 @@ export async function sendQuoteEmail(payload: EmailQuotePayload): Promise<{ succ
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f7f7f7; margin: 0; padding: 20px; color: #333333;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e1e1e1;">
           <!-- Header -->
-          <div style="background-color: #0f0f0f; padding: 30px; text-align: center; border-bottom: 3px solid #D4AF37;">
-            <p style="color: #D4AF37; font-size: 11px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; margin: 0 0 5px 0;">Pinstripes Party &amp; Event Rentals</p>
+          <div style="background-color: #0f0f0f; padding: 30px; text-align: center; border-bottom: 3px solid ${accentColor};">
+            <p style="color: ${accentColor}; font-size: 11px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; margin: 0 0 5px 0;">Pinstripes Party &amp; Event Rentals</p>
             <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.02em;">New Quote Request</h1>
-            <div style="display: inline-block; background-color: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); border-radius: 9999px; padding: 4px 12px; font-size: 12px; color: #D4AF37; font-weight: 600; margin-top: 12px;">
+            <div style="display: inline-block; background-color: rgba(255,255,255,0.08); border: 1px solid ${accentColor}; border-radius: 9999px; padding: 4px 12px; font-size: 12px; color: ${accentColor}; font-weight: 600; margin-top: 12px;">
               Ref: ${payload.ref}
             </div>
           </div>
 
           <div style="padding: 30px;">
             <!-- Customer Section -->
-            <h2 style="font-size: 16px; border-bottom: 1px solid #D4AF37; padding-bottom: 8px; color: #0f0f0f; margin-top: 0;">Customer Information</h2>
+            <h2 style="font-size: 16px; border-bottom: 1px solid ${accentColor}; padding-bottom: 8px; color: #0f0f0f; margin-top: 0;">Customer Information</h2>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
               <tr>
                 <td style="padding: 6px 0; font-size: 14px; color: #666666; width: 120px;">Name:</td>
@@ -95,16 +99,16 @@ export async function sendQuoteEmail(payload: EmailQuotePayload): Promise<{ succ
               </tr>
               <tr>
                 <td style="padding: 6px 0; font-size: 14px; color: #666666;">Email:</td>
-                <td style="padding: 6px 0; font-size: 14px; color: #0f0f0f;"><a href="mailto:${payload.customer.email}" style="color: #D4AF37; text-decoration: none; font-weight: 500;">${payload.customer.email}</a></td>
+                <td style="padding: 6px 0; font-size: 14px; color: #0f0f0f;"><a href="mailto:${payload.customer.email}" style="color: ${accentColor}; text-decoration: none; font-weight: 500;">${payload.customer.email}</a></td>
               </tr>
               <tr>
                 <td style="padding: 6px 0; font-size: 14px; color: #666666;">Phone:</td>
-                <td style="padding: 6px 0; font-size: 14px; color: #0f0f0f;"><a href="tel:${payload.customer.phone}" style="color: #D4AF37; text-decoration: none; font-weight: 500;">${payload.customer.phone}</a></td>
+                <td style="padding: 6px 0; font-size: 14px; color: #0f0f0f;"><a href="tel:${payload.customer.phone}" style="color: ${accentColor}; text-decoration: none; font-weight: 500;">${payload.customer.phone}</a></td>
               </tr>
             </table>
 
             <!-- Event Details -->
-            <h2 style="font-size: 16px; border-bottom: 1px solid #D4AF37; padding-bottom: 8px; color: #0f0f0f;">Event &amp; Delivery Details</h2>
+            <h2 style="font-size: 16px; border-bottom: 1px solid ${accentColor}; padding-bottom: 8px; color: #0f0f0f;">Event &amp; Delivery Details</h2>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
               <tr>
                 <td style="padding: 6px 0; font-size: 14px; color: #666666; width: 120px;">Event Type:</td>
@@ -132,7 +136,7 @@ export async function sendQuoteEmail(payload: EmailQuotePayload): Promise<{ succ
             </table>
 
             <!-- Requested Items -->
-            <h2 style="font-size: 16px; border-bottom: 1px solid #D4AF37; padding-bottom: 8px; color: #0f0f0f;">Requested Rentals</h2>
+            <h2 style="font-size: 16px; border-bottom: 1px solid ${accentColor}; padding-bottom: 8px; color: #0f0f0f;">Requested Rentals</h2>
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
               <thead>
                 <tr style="background-color: #f9f9f9;">
@@ -166,7 +170,7 @@ export async function sendQuoteEmail(payload: EmailQuotePayload): Promise<{ succ
                 ? `
               <div style="margin-bottom: 25px;">
                 <h3 style="font-size: 14px; color: #0f0f0f; margin-bottom: 6px;">Customer Notes / Special Requests:</h3>
-                <div style="background-color: #f9f9f9; padding: 12px 15px; border-left: 3px solid #D4AF37; font-size: 13px; color: #555555; line-height: 1.5; border-radius: 0 4px 4px 0;">
+                <div style="background-color: #f9f9f9; padding: 12px 15px; border-left: 3px solid ${accentColor}; font-size: 13px; color: #555555; line-height: 1.5; border-radius: 0 4px 4px 0;">
                   ${payload.notes}
                 </div>
               </div>

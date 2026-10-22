@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Montserrat, Inter } from "next/font/google";
 import "./globals.css";
-import { getSiteContent } from "@/lib/db";
+import { getSiteContent, getSettings } from "@/lib/db";
+import { generateAccentVariables, generateThemeCss } from "@/lib/theme";
+import { ThemeListener } from "@/components/ThemeListener";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -41,12 +43,22 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   let phone = "(757) 200-2600";
+  let accentColor = "#D4AF37";
   try {
-    const content = await getSiteContent();
+    const [content, settings] = await Promise.all([
+      getSiteContent().catch(() => null),
+      getSettings().catch(() => null),
+    ]);
     if (content?.footer?.phone) {
       phone = content.footer.phone;
     }
+    if (settings?.accentColor) {
+      accentColor = settings.accentColor;
+    }
   } catch (e) {}
+
+  const themeVars = generateAccentVariables(accentColor);
+  const themeCss = generateThemeCss(themeVars);
 
   const orgJsonLd = {
     "@context": "https://schema.org",
@@ -71,12 +83,17 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <style
+          id="site-accent-theme"
+          dangerouslySetInnerHTML={{ __html: themeCss }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
       </head>
       <body suppressHydrationWarning>
+        <ThemeListener initialColor={accentColor} />
         {children}
       </body>
     </html>

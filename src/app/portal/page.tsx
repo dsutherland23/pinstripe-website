@@ -35,7 +35,7 @@ interface Booking {
 }
 
 const STATUS_STAGES = [
-  { key: "received",   label: "Request Received",  icon: Clock,        color: "#D4AF37" },
+  { key: "received",   label: "Request Received",  icon: Clock,        color: "var(--accent-color)" },
   { key: "confirmed",  label: "Booking Confirmed",  icon: CheckCircle2, color: "#10b981" },
   { key: "preparing",  label: "Equipment Prep",     icon: PackageCheck, color: "#3b82f6" },
   { key: "delivered",  label: "Delivered & Setup",  icon: Truck,        color: "#8b5cf6" },
@@ -569,7 +569,7 @@ export default function CustomerPortal() {
   const getBookingBadgeColor = (b: Booking) => {
     if (b.status === "cancelled") return { bg: "rgba(239, 68, 68, 0.12)", text: "#ef4444", border: "rgba(239, 68, 68, 0.2)" };
     if (b.status === "confirmed") return { bg: "rgba(16, 185, 129, 0.12)", text: "#10b981", border: "rgba(16, 185, 129, 0.2)" };
-    return { bg: "rgba(212, 175, 55, 0.12)", text: "#D4AF37", border: "rgba(212, 175, 55, 0.2)" };
+    return { bg: "rgba(var(--accent-rgb), 0.12)", text: "var(--accent-color)", border: "rgba(var(--accent-rgb), 0.2)" };
   };
 
   // --- Inline CSS Styles ---
@@ -578,7 +578,7 @@ export default function CustomerPortal() {
     fontWeight: 800,
     textTransform: "uppercase",
     letterSpacing: "0.08em",
-    color: "#D4AF37",
+    color: "var(--accent-color)",
     marginBottom: "0.35rem",
     display: "block",
   };
@@ -598,7 +598,7 @@ export default function CustomerPortal() {
   const btnPrimary: React.CSSProperties = {
     padding: "0.85rem",
     borderRadius: "0.625rem",
-    background: "linear-gradient(135deg, #D4AF37, #F3E5AB)",
+    background: "linear-gradient(135deg, var(--accent-color), #F3E5AB)",
     border: "none",
     color: "#000000",
     fontWeight: 800,
@@ -614,18 +614,18 @@ export default function CustomerPortal() {
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0a", fontFamily: "var(--font-body, -apple-system, sans-serif)", color: "#e5e5e5" }}>
       {/* Premium Header Banner */}
-      <header style={{ background: "rgba(17,17,17,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid rgba(212,175,55,0.15)", padding: "1.25rem 2rem", sticky: "top", zIndex: 100 } as any}>
+      <header style={{ background: "rgba(17,17,17,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid rgba(var(--accent-rgb),0.15)", padding: "1.25rem 2rem", sticky: "top", zIndex: 100 } as any}>
         <div style={{ maxWidth: "1000px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <Link href="/" style={{ textDecoration: "none" }}>
-              <span style={{ fontSize: "0.68rem", fontWeight: 900, letterSpacing: "0.18em", textTransform: "uppercase", color: "#D4AF37" }}>Pinstripe Rentals</span>
+              <span style={{ fontSize: "0.68rem", fontWeight: 900, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--accent-color)" }}>Pinstripe Rentals</span>
             </Link>
             <h1 style={{ color: "#ffffff", fontSize: "1.35rem", fontWeight: 900, margin: "0.15rem 0 0", letterSpacing: "-0.02em" }}>Customer Workspace</h1>
           </div>
           <div style={{ display: "flex", gap: "1.25rem", alignItems: "center" }}>
             {currentUser && (
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", background: "rgba(255,255,255,0.04)", padding: "0.4rem 0.8rem", borderRadius: "9999px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <User size={13} color="#D4AF37" />
+                <User size={13} color="var(--accent-color)" />
                 <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#ffffff" }}>{currentUser.name}</span>
                 <button onClick={handleLogout} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", padding: "0.1rem" }} title="Log out">
                   <LogOut size={13} />
@@ -656,7 +656,7 @@ export default function CustomerPortal() {
 
         {/* ── NOT LOGGED IN VIEWS ────────────────────────────────────────── */}
         {!currentUser && stripeSuccess && (
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.1fr", gap: "2.5rem", alignItems: "start", background: "#111111", border: "1px solid rgba(212,175,55,0.25)", borderRadius: "1.25rem", padding: "2.5rem", boxShadow: "0 10px 40px rgba(0,0,0,0.5)", marginBottom: "3rem" }} className="responsive-grid-auth">
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1.1fr", gap: "2.5rem", alignItems: "start", background: "#111111", border: "1px solid rgba(var(--accent-rgb),0.25)", borderRadius: "1.25rem", padding: "2.5rem", boxShadow: "0 10px 40px rgba(0,0,0,0.5)", marginBottom: "3rem" }} className="responsive-grid-auth">
             
             {/* Left Column: Success Message & Booking details */}
             <div>
@@ -700,14 +700,14 @@ export default function CustomerPortal() {
               
               <button 
                 onClick={() => setStripeSuccess(false)}
-                style={{ background: "transparent", border: "none", color: "#D4AF37", fontSize: "0.75rem", cursor: "pointer", fontWeight: 700, marginTop: "1.25rem", padding: 0 }}
+                style={{ background: "transparent", border: "none", color: "var(--accent-color)", fontSize: "0.75rem", cursor: "pointer", fontWeight: 700, marginTop: "1.25rem", padding: 0 }}
               >
                 ← Back to Login / Search
               </button>
             </div>
 
             {/* Right Column: Save Account Registration Form */}
-            <div style={{ background: "rgba(212,175,55,0.02)", border: "1px dashed rgba(212,175,55,0.2)", borderRadius: "1rem", padding: "2rem" }}>
+            <div style={{ background: "rgba(var(--accent-rgb),0.02)", border: "1px dashed rgba(var(--accent-rgb),0.2)", borderRadius: "1rem", padding: "2rem" }}>
               <h3 style={{ color: "#ffffff", fontSize: "1.1rem", fontWeight: 800, margin: "0 0 0.5rem" }}>Save Your Account</h3>
               <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.78rem", margin: "0 0 1.25rem" }}>
                 Enter a password to securely claim this booking and track your order updates in real-time.
@@ -736,18 +736,18 @@ export default function CustomerPortal() {
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2.5rem", alignItems: "start" }} className="responsive-grid-auth">
             
             {/* Account Login / Signup Card */}
-            <div style={{ background: "#111111", border: "1px solid rgba(212,175,55,0.15)", borderRadius: "1.25rem", padding: "2.5rem", boxShadow: "0 10px 40px rgba(0,0,0,0.4)" }}>
+            <div style={{ background: "#111111", border: "1px solid rgba(var(--accent-rgb),0.15)", borderRadius: "1.25rem", padding: "2.5rem", boxShadow: "0 10px 40px rgba(0,0,0,0.4)" }}>
               {/* Tab Selector */}
               <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: "2rem" }}>
                 <button 
                   onClick={() => { setAuthMode("login"); setErrorMsg(""); }}
-                  style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "none", borderBottom: authMode === "login" ? "2px solid #D4AF37" : "none", color: authMode === "login" ? "#ffffff" : "rgba(255,255,255,0.4)", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}
+                  style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "none", borderBottom: authMode === "login" ? "2px solid var(--accent-color)" : "none", color: authMode === "login" ? "#ffffff" : "rgba(255,255,255,0.4)", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}
                 >
                   Sign In
                 </button>
                 <button 
                   onClick={() => { setAuthMode("signup"); setErrorMsg(""); }}
-                  style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "none", borderBottom: authMode === "signup" ? "2px solid #D4AF37" : "none", color: authMode === "signup" ? "#ffffff" : "rgba(255,255,255,0.4)", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}
+                  style={{ flex: 1, padding: "0.75rem", background: "transparent", border: "none", borderBottom: authMode === "signup" ? "2px solid var(--accent-color)" : "none", color: authMode === "signup" ? "#ffffff" : "rgba(255,255,255,0.4)", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}
                 >
                   Create Account
                 </button>
@@ -812,7 +812,7 @@ export default function CustomerPortal() {
             {/* Guest Lookup Option */}
             <div style={{ background: "rgba(255,255,255,0.02)", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: "1.25rem", padding: "2.5rem" }}>
               <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                <div style={{ display: "inline-flex", padding: "0.75rem", borderRadius: "50%", background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.18)", color: "#D4AF37", marginBottom: "1rem" }}>
+                <div style={{ display: "inline-flex", padding: "0.75rem", borderRadius: "50%", background: "rgba(var(--accent-rgb),0.06)", border: "1px solid rgba(var(--accent-rgb),0.18)", color: "var(--accent-color)", marginBottom: "1rem" }}>
                   <Search size={20} />
                 </div>
                 <h3 style={{ color: "#ffffff", fontSize: "1.1rem", fontWeight: 800, margin: "0 0 0.25rem" }}>Guest Lookup</h3>
@@ -868,33 +868,33 @@ export default function CustomerPortal() {
                 onClick={() => { setActiveTab("bookings"); setPayingBooking(null); }}
                 style={{
                   width: "100%", padding: "0.8rem 1.25rem", borderRadius: "0.625rem",
-                  background: activeTab === "bookings" ? "rgba(212,175,55,0.08)" : "transparent",
-                  border: activeTab === "bookings" ? "1px solid rgba(212,175,55,0.2)" : "1px solid transparent",
+                  background: activeTab === "bookings" ? "rgba(var(--accent-rgb),0.08)" : "transparent",
+                  border: activeTab === "bookings" ? "1px solid rgba(var(--accent-rgb),0.2)" : "1px solid transparent",
                   color: activeTab === "bookings" ? "#ffffff" : "rgba(255,255,255,0.45)",
                   fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", textAlign: "left",
                   display: "flex", alignItems: "center", gap: "0.75rem"
                 }}
               >
-                <CalendarDays size={15} color={activeTab === "bookings" ? "#D4AF37" : "rgba(255,255,255,0.45)"} />
+                <CalendarDays size={15} color={activeTab === "bookings" ? "var(--accent-color)" : "rgba(255,255,255,0.45)"} />
                 My Bookings & Quotes
               </button>
               <button 
                 onClick={() => { setActiveTab("profile"); setPayingBooking(null); }}
                 style={{
                   width: "100%", padding: "0.8rem 1.25rem", borderRadius: "0.625rem",
-                  background: activeTab === "profile" ? "rgba(212,175,55,0.08)" : "transparent",
-                  border: activeTab === "profile" ? "1px solid rgba(212,175,55,0.2)" : "1px solid transparent",
+                  background: activeTab === "profile" ? "rgba(var(--accent-rgb),0.08)" : "transparent",
+                  border: activeTab === "profile" ? "1px solid rgba(var(--accent-rgb),0.2)" : "1px solid transparent",
                   color: activeTab === "profile" ? "#ffffff" : "rgba(255,255,255,0.45)",
                   fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", textAlign: "left",
                   display: "flex", alignItems: "center", gap: "0.75rem"
                 }}
               >
-                <User size={15} color={activeTab === "profile" ? "#D4AF37" : "rgba(255,255,255,0.45)"} />
+                <User size={15} color={activeTab === "profile" ? "var(--accent-color)" : "rgba(255,255,255,0.45)"} />
                 Profile & Settings
               </button>
 
-              <div style={{ marginTop: "2rem", padding: "1.25rem", borderRadius: "0.75rem", background: "rgba(212,175,55,0.02)", border: "1px solid rgba(212,175,55,0.08)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#D4AF37", fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
+              <div style={{ marginTop: "2rem", padding: "1.25rem", borderRadius: "0.75rem", background: "rgba(var(--accent-rgb),0.02)", border: "1px solid rgba(var(--accent-rgb),0.08)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "var(--accent-color)", fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
                   <Sparkles size={12} />
                   Booking Notice
                 </div>
@@ -918,7 +918,7 @@ export default function CustomerPortal() {
                   {bookings.length === 0 ? (
                     <div style={{ padding: "4rem 2rem", textAlign: "center", border: "1px dashed rgba(255,255,255,0.08)", borderRadius: "1rem", background: "rgba(255,255,255,0.01)" }}>
                       <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.9rem" }}>You don't have any bookings registered with this email yet.</p>
-                      <Link href="/" style={{ display: "inline-block", padding: "0.5rem 1.25rem", background: "#D4AF37", color: "#000", border: "none", borderRadius: "0.5rem", textDecoration: "none", fontSize: "0.78rem", fontWeight: 700, marginTop: "1rem" }}>
+                      <Link href="/" style={{ display: "inline-block", padding: "0.5rem 1.25rem", background: "var(--accent-color)", color: "#000", border: "none", borderRadius: "0.5rem", textDecoration: "none", fontSize: "0.78rem", fontWeight: 700, marginTop: "1rem" }}>
                         Browse Rentals
                       </Link>
                     </div>
@@ -1059,7 +1059,7 @@ export default function CustomerPortal() {
               background: "rgba(17, 17, 17, 0.95)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
-              borderLeft: "1px solid rgba(212,175,55,0.25)",
+              borderLeft: "1px solid rgba(var(--accent-rgb),0.25)",
               boxShadow: "-10px 0 40px rgba(0,0,0,0.6)",
               zIndex: 150,
               display: "flex",
@@ -1085,7 +1085,7 @@ export default function CustomerPortal() {
                     </h3>
                   </div>
                   <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", margin: "0.15rem 0 0" }}>
-                    Booking Ref: <strong style={{ color: "#D4AF37" }}>{activeChatBookingId}</strong>
+                    Booking Ref: <strong style={{ color: "var(--accent-color)" }}>{activeChatBookingId}</strong>
                   </p>
                 </div>
                 <button
@@ -1098,8 +1098,8 @@ export default function CustomerPortal() {
 
               {/* Quick Context Bar */}
               <div style={{
-                background: "rgba(212,175,55,0.05)",
-                borderBottom: "1px solid rgba(212,175,55,0.1)",
+                background: "rgba(var(--accent-rgb),0.05)",
+                borderBottom: "1px solid rgba(var(--accent-rgb),0.1)",
                 padding: "0.625rem 1.25rem",
                 fontSize: "0.75rem",
                 color: "rgba(255,255,255,0.6)",
@@ -1107,7 +1107,7 @@ export default function CustomerPortal() {
                 justifyContent: "space-between",
               }}>
                 <span>📅 {currentBooking.event.date}</span>
-                <span style={{ color: "#D4AF37", fontWeight: 700 }}>💵 ${currentBooking.estimatedTotal.toFixed(2)}</span>
+                <span style={{ color: "var(--accent-color)", fontWeight: 700 }}>💵 ${currentBooking.estimatedTotal.toFixed(2)}</span>
               </div>
 
               {/* Messages Feed */}
@@ -1143,8 +1143,8 @@ export default function CustomerPortal() {
                         }}
                       >
                         <div style={{
-                          background: isIncoming ? "#161616" : "rgba(212,175,55,0.15)",
-                          border: `1px solid ${isIncoming ? "rgba(255,255,255,0.05)" : "rgba(212,175,55,0.25)"}`,
+                          background: isIncoming ? "#161616" : "rgba(var(--accent-rgb),0.15)",
+                          border: `1px solid ${isIncoming ? "rgba(255,255,255,0.05)" : "rgba(var(--accent-rgb),0.25)"}`,
                           borderRadius: isIncoming ? "1rem 1rem 1rem 0" : "1rem 1rem 0 1rem",
                           padding: "0.75rem 1rem",
                           color: "#ffffff",
@@ -1221,7 +1221,7 @@ export default function CustomerPortal() {
                     value={chatInput}
                     onChange={e => setChatInput(e.currentTarget.value)}
                     style={{ ...inputStyle, flex: 1 }}
-                    onFocus={e => { e.currentTarget.style.borderColor = "#D4AF37"; }}
+                    onFocus={e => { e.currentTarget.style.borderColor = "var(--accent-color)"; }}
                     onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
                   />
 
@@ -1231,7 +1231,7 @@ export default function CustomerPortal() {
                     style={{
                       padding: "0.55rem 1rem",
                       borderRadius: "0.5rem",
-                      background: (!chatInput.trim() && !chatMediaUrl) ? "rgba(255,255,255,0.06)" : "#D4AF37",
+                      background: (!chatInput.trim() && !chatMediaUrl) ? "rgba(255,255,255,0.06)" : "var(--accent-color)",
                       color: (!chatInput.trim() && !chatMediaUrl) ? "rgba(255,255,255,0.2)" : "#000000",
                       border: "none",
                       fontWeight: 700,
@@ -1250,11 +1250,11 @@ export default function CustomerPortal() {
         {/* ── PAYMENT GATEWAY INTERFACE (MODAL STYLE OVERLAY) ────────────────── */}
         {payingBooking && (
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1.5rem" }}>
-            <div style={{ background: "#121212", border: "1px solid rgba(212,175,55,0.25)", borderRadius: "1.25rem", width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+            <div style={{ background: "#121212", border: "1px solid rgba(var(--accent-rgb),0.25)", borderRadius: "1.25rem", width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
               {/* Header */}
               <div style={{ background: "rgba(255,255,255,0.02)", padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <span style={{ fontSize: "0.6rem", fontWeight: 800, color: "#D4AF37", letterSpacing: "0.1em", textTransform: "uppercase" }}>Booking Payment</span>
+                  <span style={{ fontSize: "0.6rem", fontWeight: 800, color: "var(--accent-color)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Booking Payment</span>
                   <h3 style={{ margin: "0.15rem 0 0", color: "#ffffff", fontSize: "1.1rem", fontWeight: 800 }}>Invoice {payingBooking.id}</h3>
                 </div>
                 <button onClick={() => setPayingBooking(null)} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", cursor: "pointer", fontWeight: 700 }}>Cancel</button>
@@ -1283,7 +1283,7 @@ export default function CustomerPortal() {
                     <span>Amount Paid</span>
                     <span style={{ color: "#10b981", fontWeight: 600 }}>-${(payingBooking.amountPaid || 0).toFixed(2)}</span>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "0.75rem", fontSize: "1rem", fontWeight: 900, color: "#D4AF37" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "0.75rem", fontSize: "1rem", fontWeight: 900, color: "var(--accent-color)" }}>
                     <span>Remaining Balance</span>
                     <span>${(payingBooking.estimatedTotal - (payingBooking.amountPaid || 0)).toFixed(2)}</span>
                   </div>
@@ -1328,8 +1328,8 @@ export default function CustomerPortal() {
                             onClick={() => setPaymentAmountOption("deposit")}
                             style={{
                               padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
-                              background: paymentAmountOption === "deposit" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
-                              border: paymentAmountOption === "deposit" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
+                              background: paymentAmountOption === "deposit" ? "rgba(var(--accent-rgb),0.12)" : "rgba(255,255,255,0.03)",
+                              border: paymentAmountOption === "deposit" ? "1px solid var(--accent-color)" : "1px solid rgba(255,255,255,0.06)",
                               color: paymentAmountOption === "deposit" ? "#ffffff" : "rgba(255,255,255,0.5)"
                             }}
                           >
@@ -1345,8 +1345,8 @@ export default function CustomerPortal() {
                           onClick={() => setPaymentAmountOption("full")}
                           style={{
                             padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
-                            background: paymentAmountOption === "full" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
-                            border: paymentAmountOption === "full" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
+                            background: paymentAmountOption === "full" ? "rgba(var(--accent-rgb),0.12)" : "rgba(255,255,255,0.03)",
+                            border: paymentAmountOption === "full" ? "1px solid var(--accent-color)" : "1px solid rgba(255,255,255,0.06)",
                             color: paymentAmountOption === "full" ? "#ffffff" : "rgba(255,255,255,0.5)"
                           }}
                         >
@@ -1358,8 +1358,8 @@ export default function CustomerPortal() {
                           onClick={() => setPaymentAmountOption("custom")}
                           style={{
                             padding: "0.6rem 0.35rem", borderRadius: "0.5rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer",
-                            background: paymentAmountOption === "custom" ? "rgba(212,175,55,0.12)" : "rgba(255,255,255,0.03)",
-                            border: paymentAmountOption === "custom" ? "1px solid #D4AF37" : "1px solid rgba(255,255,255,0.06)",
+                            background: paymentAmountOption === "custom" ? "rgba(var(--accent-rgb),0.12)" : "rgba(255,255,255,0.03)",
+                            border: paymentAmountOption === "custom" ? "1px solid var(--accent-color)" : "1px solid rgba(255,255,255,0.06)",
                             color: paymentAmountOption === "custom" ? "#ffffff" : "rgba(255,255,255,0.5)"
                           }}
                         >
@@ -1474,8 +1474,8 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
           <button 
             onClick={() => onChatClick(booking)}
             style={{ 
-              padding: "0.45rem 1rem", border: "1px solid rgba(212,175,55,0.3)", borderRadius: "0.5rem", 
-              background: "rgba(212,175,55,0.06)", color: "#D4AF37", fontSize: "0.78rem", 
+              padding: "0.45rem 1rem", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: "0.5rem", 
+              background: "rgba(var(--accent-rgb),0.06)", color: "var(--accent-color)", fontSize: "0.78rem", 
               fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.35rem",
               transition: "all 0.2s"
             }}
@@ -1487,7 +1487,7 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
               onClick={() => onPayClick(booking)}
               style={{ 
                 padding: "0.45rem 1rem", border: "none", borderRadius: "0.5rem", 
-                background: "#D4AF37", color: "#000000", fontSize: "0.78rem", 
+                background: "var(--accent-color)", color: "#000000", fontSize: "0.78rem", 
                 fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.35rem" 
               }}
             >
@@ -1504,7 +1504,7 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
             {/* Background line */}
             <div style={{ position: "absolute", top: "16px", left: "12%", right: "12%", height: "2px", background: "rgba(255,255,255,0.06)", zIndex: 0 }} />
             {/* Active colored line */}
-            <div style={{ position: "absolute", top: "16px", left: "12%", width: `${(statusIndex / (STATUS_STAGES.length - 1)) * 76}%`, height: "2px", background: "#D4AF37", zIndex: 1, transition: "width 0.4s ease" }} />
+            <div style={{ position: "absolute", top: "16px", left: "12%", width: `${(statusIndex / (STATUS_STAGES.length - 1)) * 76}%`, height: "2px", background: "var(--accent-color)", zIndex: 1, transition: "width 0.4s ease" }} />
 
             {STATUS_STAGES.map((stage, idx) => {
               const Icon = stage.icon;
@@ -1529,7 +1529,7 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
         
         {/* Event Details */}
         <div>
-          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#D4AF37", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "0.5rem" }}>Event Details</span>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--accent-color)", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "0.5rem" }}>Event Details</span>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
             <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.82rem", alignItems: "center" }}>
               <CalendarDays size={13} color="rgba(255,255,255,0.35)" />
@@ -1554,7 +1554,7 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
 
         {/* Items Summary */}
         <div>
-          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#D4AF37", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "0.5rem" }}>Rental Items ({booking.itemCount})</span>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--accent-color)", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "0.5rem" }}>Rental Items ({booking.itemCount})</span>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", maxHeight: "100px", overflowY: "auto", paddingRight: "0.5rem" }}>
             {Object.entries(booking.items).map(([itemId, qty]) => {
               const item = inventory.find((i) => i.id === itemId);
@@ -1588,7 +1588,7 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
               Discount: -${booking.discount.toFixed(2)}
             </span>
           )}
-          <span style={{ fontSize: "1.5rem", color: "#D4AF37", fontWeight: 900, margin: "0.15rem 0" }}>${booking.estimatedTotal.toFixed(2)}</span>
+          <span style={{ fontSize: "1.5rem", color: "var(--accent-color)", fontWeight: 900, margin: "0.15rem 0" }}>${booking.estimatedTotal.toFixed(2)}</span>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.15rem", fontSize: "0.72rem", color: "rgba(255,255,255,0.4)" }}>
             {depositEnabled && (
               <span>Deposit ({depositPercentage}%): ${deposit.toFixed(2)}</span>
@@ -1607,7 +1607,7 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
       {/* Transaction Ledger / Receipts */}
       {booking.payments && booking.payments.length > 0 && (
         <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#D4AF37", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "0.5rem" }}>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--accent-color)", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "0.5rem" }}>
             💳 Payment History & Receipts
           </span>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
@@ -1630,7 +1630,7 @@ function BookingCard({ booking, statusIndex, badgeColors, payBadge, onPayClick, 
       )}
 
       {booking.notes && (
-        <div style={{ marginTop: "1.25rem", padding: "0.75rem 1rem", borderLeft: "2px solid #D4AF37", background: "rgba(212,175,55,0.03)", borderRadius: "0 0.5rem 0.5rem 0", fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
+        <div style={{ marginTop: "1.25rem", padding: "0.75rem 1rem", borderLeft: "2px solid var(--accent-color)", background: "rgba(var(--accent-rgb),0.03)", borderRadius: "0 0.5rem 0.5rem 0", fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
           <strong>Special Requests:</strong> {booking.notes}
         </div>
       )}
