@@ -178,14 +178,16 @@ export default function Footer({ onOpenQuote, onOpenAbout, onOpenContact }: Foot
         >
           {/* Column 1: Brand & Bio */}
           <div>
-            <div style={{ marginBottom: "1rem", display: "inline-flex" }}>
+            <div style={{ marginBottom: "1.25rem", display: "inline-flex" }}>
               <img
-                src="/images/pinstripes-logo-new.png?v=20260623"
+                src="/images/pinstripes-logo-new.png?v=20261022"
                 alt="Pinstripes Party & Event Rentals Logo"
                 style={{
-                  height: "56px",
+                  height: "72px",
+                  width: "auto",
+                  maxWidth: "115px",
                   objectFit: "contain",
-                  filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))",
+                  filter: "drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6))",
                 }}
               />
             </div>

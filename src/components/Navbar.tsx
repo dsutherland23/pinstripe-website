@@ -310,42 +310,23 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: (scrolled || !isHome) ? "64px" : "88px",
-                  height: (scrolled || !isHome) ? "64px" : "88px",
+                  width: (scrolled || !isHome) ? "78px" : "110px",
+                  height: (scrolled || !isHome) ? "56px" : "78px",
                   transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                   position: "relative",
                 }}
               >
-                {/* White Logo (Default Top-Home State) */}
                 <img
-                  src="/images/pinstripes-logo-new.png?v=20260623"
-                  alt="Pinstripes Party & Event Rentals - White Logo"
+                  src="/images/pinstripes-logo-new.png?v=20261022"
+                  alt="Pinstripes Party & Event Rentals Logo"
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
                     height: "100%",
                     width: "100%",
                     objectFit: "contain",
-                    transition: "opacity 0.4s ease-in-out, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                    opacity: (scrolled || !isHome) ? 0 : 1,
-                    pointerEvents: (scrolled || !isHome) ? "none" : "auto",
-                  }}
-                />
-                {/* Black Logo (Scrolled or Inner Pages State) */}
-                <img
-                  src="/images/pinstripes-logo-black.png"
-                  alt="Pinstripes Party & Event Rentals - Black Logo"
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    height: "100%",
-                    width: "100%",
-                    objectFit: "contain",
-                    transition: "opacity 0.4s ease-in-out, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                    opacity: (scrolled || !isHome) ? 1 : 0,
-                    pointerEvents: (scrolled || !isHome) ? "auto" : "none",
+                    transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease",
+                    filter: (scrolled || !isHome)
+                      ? "drop-shadow(0 2px 6px rgba(0,0,0,0.12))"
+                      : "drop-shadow(0 3px 12px rgba(0,0,0,0.45))",
                   }}
                 />
               </div>
@@ -721,20 +702,22 @@ export default function Navbar({ onOpenQuote, onOpenAbout, onOpenContact }: Navb
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
               <div
                 style={{
-                  width: "56px",
-                  height: "56px",
+                  width: "72px",
+                  height: "52px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                 }}
               >
                 <img
-                  src={isEvening ? "/images/pinstripes-logo-new.png?v=20260623" : "/images/pinstripes-logo-black.png"}
-                  alt="Pinstripes Logo"
+                  src="/images/pinstripes-logo-new.png?v=20261022"
+                  alt="Pinstripes Party & Event Rentals Logo"
                   style={{
                     height: "100%",
                     width: "100%",
                     objectFit: "contain",
+                    filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4))",
                   }}
                 />
               </div>

@@ -184,16 +184,16 @@ export default function InvoicePageClient({ id }: InvoicePageClientProps) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1.5rem" }}>
             <div style={{ display: "flex", gap: "1.25rem", alignItems: "center" }}>
               <img
-                src="/images/pinstripes-logo-new.png?v=20260623"
+                src="/images/pinstripes-logo-new.png?v=20261022"
                 alt="Pinstripes Logo"
                 className="logo-screen"
-                style={{ width: "64px", height: "64px", objectFit: "contain" }}
+                style={{ width: "84px", height: "60px", objectFit: "contain" }}
               />
               <img
-                src="/images/pinstripes-logo-black.png"
+                src="/images/pinstripes-logo-new.png?v=20261022"
                 alt="Pinstripes Logo"
                 className="logo-print"
-                style={{ width: "64px", height: "64px", objectFit: "contain" }}
+                style={{ width: "84px", height: "60px", objectFit: "contain" }}
               />
               <div>
                 <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "#D4AF37", marginBottom: "0.4rem" }} className="header-brand-text">Pinstripes Party &amp; Event Rentals</div>

@@ -1067,10 +1067,14 @@ export default function AdminDashboard() {
         <div style={{ maxWidth: "420px", width: "100%" }}>
           {/* Logo */}
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <div style={{ display: "inline-flex", padding: "1.25rem", borderRadius: "50%", background: "rgba(212,175,55,0.08)", border: "2px solid rgba(212,175,55,0.2)", color: "#D4AF37", marginBottom: "1.25rem" }}>
-              <Lock size={32} />
+            <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: "1rem" }}>
+              <img
+                src="/images/pinstripes-logo-new.png?v=20261022"
+                alt="Pinstripes Party & Event Rentals"
+                style={{ height: "80px", width: "auto", objectFit: "contain", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.6))" }}
+              />
             </div>
-            <h1 style={{ fontFamily: "var(--font-heading, serif)", color: "#ffffff", fontSize: "2rem", fontWeight: 900, margin: 0, letterSpacing: "-0.02em" }}>
+            <h1 style={{ fontFamily: "var(--font-heading, serif)", color: "#ffffff", fontSize: "1.85rem", fontWeight: 900, margin: 0, letterSpacing: "-0.02em" }}>
               Admin Portal
             </h1>
             <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", marginTop: "0.5rem" }}>
@@ -1154,11 +1158,24 @@ export default function AdminDashboard() {
       }}>
         {/* Sidebar Header */}
         <div style={{ padding: "1.25rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: "0.75rem", justifyContent: (isMobile || sidebarOpen) ? "space-between" : "center" }}>
-          {(isMobile || sidebarOpen) && (
-            <div>
-              <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "#D4AF37", letterSpacing: "0.05em", textTransform: "uppercase" }}>Pinstripes</div>
-              <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Admin CMS</div>
+          {(isMobile || sidebarOpen) ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+              <img
+                src="/images/pinstripes-logo-new.png?v=20261022"
+                alt="Pinstripes Logo"
+                style={{ height: "32px", width: "auto", objectFit: "contain" }}
+              />
+              <div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "#D4AF37", letterSpacing: "0.05em", textTransform: "uppercase" }}>Pinstripes</div>
+                <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Admin CMS</div>
+              </div>
             </div>
+          ) : (
+            <img
+              src="/images/pinstripes-logo-new.png?v=20261022"
+              alt="Pinstripes Logo"
+              style={{ height: "26px", width: "auto", objectFit: "contain" }}
+            />
           )}
           <button onClick={() => setSidebarOpen(v => !v)} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: "0.25rem", display: "flex" }}>
             {isMobile ? <X size={18} /> : <Menu size={18} />}

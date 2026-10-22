@@ -47,7 +47,7 @@ export default async function RootLayout({
     "name": "Pinstripes Party & Event Rentals",
     "alternateName": "Pinstripes Rentals",
     "url": "https://pinstripesrentals.com",
-    "logo": "https://pinstripesrentals.com/images/logo.jpg",
+    "logo": "https://pinstripesrentals.com/images/pinstripes-logo-new.png",
     "contactPoint": {
       "@type": "ContactPoint",
       "telephone": phone,
