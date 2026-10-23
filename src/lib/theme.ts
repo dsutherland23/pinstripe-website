@@ -79,3 +79,33 @@ export function generateThemeCss(vars: AccentThemeVars): string {
   --color-accent: ${vars.accent} !important;
 }`;
 }
+
+export function applyAccentTheme(color: string) {
+  if (typeof window === "undefined" || !color) return;
+  const vars = generateAccentVariables(color);
+  const root = document.documentElement;
+
+  root.style.setProperty("--accent-color", vars.accent, "important");
+  root.style.setProperty("--accent-hover", vars.hover, "important");
+  root.style.setProperty("--accent-light", vars.light, "important");
+  root.style.setProperty("--accent-rgb", vars.rgb, "important");
+  root.style.setProperty("--accent-glow", vars.glow, "important");
+  root.style.setProperty("--accent-shadow", vars.shadow, "important");
+  root.style.setProperty("--color-gold", vars.accent, "important");
+  root.style.setProperty("--color-gold-hover", vars.hover, "important");
+  root.style.setProperty("--color-gold-light", vars.light, "important");
+  root.style.setProperty("--color-accent", vars.accent, "important");
+
+  let styleEl = document.getElementById("site-accent-theme");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "site-accent-theme";
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = generateThemeCss(vars);
+
+  try {
+    localStorage.setItem("pinstripes_accent_color", vars.accent);
+    document.cookie = `pinstripes_accent_color=${encodeURIComponent(vars.accent)}; path=/; max-age=31536000; SameSite=Lax`;
+  } catch {}
+}

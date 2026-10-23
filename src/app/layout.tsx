@@ -1,5 +1,9 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import type { Metadata } from "next";
 import { Montserrat, Inter } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { getSiteContent, getSettings } from "@/lib/db";
 import { generateAccentVariables, generateThemeCss } from "@/lib/theme";
@@ -45,15 +49,21 @@ export default async function RootLayout({
   let phone = "(757) 200-2600";
   let accentColor = "#D4AF37";
   try {
-    const [content, settings] = await Promise.all([
+    const [content, settings, cookieStore] = await Promise.all([
       getSiteContent().catch(() => null),
       getSettings().catch(() => null),
+      cookies().catch(() => null),
     ]);
     if (content?.footer?.phone) {
       phone = content.footer.phone;
     }
     if (settings?.accentColor) {
       accentColor = settings.accentColor;
+    } else if (cookieStore?.get("pinstripes_accent_color")?.value) {
+      const cv = cookieStore.get("pinstripes_accent_color")!.value;
+      if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(cv)) {
+        accentColor = cv;
+      }
     }
   } catch (e) {}
 

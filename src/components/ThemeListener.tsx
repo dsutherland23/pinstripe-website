@@ -1,39 +1,52 @@
 "use client";
 
 import { useEffect } from "react";
-import { generateAccentVariables } from "@/lib/theme";
+import { applyAccentTheme } from "@/lib/theme";
 
 export function ThemeListener({ initialColor }: { initialColor?: string }) {
   useEffect(() => {
-    function applyColor(color: string) {
-      const vars = generateAccentVariables(color);
-      const root = document.documentElement;
-      root.style.setProperty("--accent-color", vars.accent);
-      root.style.setProperty("--accent-hover", vars.hover);
-      root.style.setProperty("--accent-light", vars.light);
-      root.style.setProperty("--accent-rgb", vars.rgb);
-      root.style.setProperty("--accent-glow", vars.glow);
-      root.style.setProperty("--accent-shadow", vars.shadow);
-      root.style.setProperty("--color-gold", vars.accent);
-      root.style.setProperty("--color-gold-hover", vars.hover);
-      root.style.setProperty("--color-gold-light", vars.light);
-      root.style.setProperty("--color-accent", vars.accent);
+    // 1. Try immediate restoration from localStorage
+    try {
+      const cached = localStorage.getItem("pinstripes_accent_color");
+      if (cached) {
+        applyAccentTheme(cached);
+      } else if (initialColor) {
+        applyAccentTheme(initialColor);
+      }
+    } catch {
+      if (initialColor) applyAccentTheme(initialColor);
     }
 
-    if (initialColor) {
-      applyColor(initialColor);
-    }
+    // 2. Fetch live settings from server to sync any updates made in admin
+    fetch(`/api/settings?t=${Date.now()}`, { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.accentColor) {
+          applyAccentTheme(data.accentColor);
+        }
+      })
+      .catch(() => {});
 
-    // Custom event to allow instant preview from Admin without page refresh
+    // 3. Listen for in-app color change events (from Admin preview/saves)
     const handleThemeChange = (e: CustomEvent<{ color: string }>) => {
       if (e.detail?.color) {
-        applyColor(e.detail.color);
+        applyAccentTheme(e.detail.color);
+      }
+    };
+
+    // 4. Listen for storage changes across tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "pinstripes_accent_color" && e.newValue) {
+        applyAccentTheme(e.newValue);
       }
     };
 
     window.addEventListener("site-accent-color-change" as any, handleThemeChange as EventListener);
+    window.addEventListener("storage", handleStorageChange);
+
     return () => {
       window.removeEventListener("site-accent-color-change" as any, handleThemeChange as EventListener);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, [initialColor]);
 

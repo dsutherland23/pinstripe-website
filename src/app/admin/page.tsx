@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import DeliveryPricingEngineAdmin from "@/components/admin/DeliveryPricingEngineAdmin";
 import AdminHelpGuide from "@/components/admin/AdminHelpGuide";
-import { COLOR_PRESETS, generateAccentVariables } from "@/lib/theme";
+import { COLOR_PRESETS, generateAccentVariables, applyAccentTheme } from "@/lib/theme";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface RentalItem {
@@ -423,6 +423,7 @@ export default function AdminDashboard() {
 
   // Settings
   const [savingSettings, setSavingSettings] = useState(false);
+  const [savingAccentColor, setSavingAccentColor] = useState(false);
 
   // Content
   const [savingSection, setSavingSection] = useState<string | null>(null);
@@ -1035,25 +1036,40 @@ export default function AdminDashboard() {
   // ── System Settings ───────────────────────────────────────────────────────
   const updateAccentColor = (newColor: string) => {
     setSettings(s => ({ ...s, accentColor: newColor }));
+    applyAccentTheme(newColor);
     if (typeof window !== "undefined") {
-      const vars = generateAccentVariables(newColor);
-      const root = document.documentElement;
-      root.style.setProperty("--accent-color", vars.accent);
-      root.style.setProperty("--accent-hover", vars.hover);
-      root.style.setProperty("--accent-light", vars.light);
-      root.style.setProperty("--accent-rgb", vars.rgb);
-      root.style.setProperty("--accent-glow", vars.glow);
-      root.style.setProperty("--accent-shadow", vars.shadow);
-      root.style.setProperty("--color-gold", vars.accent);
-      root.style.setProperty("--color-gold-hover", vars.hover);
-      root.style.setProperty("--color-gold-light", vars.light);
-      root.style.setProperty("--color-accent", vars.accent);
       window.dispatchEvent(new CustomEvent("site-accent-color-change", { detail: { color: newColor } }));
+    }
+  };
+
+  const handleSaveAccentColor = async (colorToSave?: string) => {
+    const color = colorToSave || settings.accentColor || "#D4AF37";
+    setSavingAccentColor(true);
+    applyAccentTheme(color);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": getCode() },
+        body: JSON.stringify({ accentColor: color }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        notify("Accent color saved and published to site!");
+      } else {
+        notify(d.error || "Failed to save accent color.", "error");
+      }
+    } catch {
+      notify("Network error saving accent color.", "error");
+    } finally {
+      setSavingAccentColor(false);
     }
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault(); setSavingSettings(true);
+    if (settings.accentColor) {
+      applyAccentTheme(settings.accentColor);
+    }
     try {
       const res = await fetch("/api/admin/settings", {
         method: "POST",
@@ -2624,7 +2640,7 @@ export default function AdminDashboard() {
                               updateAccentColor(val);
                             }
                           }}
-                          placeholder="var(--accent-color)"
+                          placeholder="#D4AF37"
                           style={{
                             ...inputStyle,
                             width: "120px",
@@ -2638,23 +2654,50 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => updateAccentColor("#D4AF37")}
-                      style={{
-                        marginLeft: "auto",
-                        padding: "0.45rem 0.85rem",
-                        borderRadius: "0.5rem",
-                        background: "transparent",
-                        border: "1px solid rgba(255,255,255,0.15)",
-                        color: "rgba(255,255,255,0.7)",
-                        fontSize: "0.72rem",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Reset to Classic Gold
-                    </button>
+                    <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateAccentColor("#D4AF37");
+                        }}
+                        style={{
+                          padding: "0.55rem 0.85rem",
+                          borderRadius: "0.5rem",
+                          background: "transparent",
+                          border: "1px solid rgba(255,255,255,0.15)",
+                          color: "rgba(255,255,255,0.7)",
+                          fontSize: "0.72rem",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Reset to Gold
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={savingAccentColor}
+                        onClick={() => handleSaveAccentColor()}
+                        style={{
+                          padding: "0.55rem 1.15rem",
+                          borderRadius: "0.5rem",
+                          background: "var(--accent-color, #D4AF37)",
+                          border: "none",
+                          color: "#0f0f0f",
+                          fontSize: "0.75rem",
+                          fontWeight: 800,
+                          cursor: savingAccentColor ? "not-allowed" : "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                          boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <Save size={13} />
+                        {savingAccentColor ? "Saving..." : "Save Accent Color"}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Live Interactive Preview */}

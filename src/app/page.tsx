@@ -16,6 +16,7 @@ import AboutContactModal from "@/components/AboutContactModal";
 import Reveal from "@/components/Reveal";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Packages from "@/components/Packages";
+import { applyAccentTheme } from "@/lib/theme";
 
 
 const DEFAULT_CATEGORIES = [
@@ -77,6 +78,9 @@ export default function Home() {
           }
           if (typeof data.featuredRentalsEnabled === "boolean") {
             setFeaturedRentalsEnabled(data.featuredRentalsEnabled);
+          }
+          if (data.accentColor) {
+            applyAccentTheme(data.accentColor);
           }
         }
       })
